@@ -174,6 +174,97 @@ PlasmoidItem {
         }
     }
 
+    // --- PRE-MARKET / AFTER-MARKET ---
+    // Latest pre-market or after-market quote per requested symbol, as
+    // { label, price, change, pct, isPos }. A symbol has no entry while its regular
+    // session is open, or when Yahoo has no extended-hours data for it.
+    property bool showExtendedHours: Plasmoid.configuration.showExtendedHours
+    property var extendedData: ({})
+
+    function setExtendedData(symbol, entry) {
+        var copy = Object.assign({}, root.extendedData);
+        if (entry) copy[symbol] = entry;
+        else delete copy[symbol];
+        root.extendedData = copy;
+    }
+
+    // True when timestamp t falls inside one of Yahoo's trading periods
+    // (an array of days, each an array of { start, end }).
+    function inTradingPeriods(periods, t) {
+        if (!periods) return false;
+        for (var i = 0; i < periods.length; i++) {
+            for (var j = 0; j < periods[i].length; j++) {
+                if (t >= periods[i][j].start && t < periods[i][j].end) return true;
+            }
+        }
+        return false;
+    }
+
+    // The chart API returns pre/post candles when asked for them. The newest candle tells
+    // which session the symbol is in: after the regular close it is After-Market, before the
+    // open it is Pre-Market. Both are measured against the last regular-session price.
+    function processExtendedData(symbol, json) {
+        try {
+            var result = json.chart.result[0];
+            var meta = result.meta;
+            var closes = result.indicators.quote[0].close;
+            var stamps = result.timestamp;
+            if (!meta.tradingPeriods || !stamps || !closes) { root.setExtendedData(symbol, null); return; }
+
+            var last = -1;
+            for (var i = closes.length - 1; i >= 0; i--) {
+                if (closes[i] !== null) { last = i; break; }
+            }
+            if (last < 0) { root.setExtendedData(symbol, null); return; }
+
+            var label = "";
+            if (root.inTradingPeriods(meta.tradingPeriods.post, stamps[last])) label = "After-Market";
+            else if (root.inTradingPeriods(meta.tradingPeriods.pre, stamps[last])) label = "Pre-Market";
+
+            var base = meta.regularMarketPrice;
+            if (label === "" || !base) { root.setExtendedData(symbol, null); return; }
+
+            var price = closes[last];
+            var change = price - base;
+            root.setExtendedData(symbol, {
+                "label": label,
+                "price": getCurrencySymbol(meta.currency) + formatNumber(price, false),
+                "change": formatNumber(change, true),
+                "pct": formatNumber((change / base) * 100, true) + "%",
+                "isPos": change >= 0
+            });
+        } catch (e) { console.log("Error parsing extended hours: " + e); }
+    }
+
+    function fetchExtendedHours(symbol) {
+        var xhr = new XMLHttpRequest();
+        var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?range=1d&interval=5m&includePrePost=true";
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                processExtendedData(symbol, JSON.parse(xhr.responseText));
+            }
+        }
+        xhr.open("GET", url);
+        xhr.send();
+    }
+
+    function refreshExtendedHours() {
+        if (!root.showExtendedHours) return;
+        if (root.isMultiMode) {
+            root.multiTickers.split(",").forEach(function(t) {
+                var clean = t.trim();
+                if (clean !== "") root.fetchExtendedHours(clean);
+            });
+        } else if (root.singleTicker.trim() !== "") {
+            root.fetchExtendedHours(root.singleTicker);
+        }
+    }
+
+    onShowExtendedHoursChanged: {
+        if (showExtendedHours) refreshExtendedHours();
+        else extendedData = ({});
+    }
+
     function refreshData() {
         if (root.isMultiMode) {
             fetchMultiStocks();
@@ -181,6 +272,7 @@ PlasmoidItem {
         else {
             fetchSingleStock(root.singleTicker);
         }
+        refreshExtendedHours();
     }
 
     // --- NEW CHECK: IS MARKET OPEN? ---

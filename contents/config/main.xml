@@ -103,6 +103,10 @@
             <label>Format stock price with commas</label>
             <default>true</default>
         </entry>
+        <entry name="showExtendedHours" type="Bool">
+            <label>Show pre-market and after-market values</label>
+            <default>true</default>
+        </entry>
         <entry name="hideDecimals" type="Bool">
             <label>Hide decimals in stock price</label>
             <default>false</default>
