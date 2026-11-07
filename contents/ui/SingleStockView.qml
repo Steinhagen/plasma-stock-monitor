@@ -60,7 +60,12 @@ Rectangle {
                 ColumnLayout {
                     spacing: 2
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                    // Take the space left of the change column, so a long "Name (TICK)"
+                    // is elided instead of pushing the percentage out of the card.
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                     RowLayout {
+                        Layout.fillWidth: true
                         spacing: 5
                         Text {
                             text: rootItem.isPositive ? "▲" : "▼"
@@ -69,7 +74,15 @@ Rectangle {
                             Layout.alignment: Qt.AlignVCenter
                         }
                         Text {
-                            text: rootItem.swapNameAndTicker ? rootItem.singleCompanyName : rootItem.singleTicker
+                            id: singleNameText
+                            FontMetrics { id: singleNameMetrics; font: singleNameText.font }
+                            text: rootItem.showNameAndTicker
+                                  ? rootItem.fitNameAndTicker(rootItem.singleCompanyName, rootItem.singleTicker, width, singleNameMetrics)
+                                  : (rootItem.swapNameAndTicker ? rootItem.singleCompanyName : rootItem.singleTicker)
+                            // Width comes only from the space left in the row, never from the text,
+                            // so choosing the wording by width cannot loop.
+                            Layout.minimumWidth: 0
+                            Layout.preferredWidth: 0
                             color: rootItem.tickerColor
                             opacity: rootItem.tickerOpacity / 100.0
                             font.bold: true
@@ -81,6 +94,8 @@ Rectangle {
                         }
                     }
                     Text {
+                        // The first line already carries the company name when name and ticker are shown together.
+                        visible: !rootItem.showNameAndTicker
                         text: rootItem.swapNameAndTicker ? rootItem.singleTicker : rootItem.singleCompanyName
                         color: rootItem.secondaryTextColor
                         font.pixelSize: 10
@@ -94,9 +109,9 @@ Rectangle {
                         visible: rootItem.lastUpdated !== "" && !rootItem.isMultiMode && !rootItem.hideTimestamps
                     }
                 }
-                Item { Layout.fillWidth: true }
                 ColumnLayout {
                     spacing: 0
+                    Layout.leftMargin: 8
                     Layout.alignment: Qt.AlignRight | Qt.AlignTop
                     Text {
                         text: rootItem.percentChange

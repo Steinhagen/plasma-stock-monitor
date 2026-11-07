@@ -13,6 +13,7 @@ Item {
     property alias cfg_multiTickers: multiListField.text
     property alias cfg_sortAlphabetically: sortSwitch.checked
     property alias cfg_swapNameAndTicker: swapNameSwitch.checked
+    property alias cfg_showNameAndTicker: nameAndTickerSwitch.checked
     
     property alias cfg_limitHours: limitHoursSwitch.checked
     property alias cfg_skipWeekendRefresh: skipWeekendRefreshSwitch.checked
@@ -81,9 +82,16 @@ Item {
             }
 
             CheckBox {
+                id: nameAndTickerSwitch
+                Kirigami.FormData.label: "Names:"
+                text: "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
+            }
+
+            CheckBox {
                 id: swapNameSwitch
-                Kirigami.FormData.label: "Swap Names:"
-                text: "Swap company name and ticker symbol"
+                text: nameAndTickerSwitch.checked
+                      ? "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
+                      : "Swap company name and ticker symbol"
             }
 
             ComboBox {

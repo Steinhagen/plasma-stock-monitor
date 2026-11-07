@@ -33,6 +33,10 @@
             <label>Swap company name and ticker symbol</label>
             <default>false</default>
         </entry>
+        <entry name="showNameAndTicker" type="Bool">
+            <label>Show the company name together with the ticker symbol</label>
+            <default>true</default>
+        </entry>
         <entry name="refreshInterval" type="Int">
             <label>Refresh Interval (minutes)</label>
             <default>5</default>

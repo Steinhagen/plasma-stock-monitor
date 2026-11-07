@@ -107,7 +107,15 @@ Rectangle {
                                 font.pixelSize: 10
                             }
                             Text {
-                                text: rootItem.swapNameAndTicker ? model.name : model.ticker
+                                id: listNameText
+                                FontMetrics { id: listNameMetrics; font: listNameText.font }
+                                text: rootItem.showNameAndTicker
+                                      ? rootItem.fitNameAndTicker(model.name, model.ticker, width, listNameMetrics)
+                                      : (rootItem.swapNameAndTicker ? model.name : model.ticker)
+                                // Width comes only from the space left beside the price, never
+                                // from the text, so choosing the wording by width cannot loop.
+                                Layout.minimumWidth: 0
+                                Layout.preferredWidth: 0
                                 color: rootItem.tickerColor
                                 opacity: rootItem.tickerOpacity / 100.0
                                 font.pixelSize: 14
@@ -166,7 +174,10 @@ Rectangle {
                                 }
 
                                 textFormat: ext ? Text.StyledText : Text.PlainText
-                                text: ext ? extText(width) : (rootItem.swapNameAndTicker ? model.ticker : model.name)
+                                // Line 1 already carries the company name when name and ticker are shown together.
+                                text: ext ? extText(width)
+                                          : (rootItem.showNameAndTicker ? ""
+                                             : (rootItem.swapNameAndTicker ? model.ticker : model.name))
                                 color: rootItem.secondaryTextColor
                                 font.pixelSize: 10
                                 elide: Text.ElideRight
