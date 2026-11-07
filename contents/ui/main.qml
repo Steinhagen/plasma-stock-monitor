@@ -599,7 +599,18 @@ PlasmoidItem {
     // --- PANEL VIEW (Compact Representation) ---
     compactRepresentation: MouseArea {
         id: compactRoot
-        implicitWidth: panelRow.implicitWidth + (Kirigami.Units.smallSpacing * 4)
+        implicitWidth: {
+            // An explicit width from the settings wins. Otherwise reserve room for the widest value.
+            if (compactRoot.useFixedWidth && Plasmoid.configuration.panelWidth > 0)
+                return Plasmoid.configuration.panelWidth;
+            var content = compactRoot.useFixedWidth
+                          ? Math.max(compactRoot.widestContent, panelRow.implicitWidth)
+                          : panelRow.implicitWidth;
+            return content + (Kirigami.Units.smallSpacing * 4);
+        }
+        // With an explicit width, anything that does not fit is cut off instead of spilling over
+        // the neighbouring applets.
+        clip: compactRoot.useFixedWidth && Plasmoid.configuration.panelWidth > 0
         implicitHeight: panelRow.implicitHeight
         width: implicitWidth
         height: implicitHeight
@@ -636,9 +647,108 @@ PlasmoidItem {
         readonly property string shownPercent: ext ? ext.pct : root.percentChange
         readonly property bool shownPositive: ext ? ext.isPos : root.isPositive
 
+        // --- Fixed width ---
+        // Cycling through the stocks, or swapping price and percentage, changes the length of the
+        // text. That used to resize the indicator and push every other applet in the panel around.
+        // With a fixed width the indicator reserves room for the widest value that can appear in
+        // it: the longest ticker, price and change of any configured stock, in the regular and
+        // in the extended-hours session. The width then stays the same while values change.
+        readonly property bool useFixedWidth: Plasmoid.configuration.fixedPanelWidth
+                                              && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+        property real widestContent: 0
+        property real widestPrice: 0
+
+        // Invisible texts with exactly the fonts and rendering of the visible ones. Measuring with
+        // these instead of with font metrics gives the real width, hinting included.
+        property real widestBadge: 0
+        Text { id: probeTicker; visible: false; font.pixelSize: 9; font.weight: Font.Bold; renderType: Text.NativeRendering }
+        Text { id: probeTag; visible: false; font.pixelSize: 8; font.weight: Font.Bold; renderType: Text.NativeRendering }
+        Text { id: probePrice; visible: false; font.pixelSize: 11; font.weight: Font.Bold; renderType: Text.NativeRendering }
+        Text { id: probeBadge; visible: false; font.pixelSize: 10; font.weight: Font.Black; renderType: Text.NativeRendering }
+
+        function measureWidest() {
+            var tickers = [], prices = [], pcts = [];
+            var collect = function(ticker, price, pct) {
+                tickers.push(String(ticker || "").toUpperCase());
+                prices.push(String(price || ""));
+                pcts.push(String(pct || ""));
+                var e = root.showExtendedHours ? root.extendedData[ticker] : undefined;
+                if (e) { prices.push(e.price); pcts.push(e.pct); }
+            };
+            if (root.isMultiMode) {
+                for (var i = 0; i < stockModel.count; i++) {
+                    var row = stockModel.get(i);
+                    collect(row.ticker, row.price, row.pct);
+                }
+            } else {
+                collect(root.singleTicker, root.currentPrice, root.percentChange);
+            }
+            // Width of the widest of `list` when drawn by `probe`.
+            // Each piece is rounded up to whole pixels, as the layout does for every item;
+            // adding unrounded widths would come out a pixel short.
+            var widest = function(list, probe) {
+                var w = 0;
+                for (var j = 0; j < list.length; j++) {
+                    probe.text = list[j];
+                    w = Math.max(w, Math.ceil(probe.implicitWidth));
+                }
+                return w;
+            };
+            var widthOf = function(probe, text) { probe.text = text; return Math.ceil(probe.implicitWidth); };
+
+            // First line: ticker, arrow and, if extended hours are shown, the session tag.
+            var arrowW = Math.max(widthOf(probeTag, "▲"), widthOf(probeTag, "▼"));
+            var tagW = root.showExtendedHours ? Math.max(widthOf(probeTag, "AH"), widthOf(probeTag, "PRE")) : 0;
+            var line1 = widest(tickers, probeTicker) + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
+
+            // Second line: price and change badge (or the wider of the two when they alternate).
+            var priceW = widest(prices, probePrice);
+            var showBadge = !root.hideChangePercentage;
+            var badgeW = showBadge ? widest(pcts, probeBadge) + (Kirigami.Units.smallSpacing * 2) : 0;
+            var line2 = (root.panelAlternate && showBadge) ? Math.max(priceW, badgeW)
+                                                          : priceW + (showBadge ? 6 + badgeW : 0);
+            return { "content": Math.ceil(Math.max(line1, line2)),
+                     "price": Math.ceil(priceW),
+                     "badge": Math.ceil(badgeW) };
+        }
+
+        function remeasure() {
+            var m = measureWidest();
+            compactRoot.widestContent = m.content;
+            compactRoot.widestPrice = m.price;
+            compactRoot.widestBadge = m.badge;
+        }
+
+        // Values arrive in bursts (one reply per ticker), so measure once they settle.
+        Timer { id: remeasureTimer; interval: 100; onTriggered: compactRoot.remeasure() }
+        Component.onCompleted: compactRoot.remeasure()
+        Connections {
+            target: stockModel
+            function onDataChanged() { remeasureTimer.restart(); }
+            function onRowsInserted() { remeasureTimer.restart(); }
+            function onRowsRemoved() { remeasureTimer.restart(); }
+            function onModelReset() { remeasureTimer.restart(); }
+        }
+        Connections {
+            target: root
+            function onExtendedDataChanged() { remeasureTimer.restart(); }
+            function onCurrentPriceChanged() { remeasureTimer.restart(); }
+            function onPercentChangeChanged() { remeasureTimer.restart(); }
+            function onSingleTickerChanged() { remeasureTimer.restart(); }
+            function onIsMultiModeChanged() { remeasureTimer.restart(); }
+            function onShowExtendedHoursChanged() { remeasureTimer.restart(); }
+            function onHideChangePercentageChanged() { remeasureTimer.restart(); }
+            function onPanelAlternateChanged() { remeasureTimer.restart(); }
+        }
+
         RowLayout {
             id: panelRow
-            anchors.centerIn: parent
+            // Fixed width: start at the left edge so the ticker stays where it is while the
+            // values change. Otherwise centre the content, as before.
+            anchors.centerIn: compactRoot.useFixedWidth ? undefined : parent
+            anchors.verticalCenter: compactRoot.useFixedWidth ? parent.verticalCenter : undefined
+            anchors.left: compactRoot.useFixedWidth ? parent.left : undefined
+            anchors.leftMargin: Kirigami.Units.smallSpacing * 2
             spacing: 8
             
             ColumnLayout {
@@ -684,10 +794,12 @@ PlasmoidItem {
                         // this item is hidden while the percentage is shown, and both keep the
                         // width of the wider one so the panel does not resize on every switch.
                         visible: !root.panelAlternate || !root.panelShowPercent
-                        horizontalAlignment: Text.AlignHCenter
+                        horizontalAlignment: root.panelAlternate ? Text.AlignHCenter : Text.AlignLeft
+                        // Fixed width: give the price the width of the widest price, so the badge
+                        // next to it stays put while the price changes.
                         Layout.minimumWidth: root.panelAlternate
                                              ? Math.max(panelPrice.implicitWidth, pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2))
-                                             : 0
+                                             : (compactRoot.useFixedWidth ? compactRoot.widestPrice : 0)
                         color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -707,9 +819,11 @@ PlasmoidItem {
                         border.color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         border.width: 1
                         Layout.preferredWidth: pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2)
+                        // Fixed width: every value gets the same badge width (the text stays centred),
+                        // so the panel has no spare room on the right of a short value.
                         Layout.minimumWidth: root.panelAlternate
                                              ? Math.max(panelPrice.implicitWidth, pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2))
-                                             : 0
+                                             : (compactRoot.useFixedWidth ? compactRoot.widestBadge : 0)
                         Layout.preferredHeight: pctText2.implicitHeight + (Kirigami.Units.smallSpacing / 2)
                         
                         Text {

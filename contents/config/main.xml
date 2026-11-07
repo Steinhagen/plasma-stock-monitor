@@ -107,6 +107,15 @@
             <label>Seconds between switching price and percentage</label>
             <default>15</default>
         </entry>
+        <entry name="fixedPanelWidth" type="Bool">
+            <label>Keep the panel indicator at a fixed width</label>
+            <default>true</default>
+        </entry>
+        <entry name="panelWidth" type="Int">
+            <label>Fixed panel width in pixels (0 = fit the widest value)</label>
+            <default>0</default>
+            <min>0</min>
+        </entry>
         <entry name="formatPrices" type="Bool">
             <label>Format stock price with commas</label>
             <default>true</default>
