@@ -61,20 +61,47 @@ Item {
         page.portfolioList = page.safeParsePortfolio(page.cfg_portfolioData);
     }
 
+    // Position in portfolioList of the lot currently loaded into the form for editing,
+    // or -1 when the form is adding a new lot.
+    property int editingIndex: -1
+
+    function clearForm() {
+        portfolioTickerField.text = "";
+        portfolioSharesSpin.value = 0;
+        portfolioCostField.text = "";
+        page.editingIndex = -1;
+    }
+
+    // Adds a new lot, or, while a lot is being edited, saves the changes to that lot
+    // (keeping its original purchase date).
     function addLot() {
         if (portfolioTickerField.text.trim() === "" || portfolioSharesSpin.value <= 0) return;
         var portfolio = page.safeParsePortfolio(page.cfg_portfolioData);
-        portfolio.push({
+        var lot = {
             ticker: portfolioTickerField.text.trim().toUpperCase(),
             shares: portfolioSharesSpin.value,
             averageCost: page.parseLocaleNumber(portfolioCostField.text) || 0,
             addedDate: new Date().toISOString()
-        });
+        };
+        if (page.editingIndex >= 0 && page.editingIndex < portfolio.length) {
+            if (portfolio[page.editingIndex].addedDate) lot.addedDate = portfolio[page.editingIndex].addedDate;
+            portfolio[page.editingIndex] = lot;
+        } else {
+            portfolio.push(lot);
+        }
         page.cfg_portfolioData = JSON.stringify(portfolio);
         page.refreshPortfolioList();
-        portfolioTickerField.text = "";
-        portfolioSharesSpin.value = 0;
-        portfolioCostField.text = "";
+        page.clearForm();
+    }
+
+    // Loads a lot (by its position in portfolioList) into the form so it can be changed.
+    function editLot(index) {
+        var lot = page.portfolioList[index];
+        if (!lot) return;
+        portfolioTickerField.text = lot.ticker;
+        portfolioSharesSpin.value = Number(lot.shares) || 0;
+        portfolioCostField.text = String(Number(lot.averageCost) || 0);
+        page.editingIndex = index;
     }
 
     // Removes a single lot by its position in portfolioList (not by ticker, since a ticker
@@ -84,6 +111,9 @@ Item {
         portfolio.splice(index, 1);
         page.cfg_portfolioData = JSON.stringify(portfolio);
         page.refreshPortfolioList();
+        // Keep the edit form pointing at the same lot, or drop it if that lot was removed.
+        if (page.editingIndex === index) page.clearForm();
+        else if (page.editingIndex > index) page.editingIndex--;
     }
 
     ScrollView {
@@ -137,8 +167,14 @@ Item {
                     Kirigami.FormData.label: "Actions:"
 
                     Button {
-                        text: "Add Lot"
+                        text: page.editingIndex >= 0 ? "Save Lot" : "Add Lot"
                         onClicked: page.addLot()
+                    }
+
+                    Button {
+                        text: "Cancel"
+                        visible: page.editingIndex >= 0
+                        onClicked: page.clearForm()
                     }
 
                     Button {
@@ -194,6 +230,11 @@ Item {
                         font.pixelSize: 11
                         text: modelData.ticker + ":  " + modelData.shares + " shares @ $" + Number(modelData.averageCost).toFixed(2)
                               + (modelData.addedDate ? "   (" + Qt.formatDateTime(new Date(modelData.addedDate), "dd MMM yyyy") + ")" : "")
+                    }
+                    Button {
+                        text: "Edit"
+                        enabled: page.editingIndex !== index
+                        onClicked: page.editLot(index)
                     }
                     Button {
                         text: "Remove"
