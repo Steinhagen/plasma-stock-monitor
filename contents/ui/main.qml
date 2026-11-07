@@ -479,6 +479,22 @@ PlasmoidItem {
 
     ListModel { id: stockModel }
 
+    // Optionally show the price and the change percentage in the same spot of
+    // the panel indicator, switching between them every N seconds, instead of
+    // showing both side by side.
+    readonly property bool panelAlternate: Plasmoid.configuration.alternatePricePercent
+                                           && !root.hideChangePercentage
+                                           && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    property bool panelShowPercent: false
+
+    Timer {
+        interval: Math.max(3, Plasmoid.configuration.alternateInterval) * 1000
+        running: root.panelAlternate
+        repeat: true
+        onTriggered: root.panelShowPercent = !root.panelShowPercent
+        onRunningChanged: if (!running) root.panelShowPercent = false
+    }
+
     Timer {
         interval: Plasmoid.configuration.refreshInterval * 60000
         running: true
@@ -550,7 +566,16 @@ PlasmoidItem {
                     Layout.alignment: Qt.AlignLeft
                     
                     Text {
+                        id: panelPrice
                         text: root.currentPrice
+                        // When alternating, the price and the percentage badge share one spot:
+                        // this item is hidden while the percentage is shown, and both keep the
+                        // width of the wider one so the panel does not resize on every switch.
+                        visible: !root.panelAlternate || !root.panelShowPercent
+                        horizontalAlignment: Text.AlignHCenter
+                        Layout.minimumWidth: root.panelAlternate
+                                             ? Math.max(panelPrice.implicitWidth, pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2))
+                                             : 0
                         color: root.isPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -562,6 +587,7 @@ PlasmoidItem {
                         radius: 4
                         // Vertical Panel Support: Hide badge in vertical panels to avoid overlap
                         visible: Plasmoid.formFactor !== PlasmaCore.Types.Vertical && !root.hideChangePercentage
+                                 && (!root.panelAlternate || root.panelShowPercent)
                         // Background: translucent tint of the positive/negative color for theme independence
                         color: root.isPositive
                                ? Qt.rgba(root.positiveColor.r, root.positiveColor.g, root.positiveColor.b, 0.18)
@@ -569,6 +595,9 @@ PlasmoidItem {
                         border.color: root.isPositive ? root.positiveColor : root.negativeColor
                         border.width: 1
                         Layout.preferredWidth: pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2)
+                        Layout.minimumWidth: root.panelAlternate
+                                             ? Math.max(panelPrice.implicitWidth, pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2))
+                                             : 0
                         Layout.preferredHeight: pctText2.implicitHeight + (Kirigami.Units.smallSpacing / 2)
                         
                         Text {

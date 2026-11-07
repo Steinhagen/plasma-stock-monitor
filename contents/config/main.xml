@@ -99,6 +99,14 @@
             <label>Hide Update Timestamps</label>
             <default>true</default>
         </entry>
+        <entry name="alternatePricePercent" type="Bool">
+            <label>Alternate the price and the change percentage in the panel</label>
+            <default>false</default>
+        </entry>
+        <entry name="alternateInterval" type="Int">
+            <label>Seconds between switching price and percentage</label>
+            <default>15</default>
+        </entry>
         <entry name="formatPrices" type="Bool">
             <label>Format stock price with commas</label>
             <default>true</default>
