@@ -897,6 +897,7 @@ PlasmoidItem {
                         color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 8
                         font.weight: Font.Bold
+                        renderType: Text.NativeRendering
                     }
                     // Session tag: AH = after-market, PRE = pre-market. Only shown while the
                     // regular market is closed.
