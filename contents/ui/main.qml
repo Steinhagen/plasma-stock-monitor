@@ -669,8 +669,159 @@ PlasmoidItem {
     // view and the multi-stock list compute their lot P/L directly from root.portfolioData
     // in their bindings, so QML re-evaluates them automatically.
 
-    // --- CUSTOM TOOLTIP ---
-    // Tooltip removed due to compatibility issues across some Plasma 6 versions
+    // --- TOOLTIP ---
+    // Plasma's fallback tooltip for an applet is the name and the description from
+    // metadata.json ("Stock Monitor" / "Modernized stock monitor for KDE…"), which says
+    // nothing about the stocks. Put the quotes in it instead: the heading names the stock
+    // (or the number of stocks) and the body lists the prices and changes, in the
+    // same gain/loss colours as the rest of the widget.
+    toolTipMainText: root.tooltipTitle
+    toolTipSubText: root.tooltipBody
+    toolTipTextFormat: Text.RichText
+
+    // ListModel rows do not notify property reads through get(), so the body is bound to
+    // this counter and the connections below bump it whenever the model changes.
+    property int tooltipRevision: 0
+
+    Connections {
+        target: stockModel
+        function onDataChanged() { root.tooltipRevision++ }
+        function onRowsInserted() { root.tooltipRevision++ }
+        function onRowsRemoved() { root.tooltipRevision++ }
+        function onModelReset() { root.tooltipRevision++ }
+    }
+
+    readonly property string tooltipTitle: {
+        if (!root.isMultiMode) {
+            var title = root.nameAndTicker(root.singleCompanyName, root.singleTicker);
+            return title !== "" ? title : "Stock Monitor";
+        }
+        var n = stockModel.count;
+        if (n === 0)
+            return "Stock Monitor";
+        return n + (n === 1 ? " stock" : " stocks") + " · " + root.chartRange
+               + (root.lastUpdated !== "" ? " · updated " + root.lastUpdated : "");
+    }
+
+    function htmlEscape(value) {
+        return String(value === undefined || value === null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    function htmlColor(color) {
+        var c = Qt.color(color);
+        var channel = function(v) {
+            var hex = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16);
+            return hex.length < 2 ? "0" + hex : hex;
+        };
+        return "#" + channel(c.r) + channel(c.g) + channel(c.b);
+    }
+
+    // "+1.23 (+0.98%)" in the configured gain/loss colour. No triangle: it looked
+    // like the "^" that index tickers start with, and the sign already says which
+    // way the value moved.
+    function htmlColored(isPos, text) {
+        return "<span style=\"color:" + root.htmlColor(isPos ? root.positiveColor : root.negativeColor) + ";\">"
+             + root.htmlEscape(text) + "</span>";
+    }
+
+    function tooltipChange(isPos, change, pct) {
+        return root.htmlColored(isPos, change + " (" + pct + ")");
+    }
+
+    function buildTooltipBody() {
+        // Reading the revision makes the body re-evaluate when the list changes.
+        var revision = root.tooltipRevision;
+        // The body is a table so the label, price and change columns line up on
+        // every row instead of drifting with the length of the values.
+        var cell = "padding-left:14px; padding-top:2px; padding-bottom:2px;";
+        var labelCell = "padding-top:2px; padding-bottom:2px;";
+        var muted = function(text) {
+            return "<span style=\"color:" + root.htmlColor(root.secondaryTextColor) + ";\">"
+                 + root.htmlEscape(text) + "</span>";
+        };
+
+        if (root.isMultiMode) {
+            var rows = [];
+            // Keep the tooltip compact: a long list would make it taller than the screen.
+            var maxRows = 7;
+            var tickerStyle = "padding-right:16px; padding-top:1px; padding-bottom:1px;";
+            for (var i = 0; i < stockModel.count && i < maxRows; i++) {
+                var row = stockModel.get(i);
+                var ext = root.showExtendedHours ? root.extendedData[row.ticker] : undefined;
+                var marker = "<td style=\"padding-right:6px; padding-top:1px; padding-bottom:1px;\">"
+                             + (row.ticker === root.panelTicker ? "•" : "") + "</td>";
+                var tickerCell = "<td style=\"" + tickerStyle + "\"><b>"
+                                 + root.htmlEscape(row.ticker) + "</b></td>";
+                if (row.price === "---" && !ext) {
+                    rows.push("<tr>" + marker + tickerCell
+                              + "<td colspan=\"2\" align=\"right\" style=\"padding-top:1px; padding-bottom:1px;\">"
+                              + muted("loading…") + "</td></tr>");
+                    continue;
+                }
+                rows.push("<tr>" + marker + tickerCell
+                          + "<td align=\"right\" style=\"" + tickerStyle + "\">"
+                          + root.htmlEscape(ext ? ext.price : row.price) + "</td>"
+                          + "<td align=\"right\" style=\"padding-top:1px; padding-bottom:1px;\">"
+                          + root.tooltipChange(ext ? ext.isPos : row.isPos,
+                                               ext ? ext.change : row.change,
+                                               ext ? ext.pct : row.pct) + "</td></tr>");
+            }
+            if (stockModel.count > maxRows) {
+                rows.push("<tr><td></td><td colspan=\"3\" style=\"padding-top:2px;\">"
+                          + muted("… and " + (stockModel.count - maxRows) + " more") + "</td></tr>");
+            }
+            return rows.length > 0
+                   ? "<table cellspacing=\"0\" cellpadding=\"0\">" + rows.join("") + "</table>"
+                   : "Loading…";
+        }
+
+        if (root.currentPrice === "" || root.currentPrice === "---")
+            return "Loading…";
+
+        var singleRows = [];
+        var period = root.chartRange === "1D" ? "Today" : root.chartRange;
+        singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(period) + "</td>"
+                        + "<td align=\"right\" style=\"" + cell + "\"><b>"
+                        + root.htmlEscape(root.currentPrice) + "</b></td>"
+                        + "<td align=\"right\" style=\"" + cell + "\">"
+                        + root.tooltipChange(root.isPositive, root.priceChange, root.percentChange) + "</td></tr>");
+
+        var ext = root.showExtendedHours ? root.extendedData[root.singleTicker] : undefined;
+        if (ext) {
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(ext.label) + "</td>"
+                            + "<td align=\"right\" style=\"" + cell + "\"><b>"
+                            + root.htmlEscape(ext.price) + "</b></td>"
+                            + "<td align=\"right\" style=\"" + cell + "\">"
+                            + root.tooltipChange(ext.isPos, ext.change, ext.pct) + "</td></tr>");
+        }
+
+        // When the shown ticker is in the portfolio, add the summed position: shares,
+        // average cost and the gain against the cost of all its lots.
+        if (root.showPortfolioMode && root.hasPortfolioEntry) {
+            var p = root.portfolioSummary;
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Position") + "</td>"
+                            + "<td colspan=\"2\" style=\"" + cell + "\">"
+                            + root.htmlEscape(root.formatNumber(p.shares, false)) + " shares · avg "
+                            + root.htmlEscape(root.formatMoney(root.currencySym, p.avgCost, false)) + "</td></tr>");
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("P/L") + "</td>"
+                            + "<td align=\"right\" style=\"" + cell + "\">"
+                            + root.htmlColored(p.plIsPos, root.formatMoney(root.currencySym, p.plValue, true)) + "</td>"
+                            + "<td align=\"right\" style=\"" + cell + "\">"
+                            + root.htmlColored(p.plIsPos, root.formatNumber(p.plPercent, true) + "%") + "</td></tr>");
+        }
+
+        if (root.lastUpdated !== "")
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Updated") + "</td>"
+                            + "<td colspan=\"2\" style=\"" + cell + "\">"
+                            + root.htmlEscape(root.lastUpdated) + "</td></tr>");
+
+        return "<table cellspacing=\"0\" cellpadding=\"0\">" + singleRows.join("") + "</table>";
+    }
+
+    readonly property string tooltipBody: root.buildTooltipBody()
 
     ListModel { id: stockModel }
 
