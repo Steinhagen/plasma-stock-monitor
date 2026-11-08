@@ -141,11 +141,14 @@ Rectangle {
                     visible: rootItem.chartDataPoints && rootItem.chartDataPoints.length > 0
                     renderStrategy: Canvas.Threaded
                     renderTarget: Canvas.Image
-                    onPaint: { drawChart(getContext("2d"), width, height, rootItem.chartDataPoints, rootItem.previousClose, rootItem.isPositive, true, rootItem.showChartAxis); }
+                    onPaint: { drawChart(getContext("2d"), width, height, rootItem.chartDataPoints, rootItem.chartTimestamps, rootItem.previousClose, rootItem.isPositive, true, rootItem.showChartAxis, rootItem.showTimeAxis); }
                     Connections {
                         target: rootItem
                         function onChartDataPointsChanged() { singleCanvas.requestPaint(); }
+                        function onChartTimestampsChanged() { singleCanvas.requestPaint(); }
+                        function onChartRangeChanged() { singleCanvas.requestPaint(); }
                         function onShowChartAxisChanged() { singleCanvas.requestPaint(); }
+                        function onShowTimeAxisChanged() { singleCanvas.requestPaint(); }
                     }
                 }
             }
@@ -297,7 +300,85 @@ Rectangle {
         return plotX;
     }
 
-    function drawChart(ctx, w, h, data, prevClose, isPos, drawBackground, showAxis) {
+    // Label for one timestamp, at the detail that fits the selected range: hours for a
+    // day, days for a week, months for up to a year and years for long ranges.
+    function timeAxisLabel(timestamp, span) {
+        var date = new Date(timestamp * 1000);
+        var locale = Qt.locale();
+        switch (rootItem.chartRange) {
+            case "1D":  return locale.toString(date, "HH:mm");
+            case "5D":  return locale.toString(date, "ddd");
+            case "1M":  return locale.toString(date, "d MMM");
+            case "6M":
+            case "1Y":  return locale.toString(date, "MMM");
+            case "YTD":
+                // Early in the year YTD covers only a few days, where month names would
+                // all be the same; fall back to dates or times for those short spans.
+                if (span > 60 * 86400) return locale.toString(date, "MMM");
+                if (span > 2 * 86400) return locale.toString(date, "d MMM");
+                return locale.toString(date, "HH:mm");
+            case "5Y":  return locale.toString(date, "yyyy");
+            case "Max":
+                // Max can span anything from a few days to decades, so pick the detail
+                // from the data rather than from the range name.
+                if (span > 2 * 365 * 86400) return locale.toString(date, "yyyy");
+                if (span > 90 * 86400) return locale.toString(date, "MMM yyyy");
+                if (span > 2 * 86400) return locale.toString(date, "d MMM");
+                return locale.toString(date, "HH:mm");
+            default:
+                return locale.toString(date, "d MMM");
+        }
+    }
+
+    // Time scale under the plot. A handful of evenly spaced candles is enough for the
+    // narrow chart; the label format follows the selected range and the available width
+    // decides how many labels fit without overlapping.
+    function drawTimeAxis(ctx, w, plotX, plotH, data, times) {
+        if (!times || times.length !== data.length || data.length < 2) return;
+        var plotW = w - plotX;
+        if (plotW < 24) return;
+
+        var span = times[times.length - 1] - times[0];
+        var count = Math.max(2, Math.min(4, Math.floor(plotW / 45)));
+        var lastRight = -1;
+        var seen = {};
+
+        ctx.save();
+        ctx.font = "9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = rootItem.secondaryTextColor;
+        ctx.strokeStyle = rootItem.chartBaseColor;
+        ctx.lineWidth = 1;
+
+        for (var i = 0; i < count; i++) {
+            var index = Math.round(i * (data.length - 1) / (count - 1));
+            var timestamp = times[index];
+            if (!timestamp) continue;
+
+            var label = timeAxisLabel(timestamp, span);
+            if (Object.prototype.hasOwnProperty.call(seen, label)) continue;
+            var textW = ctx.measureText(label).width;
+            var x = plotX + index * plotW / (data.length - 1);
+            // Keep the first and last labels inside the plot instead of letting them run
+            // into the price scale or off the card.
+            var center = Math.max(plotX + textW / 2, Math.min(w - textW / 2, x));
+            var left = center - textW / 2;
+            if (lastRight >= 0 && left < lastRight + 8) continue;
+
+            ctx.beginPath();
+            ctx.moveTo(Math.round(x) + 0.5, plotH);
+            ctx.lineTo(Math.round(x) + 0.5, plotH + 3);
+            ctx.stroke();
+            ctx.fillText(label, center, plotH + 3);
+
+            seen[label] = true;
+            lastRight = center + textW / 2;
+        }
+        ctx.restore();
+    }
+
+    function drawChart(ctx, w, h, data, times, prevClose, isPos, drawBackground, showPriceAxis, showTimeAxis) {
         ctx.clearRect(0, 0, w, h);
         if (!data || data.length < 2) return;
         var minVal = Math.min(...data);
@@ -308,11 +389,20 @@ Rectangle {
         minVal -= padding;
         maxVal += padding;
         range = maxVal - minVal;
-        function getY(val) { return h - ((val - minVal) / range * h); }
+
+        // Leave room under the plot for the time labels, but keep the chart usable if
+        // the card is very short.
+        var timeAxisHeight = (drawBackground && showTimeAxis && times && times.length === data.length) ? 16 : 0;
+        var plotH = h - timeAxisHeight;
+        if (plotH < 10) {
+            timeAxisHeight = 0;
+            plotH = h;
+        }
+        function getY(val) { return plotH - ((val - minVal) / range * plotH); }
 
         // Left edge of the plot; moves right when the price scale is shown.
         var plotX = 0;
-        if (drawBackground && showAxis) plotX = drawAxis(ctx, w, h, minVal, maxVal, getY);
+        if (drawBackground && showPriceAxis) plotX = drawAxis(ctx, w, plotH, minVal, maxVal, getY);
 
         if (drawBackground) {
             var prevY = getY(prevClose);
@@ -339,15 +429,17 @@ Rectangle {
         ctx.stroke();
 
         if (drawBackground) {
-            ctx.lineTo(w, h);
-            ctx.lineTo(plotX, h);
+            ctx.lineTo(w, plotH);
+            ctx.lineTo(plotX, plotH);
             ctx.closePath();
-            var gradient = ctx.createLinearGradient(0, 0, 0, h);
+            var gradient = ctx.createLinearGradient(0, 0, 0, plotH);
             var baseColor = isPos ? rootItem.positiveColor : rootItem.negativeColor;
             gradient.addColorStop(0.0, Qt.rgba(baseColor.r, baseColor.g, baseColor.b, 0.3));
             gradient.addColorStop(1.0, Qt.rgba(baseColor.r, baseColor.g, baseColor.b, 0.0));
             ctx.fillStyle = gradient;
             ctx.fill();
         }
+
+        if (timeAxisHeight > 0) drawTimeAxis(ctx, w, plotX, plotH, data, times);
     }
 }

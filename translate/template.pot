@@ -98,6 +98,14 @@ msgstr ""
 msgid "Show price values on the left of the chart"
 msgstr ""
 
+#: contents/ui/configAppearance.qml
+msgid "Time scale:"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Show dates and times under the chart"
+msgstr ""
+
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
 msgstr ""
@@ -671,6 +679,10 @@ msgctxt "@info:tooltip"
 msgid "%1 · %2"
 msgstr ""
 
+#: contents/ui/main.qml
+msgid "… and %1 more"
+msgstr ""
+
 #: contents/ui/main.qml contents/ui/MultiStockView.qml
 msgctxt "@item:market status"
 msgid "closed"
@@ -678,10 +690,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "loading…"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "… and %1 more"
 msgstr ""
 
 #: contents/ui/main.qml

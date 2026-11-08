@@ -53,7 +53,8 @@ var SETTINGS_KEYS = [
     "showExtendedHours",
     "keepExtendedAfterClose",
     "hideDecimals",
-    "showChartAxis"
+    "showChartAxis",
+    "showTimeAxis"
 ];
 
 var BOOL_KEYS = {
@@ -74,7 +75,8 @@ var BOOL_KEYS = {
     showExtendedHours: true,
     keepExtendedAfterClose: true,
     hideDecimals: true,
-    showChartAxis: true
+    showChartAxis: true,
+    showTimeAxis: true
 };
 
 // [minimum, maximum] for every integer setting. The ranges mirror the SpinBoxes and

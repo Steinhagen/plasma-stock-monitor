@@ -82,6 +82,8 @@ PlasmoidItem {
     property string priceChange: "+0.00"
     property string percentChange: "+0.00%"
     property var chartDataPoints: []
+    // Unix timestamps (seconds) parallel to chartDataPoints, used for the chart's time scale.
+    property var chartTimestamps: []
     property double previousClose: 0
     property bool isPositive: true
     property string currencySym: ""
@@ -150,6 +152,7 @@ PlasmoidItem {
     property bool formatPrices: Plasmoid.configuration.formatPrices
     property bool hideDecimals: Plasmoid.configuration.hideDecimals
     property bool showChartAxis: Plasmoid.configuration.showChartAxis
+    property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
     // (same ticker can have several, bought at different prices); the lots of a ticker are
     // added up into one position, summarised on a single line.
@@ -803,6 +806,38 @@ PlasmoidItem {
         });
     }
 
+    // The candles that make up the chart, with null entries dropped. The timestamps are
+    // kept in a parallel array so the time scale can position its labels on the exact
+    // data points; both arrays must stay the same length. For 1D the request asks for two
+    // days (so the previous close is available) but only the current session is plotted.
+    function cleanChartData(quotes, timestamps, startTime) {
+        var values = [], times = [];
+        for (var i = 0; i < quotes.length; i++) {
+            if (quotes[i] === null) continue;
+            if (root.chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
+                continue;
+            values.push(quotes[i]);
+            times.push(timestamps ? timestamps[i] : 0);
+        }
+
+        if (root.chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
+            var dayStartIndex = 0;
+            for (var j = timestamps.length - 1; j > 0; j--) {
+                if (timestamps[j] - timestamps[j-1] > 4 * 3600) {
+                    dayStartIndex = j;
+                    break;
+                }
+            }
+            for (var k = dayStartIndex; k < quotes.length; k++) {
+                if (quotes[k] !== null) {
+                    values.push(quotes[k]);
+                    times.push(timestamps[k]);
+                }
+            }
+        }
+        return { values: values, times: times };
+    }
+
     function processSingleData(json, fallbackSymbol) {
         try {
             var result = json.chart.result[0];
@@ -818,36 +853,11 @@ PlasmoidItem {
             root.currentRawPrice = meta.regularMarketPrice;
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
-            var cleanData = [];
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            
-            for (var i = 0; i < quotes.length; i++) {
-                if (quotes[i] !== null) {
-                    if (root.chartRange === "1D" && startTime > 0) {
-                        if (timestamps[i] >= startTime) {
-                            cleanData.push(quotes[i]);
-                        }
-                    } else {
-                        cleanData.push(quotes[i]);
-                    }
-                }
-            }
-
-            if (root.chartRange === "1D" && cleanData.length === 0 && timestamps && timestamps.length > 0) {
-                var dayStartIndex = 0;
-                for (var j = timestamps.length - 1; j > 0; j--) {
-                    if (timestamps[j] - timestamps[j-1] > 4 * 3600) { 
-                        dayStartIndex = j;
-                        break;
-                    }
-                }
-                for (var k = dayStartIndex; k < quotes.length; k++) {
-                    if (quotes[k] !== null) {
-                        cleanData.push(quotes[k]);
-                    }
-                }
-            }
+            var chart = root.cleanChartData(quotes, timestamps, startTime);
+            var cleanData = chart.values;
             root.chartDataPoints = cleanData;
+            root.chartTimestamps = chart.times;
 
             if (root.chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -884,36 +894,8 @@ PlasmoidItem {
             var current = meta.regularMarketPrice;
             var curSym = getCurrencySymbol(meta.currency);
 
-            var cleanData = [];
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            
-            for (var i = 0; i < quotes.length; i++) {
-                if (quotes[i] !== null) {
-                    if (root.chartRange === "1D" && startTime > 0) {
-                        if (timestamps[i] >= startTime) {
-                            cleanData.push(quotes[i]);
-                        }
-                    } else {
-                        cleanData.push(quotes[i]);
-                    }
-                }
-            }
-
-            if (root.chartRange === "1D" && cleanData.length === 0 && timestamps && timestamps.length > 0) {
-                var dayStartIndex = 0;
-                for (var j = timestamps.length - 1; j > 0; j--) {
-                    if (timestamps[j] - timestamps[j-1] > 4 * 3600) {
-                        dayStartIndex = j;
-                        break;
-                    }
-                }
-                for (var k = dayStartIndex; k < quotes.length; k++) {
-                    if (quotes[k] !== null) {
-                        cleanData.push(quotes[k]);
-                    }
-                }
-            }
-
+            var cleanData = root.cleanChartData(quotes, timestamps, startTime).values;
             var prev;
             if (root.chartRange === "1D") {
                 prev = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -992,6 +974,7 @@ PlasmoidItem {
             root.priceChange = "";
             root.percentChange = "";
             root.chartDataPoints = [];
+            root.chartTimestamps = [];
         }
         refreshData();
     }

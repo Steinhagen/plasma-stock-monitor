@@ -148,6 +148,10 @@
             <label>Show a price scale on the left of the chart</label>
             <default>false</default>
         </entry>
+        <entry name="showTimeAxis" type="Bool">
+            <label>Show a time scale under the chart</label>
+            <default>true</default>
+        </entry>
 
         <!-- Portfolio Tracking -->
         <entry name="portfolioData" type="String">

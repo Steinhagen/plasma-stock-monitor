@@ -97,6 +97,14 @@ msgstr "Scară de preț:"
 msgid "Show price values on the left of the chart"
 msgstr "Afișează valorile prețului în stânga graficului"
 
+#: contents/ui/configAppearance.qml
+msgid "Time scale:"
+msgstr "Scară de timp:"
+
+#: contents/ui/configAppearance.qml
+msgid "Show dates and times under the chart"
+msgstr "Afișează datele și orele sub grafic"
+
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
 msgstr "Fișierul selectat este gol."
@@ -672,6 +680,10 @@ msgctxt "@info:tooltip"
 msgid "%1 · %2"
 msgstr "%1 · %2"
 
+#: contents/ui/main.qml
+msgid "… and %1 more"
+msgstr "… și încă %1"
+
 #: contents/ui/main.qml contents/ui/MultiStockView.qml
 msgctxt "@item:market status"
 msgid "closed"
@@ -680,10 +692,6 @@ msgstr "închisă"
 #: contents/ui/main.qml
 msgid "loading…"
 msgstr "se încarcă…"
-
-#: contents/ui/main.qml
-msgid "… and %1 more"
-msgstr "… și încă %1"
 
 #: contents/ui/main.qml
 msgid "Loading…"

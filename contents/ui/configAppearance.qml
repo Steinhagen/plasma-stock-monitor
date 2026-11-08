@@ -15,6 +15,7 @@ Item {
     property alias cfg_priceColor: priceColorButton.text
     property alias cfg_priceOpacity: priceOpacitySlider.value
     property alias cfg_showChartAxis: showAxisSwitch.checked
+    property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
 
     ScrollView {
         anchors.fill: parent
@@ -134,6 +135,13 @@ Item {
 
                 Kirigami.FormData.label: i18n("Price scale:")
                 text: i18n("Show price values on the left of the chart")
+            }
+
+            CheckBox {
+                id: showTimeAxisSwitch
+
+                Kirigami.FormData.label: i18n("Time scale:")
+                text: i18n("Show dates and times under the chart")
             }
 
         }
