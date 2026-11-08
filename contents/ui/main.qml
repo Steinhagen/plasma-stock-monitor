@@ -501,6 +501,34 @@ PlasmoidItem {
         Layout.preferredWidth: implicitWidth
         
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+        // Scroll wheel / touchpad scroll cycles the stock shown in the panel.
+        // Scroll up = previous stock, scroll down = next stock. Deltas are
+        // accumulated so smooth-scrolling touchpads advance one step per 120 units.
+        property real wheelAccum: 0
+        onWheel: (wheel) => {
+            if (!root.isMultiMode || stockModel.count < 2) {
+                wheel.accepted = false;
+                return;
+            }
+            wheelAccum += wheel.angleDelta.y;
+            var steps = 0;
+            while (wheelAccum >= 120) { steps -= 1; wheelAccum -= 120; }
+            while (wheelAccum <= -120) { steps += 1; wheelAccum += 120; }
+            if (steps === 0) return;
+
+            var current = 0;
+            for (var i = 0; i < stockModel.count; i++) {
+                if (stockModel.get(i).ticker === root.panelTicker) { current = i; break; }
+            }
+            var n = stockModel.count;
+            var next = (((current + steps) % n) + n) % n;
+            root.manualPanelTickerOverride = stockModel.get(next).ticker;
+            root.panelTicker = root.manualPanelTickerOverride;
+            root.singleTicker = root.panelTicker;
+            root.refreshData();
+        }
+
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton) {
                 // Visual feedback: brief flicker
