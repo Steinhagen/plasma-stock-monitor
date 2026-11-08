@@ -21,6 +21,32 @@ PlasmoidItem {
     property string multiTickers: Plasmoid.configuration.multiTickers
     property bool sortAlphabetically: Plasmoid.configuration.sortAlphabetically
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
+    property bool showNameAndTicker: Plasmoid.configuration.showNameAndTicker
+
+    // Name and ticker together: "Company Name (TICK)", or "TICK (Company Name)" when
+    // "swap names" is on. Falls back to just the ticker while the name is not known yet
+    // or when Yahoo only returned the ticker as the name.
+    function nameAndTicker(name, ticker) {
+        var t = (ticker || "").trim().toUpperCase();
+        if (!name || name === "Loading..." || name.trim().toUpperCase() === t) return t;
+        return root.swapNameAndTicker ? t + " (" + name + ")" : name + " (" + t + ")";
+    }
+
+    // Same text, but when it does not fit in `avail` pixels only the company name is shortened
+    // ("Advanced Micro… (AMD)" / "AMD (Advanced Micro…)"), so the ticker always stays visible.
+    // When there is hardly any room for the name, only the ticker is shown.
+    // `metrics` is a FontMetrics of the Text.
+    function fitNameAndTicker(name, ticker, avail, metrics) {
+        var full = nameAndTicker(name, ticker);
+        if (avail <= 0 || metrics.advanceWidth(full) <= avail) return full;
+        var t = (ticker || "").trim().toUpperCase();
+        if (full === t) return full;
+        var before = root.swapNameAndTicker ? t + " (" : "";
+        var after = root.swapNameAndTicker ? ")" : " (" + t + ")";
+        var room = avail - metrics.advanceWidth(before + after);
+        if (room < metrics.advanceWidth("MMM…")) return t;
+        return before + metrics.elidedText(name, Qt.ElideRight, room) + after;
+    }
     property string chartRange: Plasmoid.configuration.chartRange
     // Time Limits Config
     property bool limitHours: Plasmoid.configuration.limitHours
