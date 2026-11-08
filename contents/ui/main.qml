@@ -68,8 +68,52 @@ PlasmoidItem {
     property bool isLightTheme: Plasmoid.configuration.selectedTheme === 0
     property bool isDarkTheme: Plasmoid.configuration.selectedTheme === 1
     property bool isPlasmaTheme: Plasmoid.configuration.selectedTheme === 2
-    property color positiveColor: Plasmoid.configuration.positiveColor
-    property color negativeColor: Plasmoid.configuration.negativeColor
+    // Colour the gain/loss text is measured against. In a panel that is the Plasma
+    // theme background, in the widget it is the background of the selected theme.
+    property color contrastBackground: {
+        if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical)
+            return Kirigami.Theme.backgroundColor;
+        if (isLightTheme)
+            return "#ffffff";
+        if (isDarkTheme)
+            return "#1a1a1a";
+        return Kirigami.Theme.backgroundColor;
+    }
+    // The configured gain/loss colours, adjusted only as far as needed to stay readable
+    // (WCAG AA, 4.5:1) on that background. The default green is bright enough for the
+    // dark theme but washes out on white, so it is darkened in the light theme.
+    property color positiveColor: root.withContrast(Plasmoid.configuration.positiveColor, root.contrastBackground)
+    property color negativeColor: root.withContrast(Plasmoid.configuration.negativeColor, root.contrastBackground)
+
+    // WCAG relative luminance of a colour and the contrast ratio between two colours.
+    function luminance(c) {
+        function channel(v) { return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+    function contrastRatio(a, b) {
+        var la = luminance(a), lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    // Returns the colour unchanged when it already reads well on bg. Otherwise keeps the hue
+    // and saturation and moves only the lightness (darker on light backgrounds, lighter on dark
+    // ones) until the contrast is enough.
+    function withContrast(color, bg) {
+        var c = Qt.color(color);
+        var b = Qt.color(bg);
+        if (contrastRatio(c, b) >= 4.5) return c;
+        var darken = luminance(b) > 0.18;
+        var hue = c.hslHue < 0 ? 0 : c.hslHue;
+        var l = c.hslLightness;
+        var out = c;
+        for (var i = 0; i < 100; i++) {
+            l += darken ? -0.01 : 0.01;
+            if (l < 0 || l > 1) break;
+            out = Qt.hsla(hue, c.hslSaturation, l, 1);
+            if (contrastRatio(out, b) >= 4.5) break;
+        }
+        return out;
+    }
     property color tickerColor: getThemeColor("ticker")
     property int tickerOpacity: Plasmoid.configuration.tickerOpacity
     property color priceColor: getThemeColor("price")
