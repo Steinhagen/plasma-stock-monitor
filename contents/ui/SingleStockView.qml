@@ -38,8 +38,11 @@ Rectangle {
             // buttons: those have their own click handling.
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: chartArea.top
-            anchors.bottom: parent.bottom
+            // chartArea is inside the ColumnLayout, so it is not a sibling of this
+            // MouseArea. Anchoring to chartArea.top would silently leave the area
+            // with zero height; map its top into singleView instead.
+            y: chartArea.mapToItem(singleView, 0, 0).y
+            height: singleView.height - y
             z: 100 // Ensure it is on top of everything
             hoverEnabled: true
             cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor
@@ -50,7 +53,7 @@ Rectangle {
             // price and after-hours rows below keep their normal pointer cursor.
             function updateHover(mx, my) {
                 var p = chartArea.mapFromItem(chartMouseArea, mx, my);
-                var inside = p.x >= 0 && p.x <= chartArea.width && p.y >= 0 && p.y <= chartArea.height;
+                var inside = rootItem.showChartHover && p.x >= 0 && p.x <= chartArea.width && p.y >= 0 && p.y <= chartArea.height;
                 singleStockRoot.chartHoverActive = inside;
                 if (inside) singleStockRoot.chartHoverX = p.x;
             }
@@ -221,6 +224,10 @@ Rectangle {
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartOpenPriceChanged() { singleCanvas.requestPaint(); }
+                        function onShowChartHoverChanged() {
+                            if (!rootItem.showChartHover) singleStockRoot.chartHoverActive = false;
+                            singleCanvas.requestPaint();
+                        }
                     }
                     Connections {
                         target: singleStockRoot

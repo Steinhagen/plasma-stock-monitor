@@ -61,6 +61,11 @@
             <default>0</default>
         </entry>
 
+        <entry name="showChartHover" type="Bool">
+            <label>Show values when hovering over the chart</label>
+            <default>true</default>
+        </entry>
+
         <entry name="limitHours" type="Bool">
             <label>Only update during specific hours</label>
             <default>false</default>

@@ -178,6 +178,7 @@ PlasmoidItem {
     property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
     // 0 = reference line split at the session open, 1 = candles + volume.
     property int chartStyle: Plasmoid.configuration.chartStyle === 1 ? 1 : 0
+    property bool showChartHover: Plasmoid.configuration.showChartHover
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
     // (same ticker can have several, bought at different prices); the lots of a ticker are
     // added up into one position, summarised on a single line.

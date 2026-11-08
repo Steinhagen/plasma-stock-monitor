@@ -17,6 +17,7 @@ Item {
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
     property alias cfg_chartStyle: chartStyleCombo.currentIndex
+    property alias cfg_showChartHover: hoverSwitch.checked
 
     ScrollView {
         anchors.fill: parent
@@ -136,6 +137,13 @@ Item {
 
                 Kirigami.FormData.label: i18n("Chart style:")
                 model: [i18n("Reference line (open)"), i18n("Candles + volume")]
+            }
+
+            CheckBox {
+                id: hoverSwitch
+
+                Kirigami.FormData.label: i18n("Hover:")
+                text: i18n("Show values when hovering over the chart")
             }
 
             CheckBox {

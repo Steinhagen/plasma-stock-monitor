@@ -102,6 +102,14 @@ msgid "Candles + volume"
 msgstr "Candele + volum"
 
 #: contents/ui/configAppearance.qml
+msgid "Hover:"
+msgstr "La hover:"
+
+#: contents/ui/configAppearance.qml
+msgid "Show values when hovering over the chart"
+msgstr "Afișează valorile când treci cu mouse-ul peste grafic"
+
+#: contents/ui/configAppearance.qml
 msgid "Price scale:"
 msgstr "Scară de preț:"
 

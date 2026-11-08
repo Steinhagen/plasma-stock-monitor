@@ -31,6 +31,7 @@ var SETTINGS_KEYS = [
     "chartViewRange",
     "showChartRangeButtons",
     "chartStyle",
+    "showChartHover",
     "limitHours",
     "skipWeekendRefresh",
     "startHour",
@@ -80,7 +81,8 @@ var BOOL_KEYS = {
     hideDecimals: true,
     showChartAxis: true,
     showTimeAxis: true,
-    showChartRangeButtons: true
+    showChartRangeButtons: true,
+    showChartHover: true
 };
 
 // [minimum, maximum] for every integer setting. The ranges mirror the SpinBoxes and

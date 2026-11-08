@@ -103,6 +103,14 @@ msgid "Candles + volume"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
+msgid "Hover:"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Show values when hovering over the chart"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
 msgid "Price scale:"
 msgstr ""
 
