@@ -37,6 +37,10 @@ msgstr "Urmărire portofoliu"
 msgid "Appearance"
 msgstr "Aspect"
 
+#: contents/config/config.qml
+msgid "Import / Export"
+msgstr "Import / Export"
+
 #: contents/ui/configAppearance.qml
 msgid "Theme:"
 msgstr "Temă:"
@@ -92,6 +96,156 @@ msgstr "Scară de preț:"
 #: contents/ui/configAppearance.qml
 msgid "Show price values on the left of the chart"
 msgstr "Afișează valorile prețului în stânga graficului"
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is empty."
+msgstr "Fișierul selectat este gol."
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is not valid JSON."
+msgstr "Fișierul selectat nu conține JSON valid."
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is not a Plasma Stock Monitor backup."
+msgstr "Fișierul selectat nu este o copie de siguranță Plasma Stock Monitor."
+
+#: contents/ui/configBackup.qml
+msgid "This backup was created by a newer version of the widget."
+msgstr "Această copie de siguranță a fost creată de o versiune mai nouă a widgetului."
+
+#: contents/ui/configBackup.qml
+msgid "The portfolio data in this backup is invalid."
+msgstr "Datele portofoliului din această copie de siguranță nu sunt valide."
+
+#: contents/ui/configBackup.qml
+msgid "Portfolio entry %1 in this backup is invalid."
+msgstr "Intrarea %1 din portofoliu din această copie de siguranță nu este validă."
+
+#: contents/ui/configBackup.qml
+msgid "The backup contains an invalid value for \"%1\"."
+msgstr "Copia de siguranță conține o valoare invalidă pentru „%1”."
+
+#: contents/ui/configBackup.qml
+msgid "The value for \"%1\" is outside the allowed range."
+msgstr "Valoarea pentru „%1” este în afara intervalului permis."
+
+#: contents/ui/configBackup.qml
+msgid "The backup could not be imported."
+msgstr "Copia de siguranță nu a putut fi importată."
+
+#: contents/ui/configBackup.qml
+msgid "Writing %1..."
+msgstr "Se scrie %1..."
+
+#: contents/ui/configBackup.qml
+msgid "Reading %1..."
+msgstr "Se citește %1..."
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain portfolio or watchlist data."
+msgstr "Această copie de siguranță nu conține date despre portofoliu sau lista de urmărire."
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain application settings."
+msgstr "Această copie de siguranță nu conține setările aplicației."
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain any data or settings."
+msgstr "Această copie de siguranță nu conține date sau setări."
+
+#: contents/ui/configBackup.qml
+msgid "Imported from %1. Click Apply or OK to save the changes."
+msgstr "Importat din %1. Apasă Aplică sau OK pentru a salva modificările."
+
+#: contents/ui/configBackup.qml
+msgid "The file could not be read."
+msgstr "Fișierul nu a putut fi citit."
+
+#: contents/ui/configBackup.qml
+msgid "The file could not be saved."
+msgstr "Fișierul nu a putut fi salvat."
+
+#: contents/ui/configBackup.qml
+msgid "The file operation timed out."
+msgstr "Operațiunea asupra fișierului a expirat."
+
+#: contents/ui/configBackup.qml
+msgid "Details: %1"
+msgstr "Detalii: %1"
+
+#: contents/ui/configBackup.qml
+msgid "Save your portfolio, watchlist and settings to a JSON file, or restore them from a backup."
+msgstr "Salvează portofoliul, lista de urmărire și setările într-un fișier JSON sau restaurează-le dintr-o copie de siguranță."
+
+#: contents/ui/configBackup.qml
+msgid "Content:"
+msgstr "Conținut:"
+
+#: contents/ui/configBackup.qml
+msgid "Portfolio and watchlist"
+msgstr "Portofoliu și listă de urmărire"
+
+#: contents/ui/configBackup.qml
+msgid "Application settings"
+msgstr "Setările aplicației"
+
+#: contents/ui/configBackup.qml
+msgid "Everything (portfolio and settings)"
+msgstr "Tot (portofoliu și setări)"
+
+#: contents/ui/configBackup.qml
+msgid "Holdings, purchase lots, portfolio currency and the ticker list."
+msgstr "Dețineri, loturi de achiziție, moneda portofoliului și lista de simboluri."
+
+#: contents/ui/configBackup.qml
+msgid "Refresh, market hours, appearance, panel and display preferences."
+msgstr "Reîmprospătare, ore de tranzacționare, aspect, panou și preferințe de afișare."
+
+#: contents/ui/configBackup.qml
+msgid "A full backup of the portfolio, watchlist and all settings."
+msgstr "O copie de siguranță completă a portofoliului, listei de urmărire și tuturor setărilor."
+
+#: contents/ui/configBackup.qml
+msgid "Backup:"
+msgstr "Copie de siguranță:"
+
+#: contents/ui/configBackup.qml
+msgid "Export to File..."
+msgstr "Exportă în fișier..."
+
+#: contents/ui/configBackup.qml
+msgid "Import from File..."
+msgstr "Importă din fișier..."
+
+#: contents/ui/configBackup.qml
+msgid "File import and export are not available because the Plasma5Support module is missing on this system."
+msgstr "Importul și exportul în fișier nu sunt disponibile deoarece modulul Plasma5Support lipsește pe acest sistem."
+
+#: contents/ui/configBackup.qml
+msgid "Backups are plain JSON files. Cached exchange rates are not included because they are downloaded again automatically."
+msgstr "Copiile de siguranță sunt fișiere JSON simple. Cursurile de schimb memorate nu sunt incluse, deoarece sunt descărcate din nou automat."
+
+#: contents/ui/configBackup.qml
+msgid "Exported to %1."
+msgstr "Exportat în %1."
+
+#: contents/ui/configBackup.qml
+msgid "Export Settings"
+msgstr "Exportă setările"
+
+#: contents/ui/configBackup.qml
+msgctxt "file filter"
+msgid "JSON backup files (*.json)"
+msgstr "Fișiere de siguranță JSON (*.json)"
+
+#: contents/ui/configBackup.qml
+msgctxt "file filter"
+msgid "All files (*)"
+msgstr "Toate fișierele (*)"
+
+#: contents/ui/configBackup.qml
+msgid "Import Settings"
+msgstr "Importă setările"
 
 #: contents/ui/configGeneral.qml
 msgid "Display Mode:"
@@ -354,14 +508,6 @@ msgid "Cancel"
 msgstr "Anulează"
 
 #: contents/ui/configPortfolio.qml
-msgid "Export CSV"
-msgstr "Exportă CSV"
-
-#: contents/ui/configPortfolio.qml
-msgid "No portfolio data to export."
-msgstr "Nu există date de portofoliu de exportat."
-
-#: contents/ui/configPortfolio.qml
 msgid "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
 msgstr "Fiecare achiziție este un lot separat — dacă mai cumperi același simbol la un alt preț, se adaugă un lot nou în loc să fie suprascris cel vechi."
 
@@ -380,6 +526,10 @@ msgstr "Cursuri de schimb: încă nedescărcate."
 #: contents/ui/configPortfolio.qml
 msgid "Exchange rates: updated %1"
 msgstr "Cursuri de schimb: actualizate la %1"
+
+#: contents/ui/configPortfolio.qml
+msgid "Use the Import / Export page to back up or restore the portfolio and watchlist."
+msgstr "Folosește pagina Import / Export pentru a salva sau restaura portofoliul și lista de urmărire."
 
 #: contents/ui/configPortfolio.qml
 msgid "Your Lots"
@@ -615,3 +765,9 @@ msgstr "%1 la %2"
 #: contents/ui/PositionLine.qml
 msgid "Value"
 msgstr "Valoare"
+
+#~ msgid "Export CSV"
+#~ msgstr "Exportă CSV"
+
+#~ msgid "No portfolio data to export."
+#~ msgstr "Nu există date de portofoliu de exportat."

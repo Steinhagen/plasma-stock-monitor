@@ -33,6 +33,7 @@ Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It
   - **Closed-market quotes:** Keeps the last pre-market/after-hours quote visible after the session ends (on by default).
   - **Battery Saver:** Option to stop updating when the market is closed.
   - Weekend detection logic.
+- **Backup and restore:** Export the portfolio, watchlist and settings to a JSON file and import them back.
 - **Localized:** The whole interface is translatable through gettext/Ki18n and ships with a complete Romanian translation. Any other language can be added without touching the code — see [Localization](#-localization).
 
 <br>
@@ -73,6 +74,18 @@ You can right-click the widget and hit **"Configure..."** to tweak almost everyt
 
 - **Only update during market hours:** Check this to prevent the widget from waking up your network when the stock market is closed.
 - **Market Open/Close:** Set the start and end time (e.g., 09:15 to 15:30) matching your local stock exchange time.
+
+### 4\. Import / Export
+
+Open **Configure... → Import / Export** to save or restore a JSON backup. Choose one of three scopes:
+
+- **Portfolio and watchlist:** Holdings, purchase lots, portfolio currency/mode, single ticker and ticker list.
+- **Application settings:** Refresh interval, market hours, appearance, panel and display preferences.
+- **Everything:** A full backup of the portfolio, watchlist and all settings.
+
+**Export to File...** opens a save dialog; **Import from File...** reads a backup and stages its values. Imported values are applied like any other setting, so press **Apply** or **OK** to keep them, or **Cancel** to discard them. Cached exchange rates are not part of a backup because they are downloaded again automatically.
+
+The backup uses a small helper script (`contents/code/backup-io.sh`) through Plasma's compatibility data engine, so the widget does not need a compiled plugin. If the optional `Plasma5Support` module is not installed, the page explains that file access is unavailable.
 
 ![Config 1](screenshots/config1.png)
 ![Config 2](screenshots/config2.png)

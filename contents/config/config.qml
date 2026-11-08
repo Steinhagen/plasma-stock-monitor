@@ -27,4 +27,9 @@ ConfigModel {
         icon: "preferences-desktop-color"
         source: "configAppearance.qml"
     }
+    ConfigCategory {
+        name: i18n("Import / Export")
+        icon: "document-save-as"
+        source: "configBackup.qml"
+    }
 }

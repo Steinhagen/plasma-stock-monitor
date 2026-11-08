@@ -86,14 +86,6 @@ Item {
         return parseFloat(str);
     }
 
-    function escapeCsvField(val) {
-        var str = String(val);
-        if (str.indexOf(",") >= 0 || str.indexOf("\"") >= 0 || str.indexOf("\n") >= 0) {
-            return "\"" + str.replace(/"/g, "\"\"") + "\"";
-        }
-        return str;
-    }
-
     function refreshPortfolioList() {
         page.portfolioList = page.safeParsePortfolio(page.cfg_portfolioData);
     }
@@ -394,22 +386,6 @@ Item {
                         onClicked: page.clearForm()
                     }
 
-                    Button {
-                        text: i18n("Export CSV")
-                        onClicked: {
-                            if (page.portfolioList.length === 0) {
-                                csvOutput.text = i18n("No portfolio data to export.");
-                                return;
-                            }
-                            // NO I18N: the CSV header is part of the exported file format, not the UI.
-                            var csv = "Ticker,Shares,Average Cost,Currency,Added Date,Details\n";
-                            for (var i = 0; i < page.portfolioList.length; i++) {
-                                var lot = page.portfolioList[i];
-                                csv += page.escapeCsvField(lot.ticker) + "," + page.escapeCsvField(lot.shares) + "," + page.escapeCsvField(lot.averageCost) + "," + page.escapeCsvField(lot.currency || "USD") + "," + page.escapeCsvField(lot.addedDate) + "," + page.escapeCsvField(lot.details || "") + "\n";
-                            }
-                            csvOutput.text = csv;
-                        }
-                    }
                 }
 
                 Label {
@@ -443,6 +419,16 @@ Item {
                                     Qt.formatDateTime(new Date(ts * 1000), "dd MMM yyyy HH:mm"));
                     }
                     font.pixelSize: 10
+                    opacity: 0.7
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 300
+                }
+
+                Label {
+                    text: i18n("Use the Import / Export page to back up or restore the portfolio and watchlist.")
+                    font.pixelSize: 10
+                    font.italic: true
                     opacity: 0.7
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -503,17 +489,6 @@ Item {
                         onClicked: page.removeLot(index)
                     }
                 }
-            }
-
-            Label {
-                id: csvOutput
-                text: ""
-                font.pixelSize: 10
-                font.family: "monospace"
-                color: Kirigami.Theme.neutralTextColor
-                wrapMode: Text.WordWrap
-                visible: text !== ""
-                Layout.fillWidth: true
             }
         }
     }

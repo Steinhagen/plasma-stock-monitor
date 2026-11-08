@@ -38,6 +38,10 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+#: contents/config/config.qml
+msgid "Import / Export"
+msgstr ""
+
 #: contents/ui/configAppearance.qml
 msgid "Theme:"
 msgstr ""
@@ -92,6 +96,156 @@ msgstr ""
 
 #: contents/ui/configAppearance.qml
 msgid "Show price values on the left of the chart"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is empty."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is not valid JSON."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The selected file is not a Plasma Stock Monitor backup."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "This backup was created by a newer version of the widget."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The portfolio data in this backup is invalid."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Portfolio entry %1 in this backup is invalid."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The backup contains an invalid value for \"%1\"."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The value for \"%1\" is outside the allowed range."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The backup could not be imported."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Writing %1..."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Reading %1..."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain portfolio or watchlist data."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain application settings."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "This backup does not contain any data or settings."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Imported from %1. Click Apply or OK to save the changes."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The file could not be read."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The file could not be saved."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "The file operation timed out."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Details: %1"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Save your portfolio, watchlist and settings to a JSON file, or restore them from a backup."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Content:"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Portfolio and watchlist"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Application settings"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Everything (portfolio and settings)"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Holdings, purchase lots, portfolio currency and the ticker list."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Refresh, market hours, appearance, panel and display preferences."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "A full backup of the portfolio, watchlist and all settings."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Backup:"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Export to File..."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Import from File..."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "File import and export are not available because the Plasma5Support module is missing on this system."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Backups are plain JSON files. Cached exchange rates are not included because they are downloaded again automatically."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Exported to %1."
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Export Settings"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgctxt "file filter"
+msgid "JSON backup files (*.json)"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgctxt "file filter"
+msgid "All files (*)"
+msgstr ""
+
+#: contents/ui/configBackup.qml
+msgid "Import Settings"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -355,14 +509,6 @@ msgid "Cancel"
 msgstr ""
 
 #: contents/ui/configPortfolio.qml
-msgid "Export CSV"
-msgstr ""
-
-#: contents/ui/configPortfolio.qml
-msgid "No portfolio data to export."
-msgstr ""
-
-#: contents/ui/configPortfolio.qml
 msgid "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
 msgstr ""
 
@@ -380,6 +526,10 @@ msgstr ""
 
 #: contents/ui/configPortfolio.qml
 msgid "Exchange rates: updated %1"
+msgstr ""
+
+#: contents/ui/configPortfolio.qml
+msgid "Use the Import / Export page to back up or restore the portfolio and watchlist."
 msgstr ""
 
 #: contents/ui/configPortfolio.qml
