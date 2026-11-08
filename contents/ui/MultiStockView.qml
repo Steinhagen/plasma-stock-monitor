@@ -14,8 +14,9 @@ Rectangle {
 
     // --- Portfolio total ---
     // The value, total gain and period gain of all the positions together, shown as the last
-    // line of the list. null when it does not apply: the feature is off, fewer than two tickers
-    // have lots, or the positions are in different currencies (those cannot be added up).
+    // line of the list. Positions can be held in different currencies: each one is converted
+    // to the portfolio currency (daily exchange rates) before they are added up. null when
+    // the feature is off or fewer than two tickers have lots.
     property var totals: null
     property string totalsSym: ""
     property string totalsLabel: ""
@@ -25,33 +26,47 @@ Rectangle {
         if (!rootItem || !listModel || !rootItem.showPortfolioMode) return;
         var held = rootItem.getPortfolioTickers(rootItem.portfolioData);
         if (held.length < 2) return;
-        var value = 0, cost = 0, day = 0, dayKnown = true, priced = 0, currencies = {};
+        var base = rootItem.portfolioCurrency || "USD";
+        var value = 0, cost = 0, day = 0, dayKnown = true, priced = 0, noRate = 0;
         for (var i = 0; i < listModel.count; i++) {
             var row = listModel.get(i);
             if (!(row.currentRaw > 0)) continue;
-            var s = rootItem.getPortfolioSummary(row.ticker, rootItem.portfolioData, row.currentRaw, row.prevClose);
+            var s = rootItem.getPortfolioSummary(row.ticker, rootItem.portfolioData, row.currentRaw, row.prevClose, row.currency);
             if (!s) continue;
+            var positionValue = rootItem.convertMoney(s.value, s.currency, base);
+            var positionCost = rootItem.convertMoney(s.cost, s.currency, base);
+            if (positionValue === null || positionCost === null) {
+                noRate++;
+                continue;
+            }
             priced++;
-            value += s.value;
-            cost += s.cost;
-            currencies[row.currencySym] = true;
-            if (s.dayValue === null) dayKnown = false;
-            else day += s.dayValue;
+            value += positionValue;
+            cost += positionCost;
+            if (s.dayValue === null) {
+                dayKnown = false;
+            } else {
+                var positionDay = rootItem.convertMoney(s.dayValue, s.currency, base);
+                if (positionDay === null) dayKnown = false;
+                else day += positionDay;
+            }
         }
-        var symbols = Object.keys(currencies);
-        if (priced === 0 || symbols.length !== 1) return;
+        if (priced === 0) return;
         var pl = value - cost;
-        multiStockRoot.totalsSym = symbols[0];
-        // Say so when some positions have no price yet (still loading, or not in the list).
-        multiStockRoot.totalsLabel = priced === held.length ? held.length + " positions"
-                                                            : priced + " of " + held.length + " positions";
+        multiStockRoot.totalsSym = rootItem.getCurrencySymbol(base);
+        // Say so when some positions have no price yet (still loading, or not in the list)
+        // or no exchange rate for their currency.
+        multiStockRoot.totalsLabel = (priced === held.length ? held.length + " positions"
+                                                             : priced + " of " + held.length + " positions")
+                                     + (noRate > 0 ? " · no rate for " + noRate : "");
         multiStockRoot.totals = {
             value: value, cost: cost, plValue: pl, plPercent: cost > 0 ? (pl / cost) * 100 : 0, plIsPos: pl >= 0,
-            dayValue: dayKnown ? day : null, dayIsPos: !dayKnown || day >= 0
+            dayValue: dayKnown ? day : null, dayIsPos: !dayKnown || day >= 0, currency: base
         };
     }
 
-    // Prices arrive one ticker at a time, so recompute once they settle.
+    // Prices arrive one ticker at a time, so recompute once they settle. The total also
+    // changes when a fresh daily exchange-rate table arrives or the portfolio currency is
+    // changed in the settings.
     Timer { id: totalsTimer; interval: 100; onTriggered: multiStockRoot.recomputeTotals() }
     Component.onCompleted: multiStockRoot.recomputeTotals()
     Connections {
@@ -65,6 +80,8 @@ Rectangle {
         target: multiStockRoot.rootItem
         function onPortfolioDataChanged() { totalsTimer.restart(); }
         function onShowPortfolioModeChanged() { totalsTimer.restart(); }
+        function onExchangeRatesChanged() { totalsTimer.restart(); }
+        function onPortfolioCurrencyChanged() { totalsTimer.restart(); }
     }
 
     Text {
@@ -119,7 +136,7 @@ Rectangle {
             // the feature is off). Computed here, not stored as a model role, so it stays reactive
             // to rootItem.portfolioData and the live price.
             property var rowSummary: (rootItem.showPortfolioMode && model.currentRaw > 0)
-                                     ? rootItem.getPortfolioSummary(model.ticker, rootItem.portfolioData, model.currentRaw, model.prevClose)
+                                     ? rootItem.getPortfolioSummary(model.ticker, rootItem.portfolioData, model.currentRaw, model.prevClose, model.currency)
                                      : null
             // Base row, plus one summary line when the ticker has a position.
             height: 60 + (rowRoot.rowSummary !== null ? 20 : 0)

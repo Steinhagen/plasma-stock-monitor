@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
+import "currencies.js" as Currency
 
 PlasmoidItem {
     id: root
@@ -65,6 +66,9 @@ PlasmoidItem {
     property double previousClose: 0
     property bool isPositive: true
     property string currencySym: ""
+    // The currency Yahoo quotes the shown instrument in (e.g. "USD", "GBp"). Used to
+    // convert the live price to the currency a portfolio lot was bought in.
+    property string quoteCurrency: ""
     property bool isLightTheme: Plasmoid.configuration.selectedTheme === 0
     property bool isDarkTheme: Plasmoid.configuration.selectedTheme === 1
     property bool isPlasmaTheme: Plasmoid.configuration.selectedTheme === 2
@@ -132,7 +136,12 @@ PlasmoidItem {
     // added up into one position, summarised on a single line.
     property bool showPortfolioMode: Plasmoid.configuration.showPortfolioMode
     property string portfolioData: Plasmoid.configuration.portfolioData
-    property var portfolioSummary: root.getPortfolioSummary(root.singleTicker, root.portfolioData, root.currentRawPrice, root.previousClose)
+    // Currency the portfolio totals are shown in. Lots keep their own currency; this is
+    // only the common currency they are converted to when they have to be added up.
+    property string portfolioCurrency: Currency.isKnown(Plasmoid.configuration.portfolioCurrency)
+                                        ? Currency.major(Plasmoid.configuration.portfolioCurrency)
+                                        : "USD"
+    property var portfolioSummary: root.getPortfolioSummary(root.singleTicker, root.portfolioData, root.currentRawPrice, root.previousClose, root.quoteCurrency)
     property bool hasPortfolioEntry: root.portfolioSummary !== null
     // What the change in the summary covers: today for the 1D chart, otherwise the chart range.
     property string portfolioChangeLabel: root.chartRange === "1D" ? "Today" : root.chartRange
@@ -188,22 +197,140 @@ PlasmoidItem {
     }
 
     function getCurrencySymbol(code) {
-        // Fix: Return empty string if code is missing or literal "null"
-        if (!code || code === "null")
-            return "";
+        // Yahoo occasionally reports the literal text "null" for a missing currency.
+        if (!code || code === "null") return "";
+        return Currency.symbol(code);
+    }
 
-        const symbols = {
-            "USD": "$",
-            "EUR": "€",
-            "GBP": "£",
-            "INR": "₹",
-            "JPY": "¥",
-            "CNY": "¥",
-            "KRW": "₩",
-            "RUB": "₽",
-            "TRY": "₺"
+    // --- EXCHANGE RATES ---
+    // Lots can be bought in different currencies, so positions and the portfolio total
+    // sometimes have to be converted. The rates for all currencies come from a free daily
+    // feed and are cached in the applet configuration; a timer checks once an hour and
+    // downloads them only when the feed's next daily update is due (or after 24 hours).
+    property string exchangeRatesJson: Plasmoid.configuration.exchangeRates
+    property var exchangeRates: {
+        try {
+            var cached = JSON.parse(root.exchangeRatesJson || "{}");
+            return (cached && cached.rates) ? cached.rates : ({});
+        } catch (e) {
+            return ({});
+        }
+    }
+    property double exchangeRatesUpdated: Number(Plasmoid.configuration.exchangeRatesUpdated) || 0
+    property double exchangeRatesNext: Number(Plasmoid.configuration.exchangeRatesNext) || 0
+    property bool exchangeRatesFetching: false
+    property bool exchangeRatesTryingFallback: false
+
+    // Converts an amount between currencies through the cached daily rates. Returns null
+    // when a rate is not known yet, so callers can tell "no rate" apart from a real zero.
+    function convertMoney(amount, from, to) {
+        return Currency.convert(amount, from, to, root.exchangeRates);
+    }
+
+    function exchangeRatesDue() {
+        // A missing or unreadable cache is due even if its timestamp looks fresh.
+        if (!root.exchangeRates || Object.keys(root.exchangeRates).length < 2) return true;
+        if (root.exchangeRatesUpdated <= 0) return true;
+        var now = Math.floor(Date.now() / 1000);
+        if (root.exchangeRatesNext > 0) return now >= root.exchangeRatesNext;
+        return now - root.exchangeRatesUpdated >= 24 * 60 * 60;
+    }
+
+    function finishExchangeRates(error) {
+        root.exchangeRatesFetching = false;
+        root.exchangeRatesTryingFallback = false;
+        if (error) console.log("Exchange rates: " + error);
+    }
+
+    // Stores the feed's rates. `rates` maps a currency code to units of that currency per
+    // one unit of `base`; the cross-rate conversion in currencies.js works with any base.
+    function saveExchangeRates(base, rates, updated, next) {
+        if (!rates) return false;
+        var clean = {};
+        var count = 0;
+        for (var code in rates) {
+            var value = Number(rates[code]);
+            if (!(value > 0)) continue;
+            clean[String(code).toUpperCase()] = value;
+            count++;
+        }
+        if (count < 2) return false;
+        var b = String(base || "USD").toUpperCase();
+        if (!(clean[b] > 0)) clean[b] = 1;
+        try {
+            Plasmoid.configuration.exchangeRates = JSON.stringify({ base: b, rates: clean });
+            Plasmoid.configuration.exchangeRatesUpdated = String(updated);
+            Plasmoid.configuration.exchangeRatesNext = String(next);
+        } catch (e) {
+            console.log("Error saving exchange rates: " + e);
+            return false;
+        }
+        root.exchangeRatesFetching = false;
+        root.exchangeRatesTryingFallback = false;
+        return true;
+    }
+
+    // Secondary feed, used when open.er-api.com cannot be reached. It returns the same
+    // shape of data (all currencies, relative to USD) under a lowercase "usd" object.
+    function fetchExchangeRatesFallback() {
+        if (!root.exchangeRatesFetching || root.exchangeRatesTryingFallback) return;
+        root.exchangeRatesTryingFallback = true;
+        var now = Math.floor(Date.now() / 1000);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            var ok = false;
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data && data.usd && root.saveExchangeRates("USD", data.usd, now, now + 86400))
+                        ok = true;
+                } catch (e) {
+                    console.log("Error parsing fallback exchange rates: " + e);
+                }
+            }
+            if (!ok) root.finishExchangeRates("no exchange-rate feed available");
         };
-        return symbols[code] || code + " ";
+        xhr.ontimeout = function() { root.finishExchangeRates("exchange-rate request timed out"); };
+        xhr.onerror = function() { root.finishExchangeRates("exchange-rate request failed"); };
+        xhr.open("GET", "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json");
+        xhr.timeout = 20000;
+        xhr.send();
+    }
+
+    function fetchExchangeRates() {
+        if (root.exchangeRatesFetching) return;
+        root.exchangeRatesFetching = true;
+        root.exchangeRatesTryingFallback = false;
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    var now = Math.floor(Date.now() / 1000);
+                    if (data && data.result === "success" && data.rates) {
+                        var updated = Number(data.time_last_update_unix) || now;
+                        var next = Number(data.time_next_update_unix) || (updated + 86400);
+                        if (root.saveExchangeRates(data.base_code || "USD", data.rates, updated, next))
+                            return;
+                    }
+                } catch (e) {
+                    console.log("Error parsing exchange rates: " + e);
+                }
+            }
+            root.fetchExchangeRatesFallback();
+        };
+        xhr.ontimeout = function() { root.fetchExchangeRatesFallback(); };
+        xhr.onerror = function() { root.fetchExchangeRatesFallback(); };
+        xhr.open("GET", "https://open.er-api.com/v6/latest/USD");
+        xhr.timeout = 20000;
+        xhr.send();
+    }
+
+    function maybeRefreshExchangeRates() {
+        if (root.exchangeRatesFetching) return;
+        if (root.exchangeRatesDue()) root.fetchExchangeRates();
     }
 
     // --- PORTFOLIO TRACKING HELPERS ---
@@ -211,28 +338,68 @@ PlasmoidItem {
     // into one position with the figures a portfolio view leads with: shares, average cost,
     // market value, total gain (against the cost of all the lots) and the gain over the period
     // the widget shows (today for the 1D chart). Returns null when the ticker has no lots.
-    function getPortfolioSummary(ticker, dataStr, rawPrice, prevClose) {
+    //
+    // Every lot's average cost is in that lot's own currency. The live quote is in the
+    // instrument's Yahoo currency, so it is converted before it is compared with the cost.
+    // A position whose lots all share a currency is shown in that currency; mixed lots are
+    // converted to the configured portfolio currency so they can be added up.
+    function getPortfolioSummary(ticker, dataStr, rawPrice, prevClose, quoteCurrency) {
         if (!ticker || !dataStr || !rawPrice) return null;
         try {
             var portfolio = JSON.parse(dataStr);
             var upperTicker = ticker.trim().toUpperCase();
-            var lots = 0, shares = 0, cost = 0;
+            var lots = [], lotCurrencies = {};
             for (var i = 0; i < portfolio.length; i++) {
                 if (portfolio[i].ticker !== upperTicker) continue;
                 var s = Number(portfolio[i].shares) || 0;
                 if (s <= 0) continue;
-                lots++;
-                shares += s;
-                cost += s * (Number(portfolio[i].averageCost) || 0);
+                // Lots saved before this feature existed have no currency and are USD.
+                var lotCurrency = Currency.major(portfolio[i].currency) || "USD";
+                lots.push({
+                    shares: s,
+                    averageCost: Number(portfolio[i].averageCost) || 0,
+                    currency: lotCurrency
+                });
+                lotCurrencies[lotCurrency] = true;
             }
-            if (lots === 0) return null;
-            var value = shares * rawPrice;
+            if (lots.length === 0) return null;
+
+            var codes = Object.keys(lotCurrencies);
+            var target = codes.length === 1 ? codes[0] : root.portfolioCurrency;
+            // Mixed positions are always converted to a catalog currency; a single-currency
+            // position keeps its own code even if the feed has no rate for it, so a quote
+            // already in that currency can still be shown without a conversion.
+            if (codes.length > 1 && !Currency.isKnown(target)) target = "USD";
+
+            var quoteCode = Currency.major(quoteCurrency);
+            var quoteFactor = Currency.minorFactor(quoteCurrency);
+            var price = rawPrice * quoteFactor;
+            // Without a quote currency (old cache / unexpected response) assume the price
+            // is already expressed in the currency the position is shown in.
+            var priceInTarget = quoteCode === "" ? price : root.convertMoney(price, quoteCode, target);
+            if (priceInTarget === null) return null;
+            var prevInTarget = null;
+            if (prevClose > 0) {
+                var prev = prevClose * quoteFactor;
+                prevInTarget = quoteCode === "" ? prev : root.convertMoney(prev, quoteCode, target);
+            }
+
+            var shares = 0, cost = 0, value = 0, day = 0;
+            var dayKnown = prevInTarget !== null;
+            for (var j = 0; j < lots.length; j++) {
+                var costInTarget = root.convertMoney(lots[j].averageCost, lots[j].currency, target);
+                if (costInTarget === null) return null;
+                shares += lots[j].shares;
+                cost += lots[j].shares * costInTarget;
+                value += lots[j].shares * priceInTarget;
+                if (dayKnown) day += lots[j].shares * (priceInTarget - prevInTarget);
+            }
+            if (shares <= 0) return null;
             var plValue = value - cost;
-            var day = prevClose > 0 ? shares * (rawPrice - prevClose) : null;
             return {
-                lots: lots, shares: shares, avgCost: cost / shares, cost: cost, value: value,
+                lots: lots.length, shares: shares, avgCost: cost / shares, cost: cost, value: value,
                 plValue: plValue, plPercent: cost > 0 ? (plValue / cost) * 100 : 0, plIsPos: plValue >= 0,
-                dayValue: day, dayIsPos: day === null || day >= 0
+                dayValue: dayKnown ? day : null, dayIsPos: !dayKnown || day >= 0, currency: target
             };
         } catch (e) {
             console.log("Error parsing portfolio data: " + e);
@@ -456,7 +623,8 @@ PlasmoidItem {
                     "chartPoints": [],
                     "prevClose": 0.0,
                     "currentRaw": 0.0,
-                    "currencySym": ""
+                    "currencySym": "",
+                    "currency": ""
                 });
             });
         }
@@ -484,6 +652,7 @@ PlasmoidItem {
 
             root.singleCompanyName = meta.shortName || meta.longName || (fallbackSymbol || root.singleTicker);
             root.currencySym = getCurrencySymbol(meta.currency);
+            root.quoteCurrency = meta.currency || "";
             root.currentRawPrice = meta.regularMarketPrice;
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
@@ -605,7 +774,8 @@ PlasmoidItem {
                 "chartPoints": cleanData,
                 "prevClose": prev,
                 "currentRaw": current,
-                "currencySym": curSym
+                "currencySym": curSym,
+                "currency": meta.currency || ""
             };
 
             var found = false;
@@ -805,13 +975,14 @@ PlasmoidItem {
         // average cost and the gain against the cost of all its lots.
         if (root.showPortfolioMode && root.hasPortfolioEntry) {
             var p = root.portfolioSummary;
+            var pSym = root.getCurrencySymbol(p.currency);
             singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Position") + "</td>"
                             + "<td colspan=\"2\" style=\"" + cell + "\">"
                             + root.htmlEscape(root.formatNumber(p.shares, false)) + " shares · avg "
-                            + root.htmlEscape(root.formatMoney(root.currencySym, p.avgCost, false)) + "</td></tr>");
+                            + root.htmlEscape(root.formatMoney(pSym, p.avgCost, false)) + "</td></tr>");
             singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("P/L") + "</td>"
                             + "<td align=\"right\" style=\"" + cell + "\">"
-                            + root.htmlColored(p.plIsPos, root.formatMoney(root.currencySym, p.plValue, true)) + "</td>"
+                            + root.htmlColored(p.plIsPos, root.formatMoney(pSym, p.plValue, true)) + "</td>"
                             + "<td align=\"right\" style=\"" + cell + "\">"
                             + root.htmlColored(p.plIsPos, root.formatNumber(p.plPercent, true) + "%") + "</td></tr>");
         }
@@ -853,6 +1024,17 @@ PlasmoidItem {
         onTriggered: root.checkTimeAndRefresh()
     }
 
+    // Exchange rates change once a day. Checking hourly keeps the download close to the
+    // feed's own daily update without polling it repeatedly; the cached rates are only
+    // replaced when a complete response arrives.
+    Timer {
+        interval: 60 * 60 * 1000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.maybeRefreshExchangeRates()
+    }
+
     // Optionally rotate the panel stock every N seconds (multi-stock mode).
     // The panel text is filled from the already-fetched list data; a single
     // request then refreshes the chart for the newly selected stock.
@@ -876,6 +1058,7 @@ PlasmoidItem {
             root.percentChange = row.pct;
             root.isPositive = row.isPos;
             root.currencySym = row.currencySym;
+            root.quoteCurrency = row.currency;
             root.fetchSingleStock(row.ticker);
         }
     }

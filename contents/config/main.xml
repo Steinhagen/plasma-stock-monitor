@@ -154,5 +154,22 @@
             <label>Show portfolio profit/loss in views</label>
             <default>false</default>
         </entry>
+        <entry name="portfolioCurrency" type="String">
+            <label>Portfolio currency used for totals</label>
+            <default>USD</default>
+        </entry>
+        <!-- Daily exchange rates, cached by the widget so a restart does not need a download. -->
+        <entry name="exchangeRates" type="String">
+            <label>Cached daily exchange rates (JSON)</label>
+            <default></default>
+        </entry>
+        <entry name="exchangeRatesUpdated" type="String">
+            <label>Exchange rates last updated (Unix seconds)</label>
+            <default></default>
+        </entry>
+        <entry name="exchangeRatesNext" type="String">
+            <label>Exchange rates next update (Unix seconds)</label>
+            <default></default>
+        </entry>
     </group>
 </kcfg>

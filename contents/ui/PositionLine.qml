@@ -15,6 +15,7 @@ Item {
     property var rootItem
     // The position, as returned by getPortfolioSummary() (or the same fields for a total).
     property var summary: null
+    // Fallback symbol when the summary does not carry its own currency.
     property string sym: ""
     // Replaces the "17 (3 lots) @ $207.38" part, e.g. for a portfolio total.
     property string heldOverride: ""
@@ -24,6 +25,15 @@ Item {
     implicitHeight: row.implicitHeight
     // Never paint outside the space the line was given.
     clip: true
+
+    // The summary knows the currency its value and cost are expressed in (a lot currency,
+    // or the portfolio currency for mixed positions and totals), so use that symbol first.
+    // `sym` is already a symbol, so it is used as-is when the summary has no currency.
+    readonly property string moneySymbol: {
+        if (!rootItem) return "";
+        if (summary && summary.currency) return rootItem.getCurrencySymbol(summary.currency);
+        return sym;
+    }
 
     readonly property int gap: 10
     readonly property int captionGap: 4
@@ -39,7 +49,7 @@ Item {
         if (heldOverride !== "") return heldOverride;
         if (!summary || summary.shares === undefined) return "";
         return Number(summary.shares.toFixed(4)) + (summary.lots > 1 ? " (" + summary.lots + " lots)" : "")
-               + " @ " + rootItem.formatMoney(sym, summary.avgCost, false);
+               + " @ " + rootItem.formatMoney(moneySymbol, summary.avgCost, false);
     }
     readonly property string plPercentString: summary ? rootItem.formatNumber(summary.plPercent, true) + "%" : ""
 
@@ -95,7 +105,7 @@ Item {
             }
             Text {
                 id: valueText
-                text: line.summary ? rootItem.formatMoney(line.sym, line.summary.value, false) : ""
+                text: line.summary ? rootItem.formatMoney(line.moneySymbol, line.summary.value, false) : ""
                 color: rootItem.priceColor
                 font.pixelSize: line.fontSize
                 font.bold: true
@@ -124,7 +134,7 @@ Item {
                     id: plFullText
                     anchors.centerIn: parent
                     visible: line.level <= 2
-                    text: line.summary ? rootItem.formatMoney(line.sym, line.summary.plValue, true) + " (" + line.plPercentString + ")" : ""
+                    text: line.summary ? rootItem.formatMoney(line.moneySymbol, line.summary.plValue, true) + " (" + line.plPercentString + ")" : ""
                     color: line.plColor
                     font.pixelSize: line.fontSize
                     font.weight: Font.Bold
@@ -153,7 +163,7 @@ Item {
             }
             Text {
                 id: dayText
-                text: line.dayAvailable ? rootItem.formatMoney(line.sym, line.summary.dayValue, true) : ""
+                text: line.dayAvailable ? rootItem.formatMoney(line.moneySymbol, line.summary.dayValue, true) : ""
                 color: line.dayColor
                 font.pixelSize: line.fontSize
                 font.bold: true
