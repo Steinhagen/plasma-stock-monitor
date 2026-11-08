@@ -24,6 +24,17 @@ PlasmoidItem {
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
     property bool showNameAndTicker: Plasmoid.configuration.showNameAndTicker
 
+    // Yahoo returns some non-US short names from a fixed-width vendor field: the company
+    // name is padded with spaces and followed by a share-class letter, e.g.
+    // "DEUTSCHE LUFTHANSA AG         V". That padding is not part of the name, so use the
+    // long name for those quotes and collapse any whitespace that is left over.
+    function companyName(meta, fallback) {
+        var shortName = meta.shortName ? String(meta.shortName).trim() : "";
+        var longName = meta.longName ? String(meta.longName).trim() : "";
+        var name = /\s{2,}/.test(shortName) && longName !== "" ? longName : (shortName || longName);
+        return name.replace(/\s+/g, " ").trim() || fallback;
+    }
+
     // Name and ticker together: "Company Name (TICK)", or "TICK (Company Name)" when
     // "swap names" is on. Falls back to just the ticker while the name is not known yet
     // or when Yahoo only returned the ticker as the name.
@@ -650,7 +661,7 @@ PlasmoidItem {
             var quotes = result.indicators.quote[0].close;
             var timestamps = result.timestamp;
 
-            root.singleCompanyName = meta.shortName || meta.longName || (fallbackSymbol || root.singleTicker);
+            root.singleCompanyName = root.companyName(meta, fallbackSymbol || root.singleTicker);
             root.currencySym = getCurrencySymbol(meta.currency);
             root.quoteCurrency = meta.currency || "";
             root.currentRawPrice = meta.regularMarketPrice;
@@ -766,7 +777,7 @@ PlasmoidItem {
 
             var itemData = {
                 "ticker": symbol,
-                "name": meta.shortName || meta.longName || symbol,
+                "name": root.companyName(meta, symbol),
                 "price": curSym + formatNumber(current, false),
                 "change": formatNumber(change, true),
                 "pct": formatNumber(pct, true) + "%",
