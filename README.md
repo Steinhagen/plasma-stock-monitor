@@ -29,8 +29,8 @@ Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It
 - **Data Ranges:** View history from 1 Day (1D) up to 5 Years (5Y) or Max.
 - **Smart & Efficient:**
   - Automatic "Previous Close" dashed line.
-  - **Market status:** Shows when a market is closed, including indices and symbols without pre-/after-market quotes.
-  - **Closed-market quotes:** Keeps the last pre-/after-market quote visible after the session ends (on by default).
+  - **Market status:** Shows when a market is closed, including indices and symbols without pre-market/after-hours quotes.
+  - **Closed-market quotes:** Keeps the last pre-market/after-hours quote visible after the session ends (on by default).
   - **Battery Saver:** Option to stop updating when the market is closed.
   - Weekend detection logic.
 

@@ -133,7 +133,7 @@
             <default>true</default>
         </entry>
         <entry name="showExtendedHours" type="Bool">
-            <label>Show pre-market and after-market values</label>
+            <label>Show pre-market and after-hours values</label>
             <default>true</default>
         </entry>
         <entry name="keepExtendedAfterClose" type="Bool">

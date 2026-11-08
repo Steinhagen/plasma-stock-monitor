@@ -459,11 +459,11 @@ PlasmoidItem {
     }
 
     // --- PRE-MARKET / AFTER-MARKET ---
-    // Latest pre-market or after-market quote per requested symbol, as
+    // Latest pre-market or after-hours quote per requested symbol, as
     // { label, time, price, change, pct, isPos }. Only the quote from the session
     // running now is surfaced (see extendedQuote()).
     property bool showExtendedHours: Plasmoid.configuration.showExtendedHours
-    // Keep the last pre-/after-market quote visible after its session ends, marked
+    // Keep the last pre-market/after-hours quote visible after its session ends, marked
     // as closed, instead of falling back to the regular close only.
     property bool keepExtendedAfterClose: Plasmoid.configuration.keepExtendedAfterClose
     property var extendedData: ({})
@@ -544,9 +544,9 @@ PlasmoidItem {
     }
 
     // The extended quote to show for a symbol: the live one while its session runs,
-    // or — when the option is enabled — the last one after the market closes. This
-    // keeps a Friday after-hours quote from being shown as "after-market" during a
-    // later pre-market session.
+    // or — when the option is enabled — the last one after the market closes. The
+    // session checks keep a Friday after-hours quote from being shown as current
+    // during a later pre-market session.
     function extendedQuote(symbol) {
         if (!root.showExtendedHours) return undefined;
         var status = root.marketStatusFor(symbol);
@@ -563,7 +563,7 @@ PlasmoidItem {
         if (!period) return undefined;
         if (e.time < period.start || e.time >= period.end) return undefined;
         if ((status === "pre" && e.label !== "Pre-Market")
-            || (status === "post" && e.label !== "After-Market")) return undefined;
+            || (status === "post" && e.label !== "After-Hours")) return undefined;
         return e;
     }
 
@@ -598,11 +598,11 @@ PlasmoidItem {
             var label = "";
             if (status === "pre" || status === "post") {
                 period = status === "pre" ? session.pre : session.post;
-                label = status === "pre" ? "Pre-Market" : "After-Market";
+                label = status === "pre" ? "Pre-Market" : "After-Hours";
             } else if (session.post && stamps[last] >= session.post.start && stamps[last] < session.post.end) {
                 // Closed: keep the last session's quote if the option asks for it.
                 period = session.post;
-                label = "After-Market";
+                label = "After-Hours";
             } else if (session.pre && stamps[last] >= session.pre.start && stamps[last] < session.pre.end) {
                 period = session.pre;
                 label = "Pre-Market";
@@ -1273,7 +1273,7 @@ PlasmoidItem {
         }
 
         // While an extended-hours session is running, the ticker has a pre-market /
-        // after-market quote (see extendedQuote()). The panel then shows that quote
+        // after-hours quote (see extendedQuote()). The panel then shows that quote
         // instead of the regular price and change, and a small tag next to the ticker
         // says which session it is. Without an extended quote, the tag says CLOSED
         // while the market is closed.
@@ -1424,7 +1424,7 @@ PlasmoidItem {
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
                     }
-                    // Session tag: AH = after-market, PRE = pre-market, CLOSED = the
+                    // Session tag: AH = after-hours, PRE = pre-market, CLOSED = the
                     // exchange is not trading and there is no extended quote to show.
                     Text {
                         visible: (compactRoot.ext !== undefined || compactRoot.marketClosed) && !root.isVerticalPanel

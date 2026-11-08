@@ -141,7 +141,7 @@ Rectangle {
             // Base row, plus one summary line when the ticker has a position.
             height: 60 + (rowRoot.rowSummary !== null ? 20 : 0)
             property string rowCurrencySym: model.currencySym
-            // Pre-market / after-market quote for this ticker. Only present while that
+            // Pre-market / after-hours quote for this ticker. Only present while that
             // session is the latest one, i.e. when the regular market is closed
             // (undefined otherwise).
             property var rowExt: rootItem.extendedQuote(model.ticker)
@@ -234,12 +234,12 @@ Rectangle {
                         }
 
                         // Line 2: secondary text (elided when too long), change badge.
-                        // While the market is closed and the ticker has a pre-market / after-market
+                        // While the market is closed and the ticker has a pre-market / after-hours
                         // quote, that quote takes the place of the secondary text, so the row keeps
                         // its two lines.
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 4
+                            spacing: 10
                             Text {
                                 id: secondLine
                                 readonly property var ext: rowRoot.rowExt
@@ -247,11 +247,11 @@ Rectangle {
                                 FontMetrics { id: secondLineMetrics; font.pixelSize: 10; font.bold: true }
 
                                 // Longest wording that fits in `avail` pixels, richest first:
-                                // "After-Market · closed $342.65 -0.28 (-0.08%)" ... down to just the price.
+                                // "After-Hours · closed    $342.65    -0.28 (-0.08%)" ... down to just the price.
                                 function extText(avail) {
                                     var e = secondLine.ext;
                                     if (!e) return "";
-                                    var closedSuffix = rowRoot.rowClosed ? " · closed" : "";
+                                    var closedSuffix = rowRoot.rowClosed ? "&nbsp;·&nbsp;closed" : "";
                                     var fullLabel = e.label + closedSuffix;
                                     var shortLabel = (e.label === "Pre-Market" ? "Pre" : "After") + closedSuffix;
                                     var tiers = [
@@ -260,17 +260,24 @@ Rectangle {
                                         [null, e.price, e.pct],
                                         [null, e.price, null]
                                     ];
+                                    // Wide, non-collapsible gaps between the parts, matching the
+                                    // spacing the portfolio line below uses instead of the single
+                                    // space a plain text would give.
+                                    var gap = "&nbsp;&nbsp;&nbsp;&nbsp;";
+                                    var plainGap = "    ";
+                                    var plain = function(s) { return String(s).replace(/&nbsp;/g, " "); };
                                     var pick = tiers[tiers.length - 1];
                                     for (var i = 0; i < tiers.length; i++) {
-                                        var plain = tiers[i].filter(function(p) { return p !== null; }).join(" ");
-                                        if (secondLineMetrics.advanceWidth(plain) <= avail) { pick = tiers[i]; break; }
+                                        var plainText = tiers[i].filter(function(p) { return p !== null; })
+                                                               .map(plain).join(plainGap);
+                                        if (secondLineMetrics.advanceWidth(plainText) <= avail) { pick = tiers[i]; break; }
                                     }
                                     var accent = e.isPos ? rootItem.positiveColor : rootItem.negativeColor;
                                     var out = "";
-                                    if (pick[0] !== null) out += '<font color="' + rootItem.secondaryTextColor + '">' + pick[0] + '</font> ';
+                                    if (pick[0] !== null) out += '<font color="' + rootItem.secondaryTextColor + '">' + pick[0] + '</font>' + gap;
                                     // With no change shown, colour the price itself so the direction is still visible.
                                     out += '<font color="' + (pick[2] === null ? accent : rootItem.priceColor) + '"><b>' + pick[1] + '</b></font>';
-                                    if (pick[2] !== null) out += ' <font color="' + accent + '"><b>' + pick[2] + '</b></font>';
+                                    if (pick[2] !== null) out += gap + '<font color="' + accent + '"><b>' + pick[2] + '</b></font>';
                                     return out;
                                 }
 

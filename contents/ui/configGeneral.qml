@@ -161,13 +161,13 @@ Item {
             CheckBox {
                 id: extendedHoursSwitch
                 Kirigami.FormData.label: "Extended Hours:"
-                text: "Show pre-/after-market values and market-closed status"
+                text: "Show pre-market and after-hours values and market-closed status"
             }
 
             CheckBox {
                 id: keepExtendedAfterCloseSwitch
                 Kirigami.FormData.label: "When Closed:"
-                text: "Keep showing the last pre-/after-market quote"
+                text: "Keep showing the last pre-market/after-hours quote"
                 enabled: extendedHoursSwitch.checked
             }
             

@@ -158,7 +158,7 @@ Rectangle {
 
                 Behavior on opacity { NumberAnimation { duration: 150 } }
             }
-            // Pre-market / after-market quote, when enabled and the symbol has one:
+            // Pre-market / after-hours quote, when enabled and the symbol has one:
             // a muted caption, the price, and the change in the same tinted badge style
             // the list and the panel use.
             RowLayout {
@@ -166,7 +166,7 @@ Rectangle {
                 readonly property var ext: rootItem.extendedQuote(rootItem.singleTicker)
                 readonly property color accent: ext && ext.isPos ? rootItem.positiveColor : rootItem.negativeColor
 
-                // Caption fitting: "After-Market" if it fits next to the price and the change,
+                // Caption fitting: "After-Hours" if it fits next to the price and the change,
                 // else just "After" / "Pre", else nothing. Measured with the same font as the
                 // caption so the row never needs more width than the card provides.
                 readonly property real chipWidth: extendedChange.implicitWidth + (Kirigami.Units.smallSpacing * 2)
@@ -185,7 +185,7 @@ Rectangle {
                 Layout.topMargin: 4
                 Layout.bottomMargin: 2
                 visible: ext !== undefined
-                spacing: 8
+                spacing: 10
 
                 // The two spacers centre the content while there is room. The caption is
                 // chosen by the width available (see captionText), so the row never asks
