@@ -60,6 +60,14 @@ PlasmoidItem {
         return before + metrics.elidedText(name, Qt.ElideRight, room) + after;
     }
     property string chartRange: Plasmoid.configuration.chartRange
+    // Range selected with the buttons in the chart. It only affects the chart; the
+    // multi-stock list keeps using `chartRange` from the settings.
+    property string chartViewRange: Plasmoid.configuration.chartViewRange
+    // The value actually used by the chart. Keeping it apart from the config binding means
+    // a button click takes effect immediately, even if the config write is delivered later.
+    property string chartViewRangeActive: root.chartViewRange
+    readonly property string effectiveChartRange: root.showChartRangeButtons && root.chartViewRangeActive
+                                                 ? root.chartViewRangeActive : root.chartRange
     // Show the range selector in the chart instead of using the preset from the settings.
     property bool showChartRangeButtons: Plasmoid.configuration.showChartRangeButtons
     // Time Limits Config
@@ -92,6 +100,12 @@ PlasmoidItem {
     // The currency Yahoo quotes the shown instrument in (e.g. "USD", "GBp"). Used to
     // convert the live price to the currency a portfolio lot was bought in.
     property string quoteCurrency: ""
+    // Values for the compact panel indicator. They always follow the configured data
+    // range; the range picked only for the chart must not change them.
+    property string panelCurrentPrice: "---"
+    property string panelCurrentPercent: "+0.00%"
+    property bool panelCurrentIsPositive: true
+    readonly property string panelSymbol: root.isMultiMode ? root.panelTicker : root.singleTicker
     property bool isLightTheme: Plasmoid.configuration.selectedTheme === 0
     property bool isDarkTheme: Plasmoid.configuration.selectedTheme === 1
     property bool isPlasmaTheme: Plasmoid.configuration.selectedTheme === 2
@@ -169,6 +183,8 @@ PlasmoidItem {
     property bool hasPortfolioEntry: root.portfolioSummary !== null
     // What the change in the summary covers: today for the 1D chart, otherwise the chart range.
     property string portfolioChangeLabel: root.chartRange === "1D" ? i18n("Today") : root.rangeLabel(root.chartRange)
+    // Same label for the chart/single view, which can use a range of its own.
+    readonly property string chartPeriodLabel: root.effectiveChartRange === "1D" ? i18n("Today") : root.rangeLabel(root.effectiveChartRange)
     property string lastUpdated: ""
     property string nextUpdate: ""
     property color bgColor: getThemeColor("background")
@@ -476,18 +492,38 @@ PlasmoidItem {
         return range === "Max" ? i18nc("@item:chart range", "All") : root.rangeLabel(range);
     }
 
-    // Range selected from the chart buttons. It is stored in the applet configuration so
-    // the choice survives a restart and is used by the rest of the widget as well.
-    function setChartRange(range) {
-        if (range === root.chartRange) return;
-        Plasmoid.configuration.chartRange = range;
+    // Range selected from the chart buttons. It is stored separately from the list's
+    // configured range, so switching the chart range does not reload the whole list.
+    function setChartViewRange(range) {
+        if (range === root.effectiveChartRange) return;
+        // Apply and fetch it right away; the config change is for persistence only.
+        root.chartViewRangeActive = range;
+        if (root.singleTicker.trim() !== "")
+            root.fetchSingleStock(root.singleTicker, range);
+        try {
+            Plasmoid.configuration.chartViewRange = range;
+        } catch (e) {
+            console.log("Error saving chart range: " + e);
+        }
+    }
+
+    // Copy the list row's values (configured data range) into the panel indicator.
+    function updatePanelFromRow(ticker) {
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            if (row.ticker !== ticker) continue;
+            root.panelCurrentPrice = row.price;
+            root.panelCurrentPercent = row.pct;
+            root.panelCurrentIsPositive = row.isPos;
+            return;
+        }
     }
 
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
-    function getApiParams() {
+    function getApiParams(range) {
         // Yahoo Finance requires specific intervals for specific ranges
         // to return valid data and look good.
-        switch (root.chartRange) {
+        switch (range) {
             case "1D":  return "range=2d&interval=2m"; // Use 2d to get reliable previous close for indices
             case "5D":  return "range=5d&interval=15m";
             case "1M":  return "range=1mo&interval=60m"; // '1mo' is Yahoo syntax
@@ -719,9 +755,15 @@ PlasmoidItem {
     function refreshData() {
         if (root.isMultiMode) {
             fetchMultiStocks();
+            // The list request above covers the chart only when both use the same range.
+            if (root.effectiveChartRange !== root.chartRange && root.singleTicker.trim() !== "")
+                fetchSingleStock(root.singleTicker);
         } 
         else {
             fetchSingleStock(root.singleTicker);
+            // The chart can use a range of its own; the panel must keep the configured one.
+            if (root.effectiveChartRange !== root.chartRange)
+                fetchPanelStock(root.singleTicker);
         }
         refreshExtendedHours();
     }
@@ -756,13 +798,32 @@ PlasmoidItem {
         refreshData();
     }
 
-    function fetchSingleStock(symbol) {
+    function fetchSingleStock(symbol, range) {
+        var chartRange = range || root.effectiveChartRange;
         var xhr = new XMLHttpRequest();
-        var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?" + getApiParams();
+        var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?" + getApiParams(chartRange);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                // Ignore a reply for a range or symbol the user has already switched away from.
+                if (chartRange !== root.effectiveChartRange || symbol !== root.singleTicker) return;
                 var response = JSON.parse(xhr.responseText);
-                processSingleData(response);
+                processSingleData(response, symbol, chartRange);
+            }
+        }
+        xhr.open("GET", url);
+        xhr.send();
+    }
+
+    // Quote for the compact panel indicator, fetched separately when the chart uses a
+    // range of its own. The panel always follows the configured data range.
+    function fetchPanelStock(symbol) {
+        var range = root.chartRange;
+        var xhr = new XMLHttpRequest();
+        var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?" + getApiParams(range);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                if (range !== root.chartRange || symbol !== root.panelSymbol) return;
+                processPanelData(JSON.parse(xhr.responseText), symbol, range);
             }
         }
         xhr.open("GET", url);
@@ -770,6 +831,7 @@ PlasmoidItem {
     }
 
     function fetchMultiStocks() {
+        var range = root.chartRange;
         var tickers = root.multiTickers.split(",");
         var targetTickers = [];
         tickers.forEach(function(t) {
@@ -809,11 +871,13 @@ PlasmoidItem {
 
         targetTickers.forEach(function(cleanSymbol) {
             var xhr = new XMLHttpRequest();
-            var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + cleanSymbol + "?" + getApiParams();
+            var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + cleanSymbol + "?" + getApiParams(range);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    // Ignore a reply for a range the user has already switched away from.
+                    if (range !== root.chartRange) return;
                     var response = JSON.parse(xhr.responseText);
-                    processListRow(cleanSymbol, response);
+                    processListRow(cleanSymbol, response, range);
                 }
             }
             xhr.open("GET", url);
@@ -825,17 +889,18 @@ PlasmoidItem {
     // kept in a parallel array so the time scale can position its labels on the exact
     // data points; both arrays must stay the same length. For 1D the request asks for two
     // days (so the previous close is available) but only the current session is plotted.
-    function cleanChartData(quotes, timestamps, startTime) {
+    function cleanChartData(quotes, timestamps, startTime, range) {
+        var chartRange = range || root.effectiveChartRange;
         var values = [], times = [];
         for (var i = 0; i < quotes.length; i++) {
             if (quotes[i] === null) continue;
-            if (root.chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
+            if (chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
                 continue;
             values.push(quotes[i]);
             times.push(timestamps ? timestamps[i] : 0);
         }
 
-        if (root.chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
+        if (chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
             var dayStartIndex = 0;
             for (var j = timestamps.length - 1; j > 0; j--) {
                 if (timestamps[j] - timestamps[j-1] > 4 * 3600) {
@@ -853,8 +918,36 @@ PlasmoidItem {
         return { values: values, times: times };
     }
 
-    function processSingleData(json, fallbackSymbol) {
+    function processPanelData(json, symbol, range) {
         try {
+            var result = json.chart.result[0];
+            var meta = result.meta;
+            root.setMarketSession(symbol, meta);
+            var current = meta.regularMarketPrice;
+            var curSym = getCurrencySymbol(meta.currency);
+            var prev;
+            if (range === "1D") {
+                prev = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
+            } else {
+                prev = meta.chartPreviousClose;
+                if (!prev || prev === 0) {
+                    var quotes = result.indicators.quote[0].close;
+                    var timestamps = result.timestamp;
+                    var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
+                    var cleanData = root.cleanChartData(quotes, timestamps, startTime, range).values;
+                    prev = cleanData.length > 0 ? cleanData[0] : meta.regularMarketPreviousClose;
+                }
+            }
+            var change = current - prev;
+            root.panelCurrentPrice = curSym + root.formatNumber(current, false);
+            root.panelCurrentPercent = root.formatNumber(prev > 0 ? (change / prev) * 100 : 0, true) + "%";
+            root.panelCurrentIsPositive = change >= 0;
+        } catch (e) { console.log("Error parsing panel quote: " + e); }
+    }
+
+    function processSingleData(json, fallbackSymbol, range) {
+        try {
+            var chartRange = range || root.effectiveChartRange;
             var result = json.chart.result[0];
             var meta = result.meta;
             var symbol = fallbackSymbol || root.singleTicker;
@@ -869,12 +962,12 @@ PlasmoidItem {
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var chart = root.cleanChartData(quotes, timestamps, startTime);
+            var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange);
             var cleanData = chart.values;
             root.chartDataPoints = cleanData;
             root.chartTimestamps = chart.times;
 
-            if (root.chartRange === "1D") {
+            if (chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
             } else {
                 root.previousClose = meta.chartPreviousClose;
@@ -888,6 +981,15 @@ PlasmoidItem {
             root.priceChange = formatNumber(change, true);
             root.percentChange = formatNumber((change / root.previousClose) * 100, true) + "%";
 
+            // In single mode this response can also serve the panel when the chart is
+            // showing the configured range. When the chart has its own range, a separate
+            // panel request supplies these values instead.
+            if (!root.isMultiMode && chartRange === root.chartRange) {
+                root.panelCurrentPrice = root.currentPrice;
+                root.panelCurrentPercent = root.percentChange;
+                root.panelCurrentIsPositive = root.isPositive;
+            }
+
             var now = new Date();
             root.lastUpdated = now.toLocaleTimeString(Qt.locale(), "HH:mm");
             var next = new Date(now.getTime() + (Plasmoid.configuration.refreshInterval * 60000));
@@ -895,9 +997,12 @@ PlasmoidItem {
         } catch (e) { console.log("Error parsing single: " + e); }
     }
 
-    function processListRow(symbol, json) {
-        if (root.isMultiMode && symbol === root.panelTicker) {
-            processSingleData(json, symbol);
+    function processListRow(symbol, json, range) {
+        var listRange = range || root.chartRange;
+        // When both views use the same range, the chart can reuse this response. With a
+        // chart-only range, the chart is refreshed by its own request instead.
+        if (root.isMultiMode && symbol === root.panelTicker && listRange === root.effectiveChartRange) {
+            processSingleData(json, symbol, listRange);
         }
         try {
             var result = json.chart.result[0];
@@ -910,9 +1015,9 @@ PlasmoidItem {
             var curSym = getCurrencySymbol(meta.currency);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var cleanData = root.cleanChartData(quotes, timestamps, startTime).values;
+            var cleanData = root.cleanChartData(quotes, timestamps, startTime, listRange).values;
             var prev;
-            if (root.chartRange === "1D") {
+            if (listRange === "1D") {
                 prev = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
             } else {
                 prev = meta.chartPreviousClose;
@@ -937,6 +1042,12 @@ PlasmoidItem {
                 "currencySym": curSym,
                 "currency": meta.currency || ""
             };
+
+            if (root.isMultiMode && symbol === root.panelTicker) {
+                root.panelCurrentPrice = itemData.price;
+                root.panelCurrentPercent = itemData.pct;
+                root.panelCurrentIsPositive = itemData.isPos;
+            }
 
             var found = false;
             for(var k=0; k<stockModel.count; k++) {
@@ -997,8 +1108,20 @@ PlasmoidItem {
     onSortAlphabeticallyChanged: { stockModel.clear(); refreshData(); }
     onFormatPricesChanged: refreshData()
     onHideDecimalsChanged: refreshData()
-    // CHANGED: Update when range changes
+    // CHANGED: Update when the list's configured range changes
     onChartRangeChanged: { stockModel.clear(); refreshData(); }
+    // The chart's own range only refreshes the chart, never the list.
+    onChartViewRangeChanged: {
+        // A value changed outside the chart buttons (backup import, for example).
+        if (root.chartViewRangeActive === root.chartViewRange) return;
+        root.chartViewRangeActive = root.chartViewRange;
+        if (root.showChartRangeButtons && root.singleTicker.trim() !== "")
+            root.fetchSingleStock(root.singleTicker, root.effectiveChartRange);
+    }
+    onShowChartRangeButtonsChanged: {
+        if (root.singleTicker.trim() !== "")
+            root.fetchSingleStock(root.singleTicker, root.effectiveChartRange);
+    }
     // Note: no explicit handler needed when portfolioData changes — both the single-ticker
     // view and the multi-stock list compute their lot P/L directly from root.portfolioData
     // in their bindings, so QML re-evaluates them automatically.
@@ -1143,7 +1266,7 @@ PlasmoidItem {
             return i18n("Loading…");
 
         var singleRows = [];
-        var period = root.chartRange === "1D" ? i18n("Today") : root.rangeLabel(root.chartRange);
+        var period = root.chartPeriodLabel;
         singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(period) + "</td>"
                         + "<td align=\"right\" style=\"" + cell + "\"><b>"
                         + root.htmlEscape(root.currentPrice) + "</b></td>"
@@ -1234,7 +1357,9 @@ PlasmoidItem {
     // request then refreshes the chart for the newly selected stock.
     Timer {
         interval: Math.max(3, Plasmoid.configuration.autoCycleInterval) * 1000
+        // Pause while the full view is open, so the stock does not change under the user.
         running: Plasmoid.configuration.autoCycle && root.isMultiMode && stockModel.count > 1
+                 && !root.expanded
         repeat: true
         onTriggered: {
             var current = 0;
@@ -1245,14 +1370,8 @@ PlasmoidItem {
             root.manualPanelTickerOverride = row.ticker;
             root.panelTicker = row.ticker;
             root.singleTicker = row.ticker;
-            root.singleCompanyName = row.name;
-            root.currentPrice = row.price;
-            root.currentRawPrice = row.currentRaw;
-            root.priceChange = row.change;
-            root.percentChange = row.pct;
-            root.isPositive = row.isPos;
-            root.currencySym = row.currencySym;
-            root.quoteCurrency = row.currency;
+            // The panel follows the list range; the chart is refreshed separately.
+            root.updatePanelFromRow(row.ticker);
             root.fetchSingleStock(row.ticker);
         }
     }
@@ -1304,9 +1423,11 @@ PlasmoidItem {
             }
             var n = stockModel.count;
             var next = (((current + steps) % n) + n) % n;
-            root.manualPanelTickerOverride = stockModel.get(next).ticker;
+            var row = stockModel.get(next);
+            root.manualPanelTickerOverride = row.ticker;
             root.panelTicker = root.manualPanelTickerOverride;
             root.singleTicker = root.panelTicker;
+            root.updatePanelFromRow(row.ticker);
             root.refreshData();
         }
 
@@ -1332,12 +1453,12 @@ PlasmoidItem {
         // instead of the regular price and change, and a small tag next to the ticker
         // says which session it is. Without an extended quote, the tag says CLOSED
         // while the market is closed.
-        readonly property var ext: root.extendedQuote(root.isMultiMode ? root.panelTicker : root.singleTicker)
+        readonly property var ext: root.extendedQuote(root.panelSymbol)
         readonly property bool marketClosed: root.showExtendedHours
-                                             && root.isMarketClosedFor(root.isMultiMode ? root.panelTicker : root.singleTicker)
-        readonly property string shownPrice: ext ? ext.price : root.currentPrice
-        readonly property string shownPercent: ext ? ext.pct : root.percentChange
-        readonly property bool shownPositive: ext ? ext.isPos : root.isPositive
+                                             && root.isMarketClosedFor(root.panelSymbol)
+        readonly property string shownPrice: ext ? ext.price : root.panelCurrentPrice
+        readonly property string shownPercent: ext ? ext.pct : root.panelCurrentPercent
+        readonly property bool shownPositive: ext ? ext.isPos : root.panelCurrentIsPositive
 
         // --- Fixed width ---
         // Cycling through the stocks, or swapping price and percentage, changes the length of the
@@ -1373,7 +1494,7 @@ PlasmoidItem {
                     collect(row.ticker, row.price, row.pct);
                 }
             } else {
-                collect(root.singleTicker, root.currentPrice, root.percentChange);
+                collect(root.panelSymbol, root.panelCurrentPrice, root.panelCurrentPercent);
             }
             // Width of the widest of `list` when drawn by `probe`.
             // Each piece is rounded up to whole pixels, as the layout does for every item;
@@ -1430,8 +1551,8 @@ PlasmoidItem {
         Connections {
             target: root
             function onExtendedDataChanged() { remeasureTimer.restart(); }
-            function onCurrentPriceChanged() { remeasureTimer.restart(); }
-            function onPercentChangeChanged() { remeasureTimer.restart(); }
+            function onPanelCurrentPriceChanged() { remeasureTimer.restart(); }
+            function onPanelCurrentPercentChanged() { remeasureTimer.restart(); }
             function onSingleTickerChanged() { remeasureTimer.restart(); }
             function onIsMultiModeChanged() { remeasureTimer.restart(); }
             function onShowExtendedHoursChanged() { remeasureTimer.restart(); }

@@ -316,6 +316,10 @@ msgid "Show the range buttons in the chart"
 msgstr "Afișează butoanele de interval în grafic"
 
 #: contents/ui/configGeneral.qml
+msgid "List Range:"
+msgstr "Interval listă:"
+
+#: contents/ui/configGeneral.qml
 msgid "Data Range:"
 msgstr "Interval de date:"
 

@@ -154,7 +154,7 @@ Rectangle {
                         id: rangeButton
                         objectName: "chartRangeButton_" + modelData
                         required property string modelData
-                        readonly property bool selected: rangeButton.modelData === rootItem.chartRange
+                        readonly property bool selected: rangeButton.modelData === rootItem.effectiveChartRange
                         width: rangeButtonLabel.implicitWidth + 8
                         height: 18
                         radius: 4
@@ -174,7 +174,7 @@ Rectangle {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: rootItem.setChartRange(rangeButton.modelData)
+                            onClicked: rootItem.setChartViewRange(rangeButton.modelData)
                         }
                     }
                 }
@@ -305,6 +305,7 @@ Rectangle {
                 rootItem: singleStockRoot.rootItem
                 summary: singleStockRoot.rootItem.showPortfolioMode ? singleStockRoot.rootItem.portfolioSummary : null
                 sym: singleStockRoot.rootItem.currencySym
+                periodLabel: singleStockRoot.rootItem.chartPeriodLabel
                 centered: true
             }
         }
@@ -355,7 +356,7 @@ Rectangle {
     function timeAxisLabel(timestamp, span) {
         var date = new Date(timestamp * 1000);
         var locale = Qt.locale();
-        switch (rootItem.chartRange) {
+        switch (rootItem.effectiveChartRange) {
             case "1D":  return locale.toString(date, "HH:mm");
             case "5D":  return locale.toString(date, "ddd");
             case "1M":  return locale.toString(date, "d MMM");

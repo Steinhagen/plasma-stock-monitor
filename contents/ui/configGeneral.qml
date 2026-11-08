@@ -105,11 +105,12 @@ Item {
 
             ComboBox {
                 id: rangeCombo
-                // With the in-chart selector enabled, this preset is redundant wherever the
-                // chart is visible; keep it for multi-stock mode without the chart column.
-                visible: !chartRangeButtonsSwitch.checked
-                         || (modeSwitch.checked && !showTwoListSwitch.checked)
-                Kirigami.FormData.label: i18n("Data Range:")
+                // The chart buttons use a range of their own. In single mode this preset
+                // is therefore redundant; in multi mode it still sets the list's range.
+                visible: !chartRangeButtonsSwitch.checked || modeSwitch.checked
+                Kirigami.FormData.label: chartRangeButtonsSwitch.checked && modeSwitch.checked
+                                         ? i18n("List Range:")
+                                         : i18n("Data Range:")
                 // `value` is what gets stored in the config, `text` is only the label, so
                 // translating the labels never changes the saved range.
                 model: [

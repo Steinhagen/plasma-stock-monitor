@@ -28,6 +28,7 @@ var SETTINGS_KEYS = [
     "showNameAndTicker",
     "refreshInterval",
     "chartRange",
+    "chartViewRange",
     "showChartRangeButtons",
     "limitHours",
     "skipWeekendRefresh",
@@ -212,10 +213,11 @@ function validateValue(key, value) {
         return { ok: true, value: value };
     }
 
-    if (key === "chartRange") {
-        if (typeof value !== "string" || CHART_RANGES.indexOf(value) < 0) {
-            return failure("invalidValue", key);
-        }
+    if (key === "chartRange" || key === "chartViewRange") {
+        if (typeof value !== "string") return failure("invalidValue", key);
+        // An empty chartViewRange means "use the list's configured range".
+        if (key === "chartViewRange" && value === "") return { ok: true, value: "" };
+        if (CHART_RANGES.indexOf(value) < 0) return failure("invalidValue", key);
         return { ok: true, value: value };
     }
 

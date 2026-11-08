@@ -19,6 +19,8 @@ Item {
     property string sym: ""
     // Replaces the "17 (3 lots) @ $207.38" part, e.g. for a portfolio total.
     property string heldOverride: ""
+    // Caption for the period gain. Empty means the widget's configured/list range.
+    property string periodLabel: ""
     property bool centered: false
 
     visible: summary !== null && summary !== undefined
@@ -161,7 +163,7 @@ Item {
             spacing: line.captionGap
             Text {
                 id: dayCaption
-                text: rootItem.portfolioChangeLabel
+                text: line.periodLabel !== "" ? line.periodLabel : rootItem.portfolioChangeLabel
                 color: rootItem.secondaryTextColor
                 font.pixelSize: line.fontSize
             }

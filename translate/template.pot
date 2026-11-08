@@ -317,6 +317,10 @@ msgid "Show the range buttons in the chart"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "List Range:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Data Range:"
 msgstr ""
 

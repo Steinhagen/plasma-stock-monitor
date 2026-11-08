@@ -46,6 +46,10 @@
             <label>Data History Range</label>
             <default>1D</default>
         </entry>
+        <entry name="chartViewRange" type="String">
+            <label>Range selected from the in-chart buttons (empty = use the data range)</label>
+            <default></default>
+        </entry>
         <entry name="showChartRangeButtons" type="Bool">
             <label>Show the data range buttons in the chart</label>
             <default>false</default>
