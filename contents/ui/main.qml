@@ -68,6 +68,9 @@ PlasmoidItem {
     property bool isLightTheme: Plasmoid.configuration.selectedTheme === 0
     property bool isDarkTheme: Plasmoid.configuration.selectedTheme === 1
     property bool isPlasmaTheme: Plasmoid.configuration.selectedTheme === 2
+    // A vertical panel constrains the applet to the panel thickness, so the compact
+    // view has to fit (and elide) inside that width instead of using the content width.
+    readonly property bool isVerticalPanel: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     // Colour the gain/loss text is measured against. In a panel that is the Plasma
     // theme background, in the widget it is the background of the selected theme.
     property color contrastBackground: {
@@ -889,9 +892,10 @@ PlasmoidItem {
                           : panelRow.implicitWidth;
             return content + (Kirigami.Units.smallSpacing * 4);
         }
-        // With an explicit width, anything that does not fit is cut off instead of spilling over
-        // the neighbouring applets.
-        clip: compactRoot.useFixedWidth && Plasmoid.configuration.panelWidth > 0
+        // Never paint outside the rectangle the panel gives the applet. In a vertical
+        // panel that rectangle is only as wide as the panel, so the content has to fit
+        // (or elide) rather than spill over the neighbouring applets.
+        clip: true
         implicitHeight: panelRow.implicitHeight
         width: implicitWidth
         height: implicitHeight
@@ -1053,19 +1057,24 @@ PlasmoidItem {
         RowLayout {
             id: panelRow
             // Fixed width: start at the left edge so the ticker stays where it is while the
-            // values change. Otherwise centre the content, as before.
-            anchors.centerIn: compactRoot.useFixedWidth ? undefined : parent
-            anchors.verticalCenter: compactRoot.useFixedWidth ? parent.verticalCenter : undefined
-            anchors.left: compactRoot.useFixedWidth ? parent.left : undefined
-            anchors.leftMargin: Kirigami.Units.smallSpacing * 2
+            // values change. In a vertical panel the row fills the panel thickness and the
+            // labels are centred/elided inside it. Otherwise centre the content, as before.
+            anchors.centerIn: (!compactRoot.useFixedWidth && !root.isVerticalPanel) ? parent : undefined
+            anchors.verticalCenter: (compactRoot.useFixedWidth || root.isVerticalPanel) ? parent.verticalCenter : undefined
+            anchors.left: (compactRoot.useFixedWidth || root.isVerticalPanel) ? parent.left : undefined
+            anchors.right: root.isVerticalPanel ? parent.right : undefined
+            anchors.leftMargin: root.isVerticalPanel ? 0 : Kirigami.Units.smallSpacing * 2
+            anchors.rightMargin: 0
             spacing: 8
             
             ColumnLayout {
                 spacing: -2
                 Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: root.isVerticalPanel
 
                 RowLayout {
                     spacing: 4
+                    Layout.fillWidth: root.isVerticalPanel
                     Text {
                         text: (root.isMultiMode ? root.panelTicker : root.singleTicker).toUpperCase()
                         color:  Kirigami.Theme.textColor
@@ -1074,8 +1083,15 @@ PlasmoidItem {
                         renderType: Text.NativeRendering
                         opacity: 0.6
                         Layout.alignment: Qt.AlignBottom
+                        Layout.fillWidth: root.isVerticalPanel
+                        horizontalAlignment: root.isVerticalPanel ? Text.AlignHCenter : Text.AlignLeft
+                        elide: Text.ElideRight
                     }
+                    // In a vertical panel only the ticker and the price fit in the panel
+                    // thickness; the colour already shows the direction and the tooltip
+                    // carries the session tag.
                     Text {
+                        visible: !root.isVerticalPanel
                         text: compactRoot.shownPositive ? "▲" : "▼"
                         color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 8
@@ -1085,7 +1101,7 @@ PlasmoidItem {
                     // Session tag: AH = after-market, PRE = pre-market. Only shown while the
                     // regular market is closed.
                     Text {
-                        visible: compactRoot.ext !== undefined
+                        visible: compactRoot.ext !== undefined && !root.isVerticalPanel
                         text: compactRoot.ext ? (compactRoot.ext.label === "Pre-Market" ? "PRE" : "AH") : ""
                         color: Kirigami.Theme.textColor
                         opacity: 0.6
@@ -1097,23 +1113,38 @@ PlasmoidItem {
 
                 RowLayout {
                     spacing: 6
-                    Layout.alignment: Qt.AlignLeft
+                    Layout.alignment: root.isVerticalPanel ? Qt.AlignHCenter : Qt.AlignLeft
+                    Layout.fillWidth: root.isVerticalPanel
                     
                     Text {
                         id: panelPrice
-                        text: compactRoot.shownPrice
+                        // The currency symbol does not fit in the panel thickness together
+                        // with a five-digit price, and the ticker already identifies the
+                        // instrument; the tooltip shows the full value.
+                        text: {
+                            var price = compactRoot.shownPrice;
+                            return root.isVerticalPanel && root.currencySym !== ""
+                                   ? price.replace(root.currencySym, "")
+                                   : price;
+                        }
                         // When alternating, the price and the percentage badge share one spot:
                         // this item is hidden while the percentage is shown, and both keep the
                         // width of the wider one so the panel does not resize on every switch.
                         visible: !root.panelAlternate || !root.panelShowPercent
-                        horizontalAlignment: root.panelAlternate ? Text.AlignHCenter : Text.AlignLeft
+                        horizontalAlignment: root.isVerticalPanel
+                                             ? Text.AlignHCenter
+                                             : (root.panelAlternate ? Text.AlignHCenter : Text.AlignLeft)
                         // Fixed width: give the price the width of the widest price, so the badge
                         // next to it stays put while the price changes.
                         Layout.minimumWidth: root.panelAlternate
                                              ? Math.max(panelPrice.implicitWidth, pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2))
                                              : (compactRoot.useFixedWidth ? compactRoot.widestPrice : 0)
+                        Layout.fillWidth: root.isVerticalPanel
+                        elide: Text.ElideRight
                         color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
-                        font.pixelSize: 11
+                        font.pixelSize: root.isVerticalPanel
+                                         ? (compactRoot.shownPrice.length > 7 ? 8 : 9)
+                                         : 11
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
                         // Ensure the price text is fully opaque; color is controlled by the line above
