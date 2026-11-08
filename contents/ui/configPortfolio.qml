@@ -65,15 +65,24 @@ Item {
     // or -1 when the form is adding a new lot.
     property int editingIndex: -1
 
+    // Purchase date of the lot in the form. Today unless another day is picked.
+    property var purchaseDate: new Date()
+
+    // Stored at local noon so the calendar day survives the UTC conversion of
+    // toISOString() in any time zone.
+    function dateToIso(d) {
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0).toISOString();
+    }
+
     function clearForm() {
         portfolioTickerField.text = "";
         portfolioSharesSpin.value = 0;
         portfolioCostField.text = "";
+        page.purchaseDate = new Date();
         page.editingIndex = -1;
     }
 
-    // Adds a new lot, or, while a lot is being edited, saves the changes to that lot
-    // (keeping its original purchase date).
+    // Adds a new lot, or, while a lot is being edited, saves the changes to that lot.
     function addLot() {
         if (portfolioTickerField.text.trim() === "" || portfolioSharesSpin.value <= 0) return;
         var portfolio = page.safeParsePortfolio(page.cfg_portfolioData);
@@ -81,10 +90,9 @@ Item {
             ticker: portfolioTickerField.text.trim().toUpperCase(),
             shares: portfolioSharesSpin.value,
             averageCost: page.parseLocaleNumber(portfolioCostField.text) || 0,
-            addedDate: new Date().toISOString()
+            addedDate: page.dateToIso(page.purchaseDate)
         };
         if (page.editingIndex >= 0 && page.editingIndex < portfolio.length) {
-            if (portfolio[page.editingIndex].addedDate) lot.addedDate = portfolio[page.editingIndex].addedDate;
             portfolio[page.editingIndex] = lot;
         } else {
             portfolio.push(lot);
@@ -101,6 +109,7 @@ Item {
         portfolioTickerField.text = lot.ticker;
         portfolioSharesSpin.value = Number(lot.shares) || 0;
         portfolioCostField.text = String(Number(lot.averageCost) || 0);
+        page.purchaseDate = lot.addedDate ? new Date(lot.addedDate) : new Date();
         page.editingIndex = index;
     }
 
@@ -160,6 +169,142 @@ Item {
                     // into locale-formatted scientific notation (e.g. "50.21" -> "5,02E+03") on
                     // focus loss, which then gets mis-parsed. See page.parseLocaleNumber().
                     validator: RegularExpressionValidator { regularExpression: /^\d*[.,]?\d*$/ }
+                }
+
+                Button {
+                    id: purchaseDateButton
+                    Kirigami.FormData.label: "Purchase Date:"
+                    icon.name: "view-calendar"
+                    text: Qt.formatDate(page.purchaseDate, "dd MMM yyyy")
+                    onClicked: datePopup.open()
+
+                    Popup {
+                        id: datePopup
+
+                        readonly property real cellSize: Kirigami.Units.gridUnit * 2
+                        property int shownMonth: page.purchaseDate.getMonth()
+                        property int shownYear: page.purchaseDate.getFullYear()
+
+                        y: purchaseDateButton.height + Kirigami.Units.smallSpacing
+                        padding: Kirigami.Units.largeSpacing
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+                        // Always open on the month of the currently selected date.
+                        onAboutToShow: {
+                            shownMonth = page.purchaseDate.getMonth();
+                            shownYear = page.purchaseDate.getFullYear();
+                            syncHeader();
+                        }
+
+                        // Keeps the month list and year field in step with the shown month, since
+                        // interacting with them can detach their bindings.
+                        function syncHeader() {
+                            monthCombo.currentIndex = shownMonth;
+                            yearSpin.value = shownYear;
+                        }
+
+                        function shiftMonth(delta) {
+                            var d = new Date(shownYear, shownMonth + delta, 1);
+                            shownMonth = d.getMonth();
+                            shownYear = d.getFullYear();
+                            syncHeader();
+                        }
+
+                        function pick(d) {
+                            page.purchaseDate = d;
+                            close();
+                        }
+
+                        contentItem: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                Layout.fillWidth: true
+
+                                ToolButton {
+                                    icon.name: "go-previous"
+                                    onClicked: datePopup.shiftMonth(-1)
+                                }
+                                // Jump straight to any month and year: pick the month from the list and
+                                // type (or step) the year instead of paging through every month.
+                                ComboBox {
+                                    id: monthCombo
+                                    Layout.fillWidth: true
+                                    model: Array.from({ length: 12 }, (_, i) => Qt.locale().monthName(i, Locale.LongFormat))
+                                    currentIndex: datePopup.shownMonth
+                                    onActivated: (index) => datePopup.shownMonth = index
+                                }
+                                SpinBox {
+                                    id: yearSpin
+                                    from: 1900
+                                    to: 2100
+                                    editable: true
+                                    value: datePopup.shownYear
+                                    // Plain digits: the default text would add a locale thousands separator.
+                                    textFromValue: (v) => String(v)
+                                    valueFromText: (t) => parseInt(t) || datePopup.shownYear
+                                    onValueModified: datePopup.shownYear = value
+                                }
+                                ToolButton {
+                                    icon.name: "go-next"
+                                    onClicked: datePopup.shiftMonth(1)
+                                }
+                            }
+
+                            DayOfWeekRow {
+                                locale: dateGrid.locale
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.preferredWidth: datePopup.cellSize * 7
+                                Layout.preferredHeight: datePopup.cellSize * 0.8
+                                delegate: Label {
+                                    text: model.shortName
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.pixelSize: 11
+                                    opacity: 0.7
+                                }
+                            }
+
+                            MonthGrid {
+                                id: dateGrid
+                                month: datePopup.shownMonth
+                                year: datePopup.shownYear
+                                locale: Qt.locale()
+                                Layout.alignment: Qt.AlignHCenter
+                                // A month never needs more than six week rows.
+                                Layout.preferredWidth: datePopup.cellSize * 7
+                                Layout.preferredHeight: datePopup.cellSize * 0.8 * 6
+
+                                delegate: Label {
+                                    readonly property bool isSelected: model.date.getFullYear() === page.purchaseDate.getFullYear()
+                                                                       && model.date.getMonth() === page.purchaseDate.getMonth()
+                                                                       && model.date.getDate() === page.purchaseDate.getDate()
+                                    text: model.day
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    // Days of the previous/next month are dimmed.
+                                    opacity: model.month === dateGrid.month ? 1.0 : 0.3
+                                    font.bold: isSelected || model.today
+                                    color: isSelected ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+
+                                    background: Rectangle {
+                                        radius: Kirigami.Units.smallSpacing
+                                        color: isSelected ? Kirigami.Theme.highlightColor : "transparent"
+                                        border.width: model.today && !isSelected ? 1 : 0
+                                        border.color: Kirigami.Theme.highlightColor
+                                    }
+                                }
+
+                                onClicked: (date) => datePopup.pick(date)
+                            }
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Today"
+                                onClicked: datePopup.pick(new Date())
+                            }
+                        }
+                    }
                 }
 
                 RowLayout {
