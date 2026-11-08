@@ -7,6 +7,10 @@ Rectangle {
 
     property var rootItem
 
+    // Hover crosshair state for the chart. Coordinates are local to the chart canvas.
+    property bool chartHoverActive: false
+    property real chartHoverX: 0
+
     color: rootItem.bgColor
     radius: rootItem.isPlasmaTheme ? 0 : 22
     clip: true
@@ -29,15 +33,30 @@ Rectangle {
         anchors.bottomMargin: 10
 
         MouseArea {
+            id: chartMouseArea
             // Cover the chart and the values below it, but not the header or the range
             // buttons: those have their own click handling.
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: chartArea.top
             anchors.bottom: parent.bottom
-            z: 100 // Ensure it's on top of everything
-            cursorShape: Qt.PointingHandCursor
+            z: 100 // Ensure it is on top of everything
+            hoverEnabled: true
+            cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+            // The chart is a Canvas, so hover has to be tracked by the MouseArea that
+            // already covers it. Only the chart rectangle activates the crosshair; the
+            // price and after-hours rows below keep their normal pointer cursor.
+            function updateHover(mx, my) {
+                var p = chartArea.mapFromItem(chartMouseArea, mx, my);
+                var inside = p.x >= 0 && p.x <= chartArea.width && p.y >= 0 && p.y <= chartArea.height;
+                singleStockRoot.chartHoverActive = inside;
+                if (inside) singleStockRoot.chartHoverX = p.x;
+            }
+            onPositionChanged: (mouse) => updateHover(mouse.x, mouse.y)
+            onExited: singleStockRoot.chartHoverActive = false
+
             onClicked: (mouse) => {
                 if (mouse.button === Qt.MiddleButton) {
                     if (priceText) priceText.opacity = 0.3;
@@ -202,6 +221,11 @@ Rectangle {
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartOpenPriceChanged() { singleCanvas.requestPaint(); }
+                    }
+                    Connections {
+                        target: singleStockRoot
+                        function onChartHoverActiveChanged() { singleCanvas.requestPaint(); }
+                        function onChartHoverXChanged() { singleCanvas.requestPaint(); }
                     }
                 }
             }
@@ -500,6 +524,133 @@ Rectangle {
         ctx.restore();
     }
 
+    // Date/time shown in the hover tooltip. Longer ranges use a coarser label because
+    // one point covers a day/week/month rather than a minute.
+    function hoverTimeLabel(timestamp) {
+        var date = new Date(timestamp * 1000);
+        var locale = Qt.locale();
+        switch (rootItem.effectiveChartRange) {
+            case "1D":  return locale.toString(date, "HH:mm");
+            case "5D":  return locale.toString(date, "ddd HH:mm");
+            case "1M":  return locale.toString(date, "d MMM HH:mm");
+            case "6M":
+            case "YTD":
+            case "1Y":  return locale.toString(date, "d MMM yyyy");
+            case "5Y":
+            case "Max": return locale.toString(date, "MMM yyyy");
+            default:    return locale.toString(date, "d MMM yyyy");
+        }
+    }
+
+    function compactVolume(value) {
+        if (!(value > 0)) return "0";
+        if (value >= 1e9) return (value / 1e9).toFixed(2) + " B";
+        if (value >= 1e6) return (value / 1e6).toFixed(2) + " M";
+        if (value >= 1e3) return (value / 1e3).toFixed(1) + " K";
+        return Math.round(value).toString();
+    }
+
+    function roundRectPath(ctx, x, y, w, h, r) {
+        var rr = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + rr, y);
+        ctx.lineTo(x + w - rr, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+        ctx.lineTo(x + w, y + h - rr);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+        ctx.lineTo(x + rr, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+        ctx.lineTo(x, y + rr);
+        ctx.quadraticCurveTo(x, y, x + rr, y);
+        ctx.closePath();
+    }
+
+    // Crosshair plus a small tooltip. `plotBottom` is where the tooltip must stay,
+    // `crossBottom` is where the vertical hairline ends (the volume strip makes these
+    // different in the candlestick chart).
+    function drawHover(ctx, plotRight, plotBottom, crossBottom, x, y, accent, title, price, detail1, detail1Color, detail2) {
+        if (plotRight < 20 || plotBottom < 20) return;
+
+        var light = rootItem.isLightTheme;
+        var bg = light ? "#ffffff" : "#101417";
+        var border = light ? "rgba(0, 0, 0, 0.14)" : "rgba(255, 255, 255, 0.16)";
+        var text = light ? "#171a1c" : "#f3f5f6";
+        var muted = light ? "#5d656c" : "#9aa2a9";
+
+        ctx.save();
+        ctx.strokeStyle = Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g, rootItem.secondaryTextColor.b, light ? 0.38 : 0.42);
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(Math.round(x) + 0.5, 0);
+        ctx.lineTo(Math.round(x) + 0.5, crossBottom);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, Math.round(y) + 0.5);
+        ctx.lineTo(plotRight, Math.round(y) + 0.5);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = accent;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.font = "9px sans-serif";
+        var titleWidth = ctx.measureText(title).width;
+        ctx.font = "bold 12px sans-serif";
+        var priceWidth = ctx.measureText(price).width;
+        ctx.font = "9px sans-serif";
+        var detail1Width = detail1 ? ctx.measureText(detail1).width : 0;
+        var detail2Width = detail2 ? ctx.measureText(detail2).width : 0;
+        var tipW = Math.max(titleWidth, priceWidth, detail1Width, detail2Width) + 16;
+        var tipH = 7 + 12 + 16 + (detail1 ? 12 : 0) + (detail2 ? 12 : 0) + 5;
+
+        var tipX = x + 12;
+        if (tipX + tipW > plotRight - 2) tipX = x - 12 - tipW;
+        if (tipX < 2) tipX = 2;
+        var tipY = y - tipH / 2;
+        if (tipY < 2) tipY = 2;
+        if (tipY + tipH > plotBottom - 2) tipY = Math.max(2, plotBottom - tipH - 2);
+
+        ctx.save();
+        roundRectPath(ctx, tipX, tipY, tipW, tipH, 5);
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.strokeStyle = border;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.font = "9px sans-serif";
+        ctx.fillStyle = muted;
+        ctx.fillText(title, tipX + 8, tipY + 7);
+        ctx.font = "bold 12px sans-serif";
+        ctx.fillStyle = text;
+        ctx.fillText(price, tipX + 8, tipY + 19);
+
+        var lineY = tipY + 36;
+        if (detail1) {
+            ctx.font = "9px sans-serif";
+            ctx.fillStyle = detail1Color;
+            ctx.fillText(detail1, tipX + 8, lineY);
+            lineY += 12;
+        }
+        if (detail2) {
+            ctx.font = "9px sans-serif";
+            ctx.fillStyle = muted;
+            ctx.fillText(detail2, tipX + 8, lineY);
+        }
+        ctx.restore();
+    }
+
     // Reference chart: the area above the open is green and the area below it is red; the
     // line changes colour when it crosses the reference. The right-hand scale is optional
     // through the existing "Price scale" setting, but is on by default.
@@ -618,6 +769,24 @@ Rectangle {
         ctx.fillText(legend, 14, 10);
         ctx.restore();
 
+        // Hover crosshair: snap to the nearest close and show its time and value.
+        if (singleStockRoot.chartHoverActive && times && times.length === data.length) {
+            var hx = Math.max(0, Math.min(plotRight, singleStockRoot.chartHoverX));
+            var index = Math.round((data.length - 1) * hx / plotRight);
+            index = Math.max(0, Math.min(data.length - 1, index));
+            var hoverX = plotRight * index / (data.length - 1);
+            var hoverY = getY(data[index]);
+            var hoverPrice = data[index];
+            var hoverTime = times[index] ? hoverTimeLabel(times[index]) : "";
+            var hoverChange = hoverPrice - ref;
+            var hoverPct = ref > 0 ? (hoverChange / ref) * 100 : 0;
+            var hoverAccent = hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor);
+            var hoverDetail = rootItem.formatNumber(hoverChange, true) + " (" + rootItem.formatNumber(hoverPct, true) + "%)";
+            drawHover(ctx, plotRight, plotH, plotH, hoverX, hoverY, hoverAccent, hoverTime,
+                      rootItem.currencySym + rootItem.formatNumber(hoverPrice, false),
+                      hoverDetail, hoverAccent, "");
+        }
+
         if (timeAxisHeight > 0) drawTimeAxis(ctx, plotRight, 0, plotH, data, times);
     }
 
@@ -713,6 +882,25 @@ Rectangle {
         var lastUp = last.close >= last.open;
         drawEndDot(ctx, ((candles.length - 0.5) * plotRight) / candles.length, getY(last.close),
                    lastUp ? rootItem.positiveColor : rootItem.negativeColor);
+
+        // Hover crosshair: snap to the nearest candle and show its OHLC and volume.
+        if (singleStockRoot.chartHoverActive) {
+            var hx = Math.max(0, Math.min(plotRight, singleStockRoot.chartHoverX));
+            var index = Math.floor((hx / plotRight) * candles.length);
+            index = Math.max(0, Math.min(candles.length - 1, index));
+            var hoverCandle = candles[index];
+            var hoverX = ((index + 0.5) * plotRight) / candles.length;
+            var hoverY = getY(hoverCandle.close);
+            var candleAccent = hoverCandle.close >= hoverCandle.open ? rootItem.positiveColor : rootItem.negativeColor;
+            var hoverTime = hoverCandle.time ? hoverTimeLabel(hoverCandle.time) : "";
+            var hoverOHL = "O " + rootItem.formatNumber(hoverCandle.open, false)
+                         + "  H " + rootItem.formatNumber(hoverCandle.high, false)
+                         + "  L " + rootItem.formatNumber(hoverCandle.low, false);
+            var hoverVolume = "Vol " + compactVolume(hoverCandle.volume);
+            drawHover(ctx, plotRight, plotBottom, volumeBottom, hoverX, hoverY, candleAccent,
+                      hoverTime, rootItem.currencySym + rootItem.formatNumber(hoverCandle.close, false),
+                      hoverOHL, rootItem.secondaryTextColor, hoverVolume);
+        }
 
         if (timeAxisHeight > 0) {
             var closes = [];
