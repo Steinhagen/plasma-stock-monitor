@@ -55,6 +55,12 @@
             <default>false</default>
         </entry>
 
+        <!-- 0 = reference line split at the session open, 1 = candles + volume. -->
+        <entry name="chartStyle" type="Int">
+            <label>Chart style (0 = reference line, 1 = candles + volume)</label>
+            <default>0</default>
+        </entry>
+
         <entry name="limitHours" type="Bool">
             <label>Only update during specific hours</label>
             <default>false</default>
@@ -153,8 +159,8 @@
             <default>false</default>
         </entry>
         <entry name="showChartAxis" type="Bool">
-            <label>Show a price scale on the left of the chart</label>
-            <default>false</default>
+            <label>Show a price scale on the right of the chart</label>
+            <default>true</default>
         </entry>
         <entry name="showTimeAxis" type="Bool">
             <label>Show a time scale under the chart</label>

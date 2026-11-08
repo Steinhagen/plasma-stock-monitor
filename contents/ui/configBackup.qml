@@ -28,6 +28,7 @@ Item {
     property string cfg_chartRange
     property string cfg_chartViewRange
     property bool cfg_showChartRangeButtons
+    property int cfg_chartStyle
     property bool cfg_limitHours
     property bool cfg_skipWeekendRefresh
     property int cfg_startHour

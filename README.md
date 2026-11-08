@@ -25,10 +25,10 @@ Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It
 ## 🚀 Features
 
 - **Two Display Modes:** Single View and Multi-Stock List.
-- **Beautiful Charts:** Smooth, gradient-filled charts that change color (Green/Red) based on performance, with optional price and time scales.
+- **Two chart styles:** a reference-line chart split at the session open (green above, red below), or candlesticks with a volume strip. Both use a price scale on the right and a time scale underneath; the style is selected in **Appearance → Chart**.
 - **Data Ranges:** View history from 1 Day (1D) up to 5 Years (5Y) or Max. Time-scale labels adapt to the selected range (hours, days, months or years), and the range can optionally be switched from buttons directly in the chart without reloading the multi-stock list.
 - **Smart & Efficient:**
-  - Automatic "Previous Close" dashed line.
+  - **Session-open reference:** the reference-line chart marks the price at which the latest session opened.
   - **Market status:** Shows when a market is closed, including indices and symbols without pre-market/after-hours quotes.
   - **Closed-market quotes:** Keeps the last pre-market/after-hours quote visible after the session ends (on by default).
   - **Battery Saver:** Option to stop updating when the market is closed.
@@ -65,6 +65,7 @@ You can right-click the widget and hit **"Configure..."** to tweak almost everyt
 - **Single Ticker:** If you are in Single Mode, type the symbol here (e.g., `AAPL`, `BTC-USD`, `GOOG`).
 - **Ticker List:** If you are in Multi-Mode, enter a comma-separated list here (e.g., `TSLA, MSFT, GOOG`).
 - **Data Range:** Choose the data range for stocks (`1D`, `5D`, `1M`, `6M`, `YTD`, `1Y`, `5Y`, `Max`).
+- **Chart Style:** Choose between the reference-line chart and the candlestick + volume chart. Both show prices on the right and time at the bottom.
 
 ### 2\. Updates & Interval
 

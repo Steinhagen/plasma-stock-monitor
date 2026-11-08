@@ -91,11 +91,23 @@ msgid "Chart"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
+msgid "Chart style:"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Reference line (open)"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Candles + volume"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
 msgid "Price scale:"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
-msgid "Show price values on the left of the chart"
+msgid "Show price values on the right of the chart"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
@@ -661,6 +673,11 @@ msgstr ""
 #: contents/ui/main.qml
 msgctxt "@item:panel stock market session tag"
 msgid "CLOSED"
+msgstr ""
+
+#: contents/ui/main.qml
+msgctxt "@item:chart session open price"
+msgid "Open"
 msgstr ""
 
 #: contents/ui/main.qml

@@ -90,12 +90,24 @@ msgid "Chart"
 msgstr "Grafic"
 
 #: contents/ui/configAppearance.qml
+msgid "Chart style:"
+msgstr "Stil grafic:"
+
+#: contents/ui/configAppearance.qml
+msgid "Reference line (open)"
+msgstr "Linie de referință (deschidere)"
+
+#: contents/ui/configAppearance.qml
+msgid "Candles + volume"
+msgstr "Candele + volum"
+
+#: contents/ui/configAppearance.qml
 msgid "Price scale:"
 msgstr "Scară de preț:"
 
 #: contents/ui/configAppearance.qml
-msgid "Show price values on the left of the chart"
-msgstr "Afișează valorile prețului în stânga graficului"
+msgid "Show price values on the right of the chart"
+msgstr "Afișează valorile prețului în dreapta graficului"
 
 #: contents/ui/configAppearance.qml
 msgid "Time scale:"
@@ -664,6 +676,11 @@ msgid "CLOSED"
 msgstr "ÎNCHIS"
 
 #: contents/ui/main.qml
+msgctxt "@item:chart session open price"
+msgid "Open"
+msgstr "Deschidere"
+
+#: contents/ui/main.qml
 msgctxt "@item:chart range"
 msgid "All"
 msgstr "Tot"
@@ -790,6 +807,12 @@ msgstr "%1 la %2"
 #: contents/ui/PositionLine.qml
 msgid "Value"
 msgstr "Valoare"
+
+#~ msgid "Open"
+#~ msgstr "Deschidere"
+
+#~ msgid "Show price values on the left of the chart"
+#~ msgstr "Afișează valorile prețului în stânga graficului"
 
 #~ msgid "Export CSV"
 #~ msgstr "Exportă CSV"

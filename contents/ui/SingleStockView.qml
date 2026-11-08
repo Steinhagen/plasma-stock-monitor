@@ -199,6 +199,9 @@ Rectangle {
                         function onChartRangeChanged() { singleCanvas.requestPaint(); }
                         function onShowChartAxisChanged() { singleCanvas.requestPaint(); }
                         function onShowTimeAxisChanged() { singleCanvas.requestPaint(); }
+                        function onChartStyleChanged() { singleCanvas.requestPaint(); }
+                        function onChartCandlesChanged() { singleCanvas.requestPaint(); }
+                        function onChartOpenPriceChanged() { singleCanvas.requestPaint(); }
                     }
                 }
             }
@@ -311,44 +314,112 @@ Rectangle {
         }
     }
 
-    // Draws a price scale on the left: faint horizontal grid lines at round
-    // values with their labels. Returns the width reserved for the labels, so
-    // the caller can start the plot to the right of it.
-    function drawAxis(ctx, w, h, minVal, maxVal, getY) {
+    // ── Chart drawing ────────────────────────────────────────────
+    // Settings → Appearance → Chart selects between:
+    //   0 = reference line split at the open of the latest session
+    //   1 = candlesticks with volume
+    // Both use the same right-hand price scale and the same time scale below.
+
+    // Round tick values for a price scale, roughly `targetCount` of them.
+    function axisTicks(minVal, maxVal, targetCount) {
         var range = maxVal - minVal;
-        var rawStep = range / 4;
+        if (!(range > 0)) range = 1;
+        var rawStep = range / Math.max(2, targetCount || 5);
         var mag = Math.pow(10, Math.floor(Math.log(rawStep) / Math.LN10));
         var norm = rawStep / mag;
         var step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
-
         var ticks = [];
-        for (var v = Math.ceil(minVal / step) * step; v <= maxVal; v += step) {
+        for (var v = Math.ceil(minVal / step) * step; v <= maxVal + step * 1e-6; v += step)
             ticks.push(v);
-        }
+        return ticks;
+    }
 
-        ctx.font = "10px sans-serif";
-        ctx.textBaseline = "middle";
-        var labelW = 0;
+    // Price scale on the right. Returns the x coordinate where the plot ends, so the
+    // caller can draw the series to the left of the labels. The labels are measured with
+    // the same font that is used to draw them, so a six-figure price cannot run off the
+    // card.
+    function drawRightAxis(ctx, w, minVal, maxVal, getY, showGrid) {
+        var ticks = axisTicks(minVal, maxVal, 5);
         var labels = [];
+        var labelW = 0;
+        ctx.font = "9px sans-serif";
         for (var i = 0; i < ticks.length; i++) {
             var text = rootItem.formatNumber(ticks[i], false);
             labels.push(text);
             labelW = Math.max(labelW, ctx.measureText(text).width);
         }
-        var plotX = Math.ceil(labelW) + 8;
 
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = rootItem.chartBaseColor;
-        ctx.fillStyle = rootItem.secondaryTextColor;
-        for (var j = 0; j < ticks.length; j++) {
-            var y = Math.round(getY(ticks[j])) + 0.5;
-            ctx.beginPath();
-            ctx.moveTo(plotX, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-            ctx.fillText(labels[j], 0, y);
+        var plotRight = w - Math.ceil(labelW) - 10;
+        if (plotRight < 24) {
+            plotRight = w;
+            return plotRight;
         }
-        return plotX;
+
+        if (showGrid) {
+            ctx.save();
+            ctx.strokeStyle = rootItem.chartBaseColor;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 4]);
+            for (var j = 0; j < ticks.length; j++) {
+                var gy = Math.round(getY(ticks[j])) + 0.5;
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(plotRight, gy);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        ctx.fillStyle = rootItem.secondaryTextColor;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        for (var k = 0; k < ticks.length; k++)
+            ctx.fillText(labels[k], plotRight + 7, getY(ticks[k]));
+        return plotRight;
+    }
+
+    // A smooth line through the closes. The original YQL series is noisy; a small
+    // Catmull-Rom-style smoothing keeps the shape without hiding the moves.
+    function traceSmooth(ctx, data, right, getY) {
+        var n = data.length;
+        if (n < 2) return;
+        var stepX = right / (n - 1);
+        ctx.beginPath();
+        ctx.moveTo(0, getY(data[0]));
+
+        for (var i = 0; i < n - 1; i++) {
+            var x1 = i * stepX;
+            var y1 = getY(data[i]);
+            var x2 = (i + 1) * stepX;
+            var y2 = getY(data[i + 1]);
+            var x0 = i > 0 ? (i - 1) * stepX : x1;
+            var y0 = i > 0 ? getY(data[i - 1]) : y1;
+            var x3 = i + 2 < n ? (i + 2) * stepX : x2;
+            var y3 = i + 2 < n ? getY(data[i + 2]) : y2;
+            var tension = 0.85 / 6;
+            ctx.bezierCurveTo(
+                x1 + (x2 - x0) * tension, y1 + (y2 - y0) * tension,
+                x2 - (x3 - x1) * tension, y2 - (y3 - y1) * tension,
+                x2, y2
+            );
+        }
+    }
+
+    function drawEndDot(ctx, x, y, color) {
+        ctx.save();
+        ctx.fillStyle = Qt.rgba(color.r, color.g, color.b, 0.12);
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = Qt.rgba(color.r, color.g, color.b, 0.22);
+        ctx.beginPath();
+        ctx.arc(x, y, 4.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 2.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
 
     // Label for one timestamp, at the detail that fits the selected range: hours for a
@@ -381,7 +452,7 @@ Rectangle {
         }
     }
 
-    // Time scale under the plot. A handful of evenly spaced candles is enough for the
+    // Time scale under the plot. A handful of evenly spaced labels is enough for the
     // narrow chart; the label format follows the selected range and the available width
     // decides how many labels fit without overlapping.
     function drawTimeAxis(ctx, w, plotX, plotH, data, times) {
@@ -429,21 +500,25 @@ Rectangle {
         ctx.restore();
     }
 
-    function drawChart(ctx, w, h, data, times, prevClose, isPos, drawBackground, showPriceAxis, showTimeAxis) {
-        ctx.clearRect(0, 0, w, h);
-        if (!data || data.length < 2) return;
-        var minVal = Math.min(...data);
-        var maxVal = Math.max(...data);
+    // Reference chart: the area above the open is green and the area below it is red; the
+    // line changes colour when it crosses the reference. The right-hand scale is optional
+    // through the existing "Price scale" setting, but is on by default.
+    function drawReferenceChart(ctx, w, h, data, times, prevClose, showPriceAxis, showTimeAxis) {
+        var ref = rootItem.chartOpenPrice > 0 ? rootItem.chartOpenPrice : (prevClose > 0 ? prevClose : data[0]);
+        if (!(ref > 0)) ref = data[0];
+
+        var minVal = Math.min.apply(null, data);
+        var maxVal = Math.max.apply(null, data);
+        if (ref < minVal) minVal = ref;
+        if (ref > maxVal) maxVal = ref;
         var range = maxVal - minVal;
-        if (range === 0) range = 1;
-        var padding = range * (drawBackground ? 0.1 : 0.05);
+        if (!(range > 0)) range = 1;
+        var padding = range * 0.08;
         minVal -= padding;
         maxVal += padding;
         range = maxVal - minVal;
 
-        // Leave room under the plot for the time labels, but keep the chart usable if
-        // the card is very short.
-        var timeAxisHeight = (drawBackground && showTimeAxis && times && times.length === data.length) ? 16 : 0;
+        var timeAxisHeight = (showTimeAxis && times && times.length === data.length && times[0] > 0) ? 16 : 0;
         var plotH = h - timeAxisHeight;
         if (plotH < 10) {
             timeAxisHeight = 0;
@@ -451,46 +526,212 @@ Rectangle {
         }
         function getY(val) { return plotH - ((val - minVal) / range * plotH); }
 
-        // Left edge of the plot; moves right when the price scale is shown.
-        var plotX = 0;
-        if (drawBackground && showPriceAxis) plotX = drawAxis(ctx, w, plotH, minVal, maxVal, getY);
+        var plotRight = showPriceAxis ? drawRightAxis(ctx, w, minVal, maxVal, getY, false) : w;
+        if (plotRight < 24) plotRight = w;
+        var refY = getY(ref);
 
-        if (drawBackground) {
-            var prevY = getY(prevClose);
+        var pos = rootItem.positiveColor;
+        var neg = rootItem.negativeColor;
+
+        // Fill above the reference.
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, plotRight, refY);
+        ctx.clip();
+        var above = ctx.createLinearGradient(0, 0, 0, Math.max(1, refY));
+        above.addColorStop(0.0, Qt.rgba(pos.r, pos.g, pos.b, 0.30));
+        above.addColorStop(0.55, Qt.rgba(pos.r, pos.g, pos.b, 0.10));
+        above.addColorStop(1.0, Qt.rgba(pos.r, pos.g, pos.b, 0.012));
+        traceSmooth(ctx, data, plotRight, getY);
+        ctx.lineTo(plotRight, refY);
+        ctx.lineTo(0, refY);
+        ctx.closePath();
+        ctx.fillStyle = above;
+        ctx.fill();
+        ctx.restore();
+
+        // Fill below the reference.
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, refY, plotRight, Math.max(1, plotH - refY));
+        ctx.clip();
+        var below = ctx.createLinearGradient(0, refY, 0, plotH);
+        below.addColorStop(0.0, Qt.rgba(neg.r, neg.g, neg.b, 0.012));
+        below.addColorStop(0.5, Qt.rgba(neg.r, neg.g, neg.b, 0.11));
+        below.addColorStop(1.0, Qt.rgba(neg.r, neg.g, neg.b, 0.30));
+        traceSmooth(ctx, data, plotRight, getY);
+        ctx.lineTo(plotRight, refY);
+        ctx.lineTo(0, refY);
+        ctx.closePath();
+        ctx.fillStyle = below;
+        ctx.fill();
+        ctx.restore();
+
+        // Reference line.
+        ctx.save();
+        ctx.strokeStyle = Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g, rootItem.secondaryTextColor.b, 0.48);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, Math.round(refY) + 0.5);
+        ctx.lineTo(plotRight, Math.round(refY) + 0.5);
+        ctx.stroke();
+        ctx.restore();
+
+        // The line changes colour exactly at the reference.
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, plotRight, refY);
+        ctx.clip();
+        ctx.strokeStyle = pos;
+        ctx.lineWidth = 2;
+        traceSmooth(ctx, data, plotRight, getY);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, refY, plotRight, Math.max(1, plotH - refY));
+        ctx.clip();
+        ctx.strokeStyle = neg;
+        ctx.lineWidth = 2;
+        traceSmooth(ctx, data, plotRight, getY);
+        ctx.stroke();
+        ctx.restore();
+
+        // End dot.
+        var lastValue = data[data.length - 1];
+        drawEndDot(ctx, plotRight, getY(lastValue), lastValue >= ref ? pos : neg);
+
+        // Legend in the empty top-left corner.
+        var legend = rootItem.chartOpenLabel + " " + rootItem.formatNumber(ref, false);
+        ctx.save();
+        ctx.strokeStyle = Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g, rootItem.secondaryTextColor.b, 0.55);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, 9.5);
+        ctx.lineTo(10, 9.5);
+        ctx.stroke();
+        ctx.fillStyle = rootItem.secondaryTextColor;
+        ctx.font = "9px sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(legend, 14, 10);
+        ctx.restore();
+
+        if (timeAxisHeight > 0) drawTimeAxis(ctx, plotRight, 0, plotH, data, times);
+    }
+
+    // Candlestick chart with a volume strip. The candles are already aggregated in
+    // main.qml, so this function only maps them to pixels. The price scale on the right
+    // and the time scale below are shared with the reference chart.
+    function drawCandleChart(ctx, w, h, showPriceAxis, showTimeAxis) {
+        var candles = rootItem.chartCandles;
+        if (!candles || candles.length < 2) return;
+
+        var minVal = Infinity;
+        var maxVal = -Infinity;
+        var maxVolume = 0;
+        for (var i = 0; i < candles.length; i++) {
+            if (candles[i].low < minVal) minVal = candles[i].low;
+            if (candles[i].high > maxVal) maxVal = candles[i].high;
+            if (candles[i].volume > maxVolume) maxVolume = candles[i].volume;
+        }
+        if (!(maxVal > minVal)) maxVal = minVal + 1;
+        var padding = (maxVal - minVal) * 0.06;
+        minVal -= padding;
+        maxVal += padding;
+        var range = maxVal - minVal;
+
+        var hasTimes = candles.length > 1 && candles[0].time > 0 && candles[candles.length - 1].time > 0;
+        var timeAxisHeight = (showTimeAxis && hasTimes) ? 16 : 0;
+        var volumeHeight = maxVolume > 0 ? Math.min(54, Math.max(26, h * 0.13)) : 0;
+        var volumeBottom = h - timeAxisHeight;
+        var volumeTop = volumeBottom - volumeHeight;
+        var plotBottom = volumeTop - 8;
+        if (plotBottom < 36) {
+            volumeHeight = 0;
+            volumeTop = volumeBottom;
+            plotBottom = volumeBottom;
+        }
+        function getY(val) { return plotBottom - ((val - minVal) / range * plotBottom); }
+
+        var plotRight = showPriceAxis ? drawRightAxis(ctx, w, minVal, maxVal, getY, true) : w;
+        if (plotRight < 24) plotRight = w;
+
+        var candleW = Math.max(2, Math.min(6, (plotRight / candles.length) * 0.62));
+        for (var c = 0; c < candles.length; c++) {
+            var candle = candles[c];
+            var x = ((c + 0.5) * plotRight) / candles.length;
+            var up = candle.close >= candle.open;
+            var color = up ? rootItem.positiveColor : rootItem.negativeColor;
+
+            ctx.save();
+            ctx.globalAlpha = 0.55;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
             ctx.beginPath();
+            ctx.moveTo(x, getY(candle.high));
+            ctx.lineTo(x, getY(candle.low));
+            ctx.stroke();
+            ctx.restore();
+
+            var top = Math.min(getY(candle.open), getY(candle.close));
+            var bodyH = Math.max(1, Math.abs(getY(candle.close) - getY(candle.open)));
+            ctx.save();
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = color;
+            ctx.fillRect(x - candleW / 2, top, candleW, bodyH);
+            ctx.restore();
+        }
+
+        // Volume strip.
+        if (volumeHeight > 0) {
+            ctx.save();
             ctx.strokeStyle = rootItem.chartBaseColor;
             ctx.lineWidth = 1;
-            ctx.setLineDash([4, 4]);
-            ctx.moveTo(plotX, prevY);
-            ctx.lineTo(w, prevY);
+            ctx.beginPath();
+            ctx.moveTo(0, Math.round(volumeTop) + 0.5);
+            ctx.lineTo(plotRight, Math.round(volumeTop) + 0.5);
             ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.restore();
+
+            if (maxVolume > 0) {
+                for (var b = 0; b < candles.length; b++) {
+                    var bx = ((b + 0.5) * plotRight) / candles.length;
+                    var bh = Math.max(1, (candles[b].volume / maxVolume) * (volumeHeight - 4));
+                    ctx.save();
+                    ctx.globalAlpha = 0.20;
+                    ctx.fillStyle = candles[b].close >= candles[b].open ? rootItem.positiveColor : rootItem.negativeColor;
+                    ctx.fillRect(bx - candleW / 2, volumeBottom - bh, candleW, bh);
+                    ctx.restore();
+                }
+            }
         }
 
-        ctx.beginPath();
-        var stepX = (w - plotX) / (data.length - 1);
-        ctx.moveTo(plotX, getY(data[0]));
-        for (var i = 1; i < data.length; i++) {
-            ctx.lineTo(plotX + i * stepX, getY(data[i]));
+        // Last close marker.
+        var last = candles[candles.length - 1];
+        var lastUp = last.close >= last.open;
+        drawEndDot(ctx, ((candles.length - 0.5) * plotRight) / candles.length, getY(last.close),
+                   lastUp ? rootItem.positiveColor : rootItem.negativeColor);
+
+        if (timeAxisHeight > 0) {
+            var closes = [];
+            var ctimes = [];
+            for (var t = 0; t < candles.length; t++) {
+                closes.push(candles[t].close);
+                ctimes.push(candles[t].time);
+            }
+            drawTimeAxis(ctx, plotRight, 0, volumeBottom, closes, ctimes);
         }
+    }
 
-        ctx.lineJoin = "round";
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = isPos ? rootItem.positiveColor : rootItem.negativeColor;
-        ctx.stroke();
+    function drawChart(ctx, w, h, data, times, prevClose, isPos, drawBackground, showPriceAxis, showTimeAxis) {
+        ctx.clearRect(0, 0, w, h);
+        if (!data || data.length < 2 || w < 20 || h < 20) return;
 
-        if (drawBackground) {
-            ctx.lineTo(w, plotH);
-            ctx.lineTo(plotX, plotH);
-            ctx.closePath();
-            var gradient = ctx.createLinearGradient(0, 0, 0, plotH);
-            var baseColor = isPos ? rootItem.positiveColor : rootItem.negativeColor;
-            gradient.addColorStop(0.0, Qt.rgba(baseColor.r, baseColor.g, baseColor.b, 0.3));
-            gradient.addColorStop(1.0, Qt.rgba(baseColor.r, baseColor.g, baseColor.b, 0.0));
-            ctx.fillStyle = gradient;
-            ctx.fill();
-        }
-
-        if (timeAxisHeight > 0) drawTimeAxis(ctx, w, plotX, plotH, data, times);
+        if (rootItem.chartStyle === 1 && rootItem.chartCandles && rootItem.chartCandles.length > 1)
+            drawCandleChart(ctx, w, h, showPriceAxis, showTimeAxis);
+        else
+            drawReferenceChart(ctx, w, h, data, times, prevClose, showPriceAxis, showTimeAxis);
     }
 }

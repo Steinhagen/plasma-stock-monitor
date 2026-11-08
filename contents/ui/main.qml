@@ -94,6 +94,13 @@ PlasmoidItem {
     property var chartDataPoints: []
     // Unix timestamps (seconds) parallel to chartDataPoints, used for the chart's time scale.
     property var chartTimestamps: []
+    // Candle aggregates (open/high/low/close/volume/time) for the candlestick chart, and
+    // the price at which the latest session opened, used by the reference-line chart.
+    property var chartCandles: []
+    property double chartOpenPrice: 0
+    // Evaluated here rather than in the threaded Canvas paint, so the legend text is
+    // translated on the main thread.
+    readonly property string chartOpenLabel: i18nc("@item:chart session open price", "Open")
     property double previousClose: 0
     property bool isPositive: true
     property string currencySym: ""
@@ -169,6 +176,8 @@ PlasmoidItem {
     property bool hideDecimals: Plasmoid.configuration.hideDecimals
     property bool showChartAxis: Plasmoid.configuration.showChartAxis
     property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
+    // 0 = reference line split at the session open, 1 = candles + volume.
+    property int chartStyle: Plasmoid.configuration.chartStyle === 1 ? 1 : 0
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
     // (same ticker can have several, bought at different prices); the lots of a ticker are
     // added up into one position, summarised on a single line.
@@ -889,15 +898,33 @@ PlasmoidItem {
     // kept in a parallel array so the time scale can position its labels on the exact
     // data points; both arrays must stay the same length. For 1D the request asks for two
     // days (so the previous close is available) but only the current session is plotted.
-    function cleanChartData(quotes, timestamps, startTime, range) {
+    // When `quote` is supplied, the open/high/low/volume series are filtered in lockstep
+    // with the closes, so the candlestick chart can aggregate them without re-fetching.
+    function cleanChartData(quotes, timestamps, startTime, range, quote) {
         var chartRange = range || root.effectiveChartRange;
-        var values = [], times = [];
+        var q = quote || {};
+        var opens = q.open || null;
+        var highs = q.high || null;
+        var lows = q.low || null;
+        var volumes = q.volume || null;
+        var values = [], times = [], outOpens = [], outHighs = [], outLows = [], outVolumes = [];
+        if (!quotes) return { values: values, times: times, opens: outOpens, highs: outHighs, lows: outLows, volumes: outVolumes };
+
+        function addPoint(i) {
+            var close = quotes[i];
+            if (close === null || close === undefined) return;
+            values.push(close);
+            times.push(timestamps ? timestamps[i] : 0);
+            outOpens.push(opens && opens[i] !== null && opens[i] !== undefined ? opens[i] : close);
+            outHighs.push(highs && highs[i] !== null && highs[i] !== undefined ? highs[i] : close);
+            outLows.push(lows && lows[i] !== null && lows[i] !== undefined ? lows[i] : close);
+            outVolumes.push(volumes && volumes[i] !== null && volumes[i] !== undefined ? volumes[i] : 0);
+        }
+
         for (var i = 0; i < quotes.length; i++) {
-            if (quotes[i] === null) continue;
             if (chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
                 continue;
-            values.push(quotes[i]);
-            times.push(timestamps ? timestamps[i] : 0);
+            addPoint(i);
         }
 
         if (chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
@@ -908,14 +935,81 @@ PlasmoidItem {
                     break;
                 }
             }
-            for (var k = dayStartIndex; k < quotes.length; k++) {
-                if (quotes[k] !== null) {
-                    values.push(quotes[k]);
-                    times.push(timestamps[k]);
-                }
+            for (var k = dayStartIndex; k < quotes.length; k++) addPoint(k);
+        }
+        return { values: values, times: times, opens: outOpens, highs: outHighs, lows: outLows, volumes: outVolumes };
+    }
+
+    // Target number of candles for each range. The API intervals differ per range, so a
+    // fixed count keeps the candle width (and the visual density) comparable everywhere.
+    function candleTarget(range) {
+        switch (range) {
+            case "1D":  return 56;
+            case "5D":  return 56;
+            case "1M":  return 24;
+            case "6M":  return 30;
+            case "YTD": return 45;
+            case "1Y":  return 52;
+            case "5Y":  return 60;
+            case "Max": return 60;
+            default:    return 60;
+        }
+    }
+
+    // Open of the latest session in the series. Intraday data is split at the overnight
+    // gap; daily/weekly/monthly data has one point per session, so its last open is the
+    // open of the last period.
+    function lastSessionOpen(chart) {
+        if (!chart || !chart.times || chart.times.length === 0) return 0;
+        var start = 0;
+        for (var i = chart.times.length - 1; i > 0; i--) {
+            if (chart.times[i] - chart.times[i - 1] > 4 * 3600) {
+                start = i;
+                break;
             }
         }
-        return { values: values, times: times };
+        var open = chart.opens && chart.opens[start] !== undefined ? chart.opens[start] : 0;
+        return open > 0 ? open : (chart.values[start] || 0);
+    }
+
+    // Aggregate the aligned OHLCV series into `target` candles. Aggregating by count
+    // rather than by clock time keeps the same candle width across ranges and collapses
+    // weekends/holidays the way a trading chart does.
+    function buildCandles(chart, range) {
+        var n = chart && chart.values ? chart.values.length : 0;
+        if (n < 2) return [];
+        var target = Math.min(n, candleTarget(range));
+        var candles = [];
+        for (var i = 0; i < target; i++) {
+            var start = Math.floor(i * n / target);
+            var end = Math.floor((i + 1) * n / target);
+            if (end <= start) end = start + 1;
+            if (start >= n) break;
+
+            var open = chart.opens[start] !== undefined ? chart.opens[start] : chart.values[start];
+            var close = chart.values[end - 1];
+            var high = open;
+            var low = open;
+            var volume = 0;
+            for (var j = start; j < end; j++) {
+                var h = chart.highs[j] !== undefined ? chart.highs[j] : chart.values[j];
+                var l = chart.lows[j] !== undefined ? chart.lows[j] : chart.values[j];
+                if (h > high) high = h;
+                if (l < low) low = l;
+                volume += chart.volumes[j] || 0;
+            }
+            if (close > high) high = close;
+            if (close < low) low = close;
+            candles.push({
+                open: open,
+                high: high,
+                low: low,
+                close: close,
+                volume: volume,
+                time: chart.times[start] || 0
+            });
+        }
+        return candles;
     }
 
     function processPanelData(json, symbol, range) {
@@ -952,7 +1046,8 @@ PlasmoidItem {
             var meta = result.meta;
             var symbol = fallbackSymbol || root.singleTicker;
             root.setMarketSession(symbol, meta);
-            var quotes = result.indicators.quote[0].close;
+            var quote = result.indicators.quote[0] || {};
+            var quotes = quote.close || [];
             var timestamps = result.timestamp;
 
             root.singleCompanyName = root.companyName(meta, fallbackSymbol || root.singleTicker);
@@ -962,10 +1057,18 @@ PlasmoidItem {
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange);
+            var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange, quote);
             var cleanData = chart.values;
             root.chartDataPoints = cleanData;
             root.chartTimestamps = chart.times;
+
+            // The candlestick chart can be drawn from the same response; the reference
+            // chart marks the open of the latest session in the series.
+            root.chartCandles = root.buildCandles(chart, chartRange);
+            var sessionOpen = meta.regularMarketOpen && meta.regularMarketOpen > 0
+                              ? meta.regularMarketOpen
+                              : (chartRange === "1D" ? (chart.opens[0] || 0) : root.lastSessionOpen(chart));
+            root.chartOpenPrice = sessionOpen > 0 ? sessionOpen : (cleanData.length > 0 ? cleanData[0] : 0);
 
             if (chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -1101,6 +1204,8 @@ PlasmoidItem {
             root.percentChange = "";
             root.chartDataPoints = [];
             root.chartTimestamps = [];
+            root.chartCandles = [];
+            root.chartOpenPrice = 0;
         }
         refreshData();
     }

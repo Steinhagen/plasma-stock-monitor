@@ -30,6 +30,7 @@ var SETTINGS_KEYS = [
     "chartRange",
     "chartViewRange",
     "showChartRangeButtons",
+    "chartStyle",
     "limitHours",
     "skipWeekendRefresh",
     "startHour",
@@ -87,6 +88,7 @@ var BOOL_KEYS = {
 // it would not let the user create.
 var INT_RANGES = {
     selectedTheme: [0, 2],
+    chartStyle: [0, 1],
     refreshInterval: [1, 360],
     startHour: [0, 23],
     startMinute: [0, 59],

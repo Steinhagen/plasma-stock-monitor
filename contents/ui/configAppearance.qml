@@ -16,6 +16,7 @@ Item {
     property alias cfg_priceOpacity: priceOpacitySlider.value
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
+    property alias cfg_chartStyle: chartStyleCombo.currentIndex
 
     ScrollView {
         anchors.fill: parent
@@ -130,11 +131,18 @@ Item {
                 Kirigami.FormData.label: i18n("Chart")
             }
 
+            ComboBox {
+                id: chartStyleCombo
+
+                Kirigami.FormData.label: i18n("Chart style:")
+                model: [i18n("Reference line (open)"), i18n("Candles + volume")]
+            }
+
             CheckBox {
                 id: showAxisSwitch
 
                 Kirigami.FormData.label: i18n("Price scale:")
-                text: i18n("Show price values on the left of the chart")
+                text: i18n("Show price values on the right of the chart")
             }
 
             CheckBox {
