@@ -48,8 +48,12 @@ Item {
     readonly property string heldString: {
         if (heldOverride !== "") return heldOverride;
         if (!summary || summary.shares === undefined) return "";
-        return Number(summary.shares.toFixed(4)) + (summary.lots > 1 ? " (" + summary.lots + " lots)" : "")
-               + " @ " + rootItem.formatMoney(moneySymbol, summary.avgCost, false);
+        var shares = Number(summary.shares.toFixed(4));
+        // "17 (3 lots)", or just "17" when the position is a single purchase.
+        var withLots = summary.lots > 1
+                       ? i18n("%1 (%2)", shares, i18np("%1 lot", "%1 lots", summary.lots))
+                       : String(shares);
+        return i18n("%1 @ %2", withLots, rootItem.formatMoney(moneySymbol, summary.avgCost, false));
     }
     readonly property string plPercentString: summary ? rootItem.formatNumber(summary.plPercent, true) + "%" : ""
 
@@ -99,7 +103,7 @@ Item {
             spacing: line.captionGap
             Text {
                 id: valueCaption
-                text: "Value"
+                text: i18n("Value")
                 color: rootItem.secondaryTextColor
                 font.pixelSize: line.fontSize
             }
@@ -118,7 +122,7 @@ Item {
             Text {
                 id: plCaption
                 visible: line.level <= 2
-                text: "P/L"
+                text: i18n("P/L")
                 color: rootItem.secondaryTextColor
                 font.pixelSize: line.fontSize
             }

@@ -25,14 +25,14 @@ Item {
 
             CheckBox {
                 id: alternateSwitch
-                Kirigami.FormData.label: "Price and percentage:"
-                text: "Alternate them in the same spot"
+                Kirigami.FormData.label: i18n("Price and percentage:")
+                text: i18n("Alternate them in the same spot")
                 enabled: !hidePercentSwitch.checked
             }
 
             SpinBox {
                 id: alternateSpin
-                Kirigami.FormData.label: "Switch every (seconds):"
+                Kirigami.FormData.label: i18n("Switch every (seconds):")
                 enabled: alternateSwitch.checked && !hidePercentSwitch.checked
                 from: 3
                 to: 3600
@@ -41,19 +41,19 @@ Item {
 
             CheckBox {
                 id: hidePercentSwitch
-                Kirigami.FormData.label: "Stock Change Percentage:"
-                text: "Hide stock change percentage"
+                Kirigami.FormData.label: i18n("Stock Change Percentage:")
+                text: i18n("Hide stock change percentage")
             }
 
             CheckBox {
                 id: autoCycleSwitch
-                Kirigami.FormData.label: "Cycle panel stock:"
-                text: "Automatically cycle through the stocks"
+                Kirigami.FormData.label: i18n("Cycle panel stock:")
+                text: i18n("Automatically cycle through the stocks")
             }
 
             SpinBox {
                 id: autoCycleSpin
-                Kirigami.FormData.label: "Cycle every (seconds):"
+                Kirigami.FormData.label: i18n("Cycle every (seconds):")
                 enabled: autoCycleSwitch.checked
                 from: 3
                 to: 3600
@@ -62,19 +62,19 @@ Item {
 
             CheckBox {
                 id: fixedWidthSwitch
-                Kirigami.FormData.label: "Panel width:"
-                text: "Keep the panel indicator at a fixed width"
+                Kirigami.FormData.label: i18n("Panel width:")
+                text: i18n("Keep the panel indicator at a fixed width")
             }
 
             SpinBox {
                 id: panelWidthSpin
-                Kirigami.FormData.label: "Width (pixels):"
+                Kirigami.FormData.label: i18n("Width (pixels):")
                 enabled: fixedWidthSwitch.checked
                 from: 0
                 to: 1000
                 stepSize: 5
                 // 0 sizes the indicator for the widest value of any configured ticker.
-                textFromValue: (v) => v === 0 ? "Fit the widest value" : String(v)
+                textFromValue: (v) => v === 0 ? i18n("Fit the widest value") : String(v)
                 valueFromText: (t) => parseInt(t) || 0
                 editable: true
             }

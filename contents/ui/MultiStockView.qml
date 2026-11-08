@@ -55,9 +55,12 @@ Rectangle {
         multiStockRoot.totalsSym = rootItem.getCurrencySymbol(base);
         // Say so when some positions have no price yet (still loading, or not in the list)
         // or no exchange rate for their currency.
-        multiStockRoot.totalsLabel = (priced === held.length ? held.length + " positions"
-                                                             : priced + " of " + held.length + " positions")
-                                     + (noRate > 0 ? " · no rate for " + noRate : "");
+        var positions = priced === held.length
+                        ? i18np("%1 position", "%1 positions", held.length)
+                        : i18nc("@info:portfolio", "%1 of %2 positions", priced, held.length);
+        multiStockRoot.totalsLabel = noRate > 0
+                                     ? i18nc("@info:portfolio", "%1 · no rate for %2", positions, noRate)
+                                     : positions;
         multiStockRoot.totals = {
             value: value, cost: cost, plValue: pl, plPercent: cost > 0 ? (pl / cost) * 100 : 0, plIsPos: pl >= 0,
             dayValue: dayKnown ? day : null, dayIsPos: !dayKnown || day >= 0, currency: base
@@ -86,7 +89,7 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
-        text: "Loading..."
+        text: i18n("Loading...")
         color: rootItem.secondaryTextColor
         font.pixelSize: 14
         visible: rootItem.isMultiMode && listModel.count === 0
@@ -251,9 +254,14 @@ Rectangle {
                                 function extText(avail) {
                                     var e = secondLine.ext;
                                     if (!e) return "";
-                                    var closedSuffix = rowRoot.rowClosed ? "&nbsp;·&nbsp;closed" : "";
-                                    var fullLabel = e.label + closedSuffix;
-                                    var shortLabel = (e.label === "Pre-Market" ? "Pre" : "After") + closedSuffix;
+                                    var closedSuffix = rowRoot.rowClosed
+                                                       ? "&nbsp;·&nbsp;" + i18nc("@item:market status", "closed") : "";
+                                    // The caption comes from the translation, so escape it before it is
+                                    // embedded in the rich text; the &nbsp; gap is added afterwards.
+                                    var fullLabel = rootItem.htmlEscape(e.label) + closedSuffix;
+                                    var shortLabel = rootItem.htmlEscape(e.kind === "pre"
+                                                                         ? i18nc("@item:short stock market session", "Pre")
+                                                                         : i18nc("@item:short stock market session", "After")) + closedSuffix;
                                     var tiers = [
                                         [fullLabel, e.price, e.change + " (" + e.pct + ")"],
                                         [shortLabel, e.price, e.pct],
@@ -285,7 +293,7 @@ Rectangle {
                                 // Line 1 already carries the company name when name and ticker are shown together.
                                 text: ext ? extText(width)
                                           : (rowRoot.rowClosed
-                                             ? "Market closed" + (rootItem.showNameAndTicker ? ""
+                                             ? i18n("Market closed") + (rootItem.showNameAndTicker ? ""
                                                  : " · " + (rootItem.swapNameAndTicker ? model.ticker : model.name))
                                              : (rootItem.showNameAndTicker ? ""
                                                 : (rootItem.swapNameAndTicker ? model.ticker : model.name)))
@@ -354,7 +362,8 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 8
-        text: (rootItem.lastUpdated && rootItem.nextUpdate) ? "Updated: " + rootItem.lastUpdated + " • Next: " + rootItem.nextUpdate : ""
+        text: (rootItem.lastUpdated && rootItem.nextUpdate)
+              ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
         color: rootItem.secondaryTextColor
         font.pixelSize: 10
         visible: rootItem.lastUpdated !== "" && rootItem.isMultiMode && !rootItem.hideTimestamps

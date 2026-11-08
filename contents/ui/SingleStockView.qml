@@ -13,7 +13,7 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
-        text: "Loading..."
+        text: i18n("Loading...")
         color: rootItem.secondaryTextColor
         font.pixelSize: 14
         visible: rootItem.isMultiMode && singleStockRoot.visible && (!rootItem.chartDataPoints || rootItem.chartDataPoints.length === 0)
@@ -103,7 +103,8 @@ Rectangle {
                         Layout.fillWidth: true
                     }
                     Text {
-                        text: (rootItem.lastUpdated && rootItem.nextUpdate) ? "Updated: " + rootItem.lastUpdated + " • Next: " + rootItem.nextUpdate : ""
+                        text: (rootItem.lastUpdated && rootItem.nextUpdate)
+                              ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
                         color: rootItem.secondaryTextColor // Slightly brighter
                         font.pixelSize: 9
                         visible: rootItem.lastUpdated !== "" && !rootItem.isMultiMode && !rootItem.hideTimestamps
@@ -171,7 +172,10 @@ Rectangle {
                 // caption so the row never needs more width than the card provides.
                 readonly property real chipWidth: extendedChange.implicitWidth + (Kirigami.Units.smallSpacing * 2)
                 readonly property real baseWidth: extendedPrice.implicitWidth + chipWidth + spacing
-                readonly property string shortLabel: ext ? (ext.label === "Pre-Market" ? "Pre" : "After") : ""
+                readonly property string shortLabel: ext
+                    ? (ext.kind === "pre" ? i18nc("@item:short stock market session", "Pre")
+                                          : i18nc("@item:short stock market session", "After"))
+                    : ""
                 readonly property string captionText: {
                     if (!ext) return "";
                     if (width >= baseWidth + spacing + fullMetrics.width) return ext.label;
@@ -232,7 +236,7 @@ Rectangle {
                 Layout.topMargin: 2
                 visible: rootItem.showExtendedHours
                          && rootItem.isMarketClosedFor(rootItem.singleTicker)
-                text: "Market closed"
+                text: i18n("Market closed")
                 color: rootItem.secondaryTextColor
                 font.pixelSize: 11
             }

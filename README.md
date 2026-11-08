@@ -33,6 +33,7 @@ Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It
   - **Closed-market quotes:** Keeps the last pre-market/after-hours quote visible after the session ends (on by default).
   - **Battery Saver:** Option to stop updating when the market is closed.
   - Weekend detection logic.
+- **Localized:** The whole interface is translatable through gettext/Ki18n and ships with a complete Romanian translation. Any other language can be added without touching the code — see [Localization](#-localization).
 
 <br>
 
@@ -89,6 +90,17 @@ kpackagetool6 --type Plasma/Applet --install .
 Then right-click the desktop or panel, choose **Add Widgets**, and search for **Plasma Stock Monitor**.
 
 When updating an existing installation, use `--upgrade` instead of `--install`.
+
+## 🌍 Localization
+
+The widget uses KDE's [Ki18n](https://api.kde.org/ki18n-index.html) (gettext), so every label, tooltip and message can be translated. A complete **Romanian** translation is included and is used automatically when the system or Plasma language is Romanian; with any other language the widget falls back to English.
+
+- All user-visible text is wrapped in `i18n()`, `i18nc()` or `i18np()`.
+- The catalogs live in [`translate/`](translate/README.md): `template.pot` is the source of truth, `<language>.po` holds the translations and `contents/locale/<language>/LC_MESSAGES/` the compiled `.mo` files Plasma loads.
+- To add a language, copy `translate/template.pot` to `translate/<language>.po`, translate it, run `./translate/build.sh` and add `Name[<language>]` / `Description[<language>]` to `metadata.json`.
+- After changing the sources, run `./translate/merge.sh && ./translate/build.sh` to refresh the template and rebuild the catalogs.
+
+Full instructions, including plural forms and contexts, are in [translate/README.md](translate/README.md).
 
 ## Credits
 

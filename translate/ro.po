@@ -1,0 +1,617 @@
+# Romanian translation of Plasma Stock Monitor.
+# Copyright (C) 2026 The Plasma Stock Monitor authors
+# This file is distributed under the same license as the plasma_applet_io.github.steinhagen.plasmastockmonitor package.
+# Distributed under the GPL-3.0-or-later, like the widget.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: plasma_applet_io.github.steinhagen.plasmastockmonitor\n"
+"Report-Msgid-Bugs-To: https://github.com/Steinhagen/plasma-stock-monitor\n"
+"POT-Creation-Date: 2026-11-08 16:15+0200\n"
+"PO-Revision-Date: 2026-11-08 16:30+0200\n"
+"Last-Translator: Plasma Stock Monitor translators\n"
+"Language-Team: Romanian <ro@li.org>\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);\n"
+
+#: contents/config/config.qml
+msgid "General"
+msgstr "General"
+
+#: contents/config/config.qml
+msgid "Find ticker symbol"
+msgstr "Caută simbol bursier"
+
+#: contents/config/config.qml
+msgid "Panel view"
+msgstr "Vizualizare panou"
+
+#: contents/config/config.qml
+msgid "Portfolio Tracking"
+msgstr "Urmărire portofoliu"
+
+#: contents/config/config.qml
+msgid "Appearance"
+msgstr "Aspect"
+
+#: contents/ui/configAppearance.qml
+msgid "Theme:"
+msgstr "Temă:"
+
+#: contents/ui/configAppearance.qml
+msgid "Light"
+msgstr "Luminoasă"
+
+#: contents/ui/configAppearance.qml
+msgid "Dark"
+msgstr "Întunecată"
+
+#: contents/ui/configAppearance.qml
+msgid "Plasma"
+msgstr "Plasma"
+
+#: contents/ui/configAppearance.qml
+msgid "Positive Color (Hex):"
+msgstr "Culoare pozitivă (hex):"
+
+#: contents/ui/configAppearance.qml
+msgid "Negative Color (Hex):"
+msgstr "Culoare negativă (hex):"
+
+#: contents/ui/configAppearance.qml
+msgid "Background Opacity:"
+msgstr "Opacitate fundal:"
+
+#: contents/ui/configAppearance.qml
+msgid "Ticker Symbol Text"
+msgstr "Textul simbolului bursier"
+
+#: contents/ui/configAppearance.qml
+msgid "Color (Hex):"
+msgstr "Culoare (hex):"
+
+#: contents/ui/configAppearance.qml
+msgid "Opacity:"
+msgstr "Opacitate:"
+
+#: contents/ui/configAppearance.qml
+msgid "Stock Price Text"
+msgstr "Textul prețului acțiunii"
+
+#: contents/ui/configAppearance.qml
+msgid "Chart"
+msgstr "Grafic"
+
+#: contents/ui/configAppearance.qml
+msgid "Price scale:"
+msgstr "Scară de preț:"
+
+#: contents/ui/configAppearance.qml
+msgid "Show price values on the left of the chart"
+msgstr "Afișează valorile prețului în stânga graficului"
+
+#: contents/ui/configGeneral.qml
+msgid "Display Mode:"
+msgstr "Mod de afișare:"
+
+#: contents/ui/configGeneral.qml
+msgid "Show Multi-Stock List"
+msgstr "Afișează lista cu mai multe acțiuni"
+
+#: contents/ui/configGeneral.qml
+msgid "Two List:"
+msgstr "Două liste:"
+
+#: contents/ui/configGeneral.qml
+msgid "single-stock on left side and multi-stock on right side"
+msgstr "o singură acțiune în stânga și lista cu mai multe în dreapta"
+
+#: contents/ui/configGeneral.qml
+msgid "Single Ticker:"
+msgstr "Simbol bursier:"
+
+#: contents/ui/configGeneral.qml contents/ui/configPortfolio.qml
+msgid "e.g., AAPL"
+msgstr "de ex., AAPL"
+
+#: contents/ui/configGeneral.qml
+msgid "Ticker List:"
+msgstr "Listă de simboluri:"
+
+#: contents/ui/configGeneral.qml
+msgid "Sorting:"
+msgstr "Sortare:"
+
+#: contents/ui/configGeneral.qml
+msgid "Sort stocks alphabetically"
+msgstr "Sortează acțiunile alfabetic"
+
+#: contents/ui/configGeneral.qml
+msgid "Names:"
+msgstr "Nume:"
+
+#: contents/ui/configGeneral.qml
+msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
+msgstr "Afișează numele companiei împreună cu simbolul, de ex. Apple Inc. (AAPL)"
+
+#: contents/ui/configGeneral.qml
+msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
+msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
+
+#: contents/ui/configGeneral.qml
+msgid "Swap company name and ticker symbol"
+msgstr "Inversează numele companiei și simbolul bursier"
+
+#: contents/ui/configGeneral.qml
+msgid "Data Range:"
+msgstr "Interval de date:"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "1D"
+msgstr "1 zi"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "5D"
+msgstr "5 zile"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "1M"
+msgstr "1 lună"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "6M"
+msgstr "6 luni"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "YTD"
+msgstr "YTD"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "1Y"
+msgstr "1 an"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "5Y"
+msgstr "5 ani"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "Max"
+msgstr "Max"
+
+#: contents/ui/configGeneral.qml
+msgid "Refresh Interval (minutes):"
+msgstr "Interval de reîmprospătare (minute):"
+
+#: contents/ui/configGeneral.qml
+msgid "Active Hours:"
+msgstr "Ore active:"
+
+#: contents/ui/configGeneral.qml
+msgid "Only refresh data during market hours"
+msgstr "Reîmprospătează datele doar în timpul orelor de tranzacționare"
+
+#: contents/ui/configGeneral.qml
+msgid "Weekend Refresh:"
+msgstr "Reîmprospătare în weekend:"
+
+#: contents/ui/configGeneral.qml
+msgid "Do not refresh data on weekends (Sat,Sun)"
+msgstr "Nu reîmprospăta datele în weekend (sâm., dum.)"
+
+#: contents/ui/configGeneral.qml
+msgid "Market Open:"
+msgstr "Deschidere piață:"
+
+#: contents/ui/configGeneral.qml
+msgid "Market Close:"
+msgstr "Închidere piață:"
+
+#: contents/ui/configGeneral.qml
+msgid "Update Timestamps:"
+msgstr "Marcaje de actualizare:"
+
+#: contents/ui/configGeneral.qml
+msgid "Hide update timestamps"
+msgstr "Ascunde marcajele de timp ale actualizării"
+
+#: contents/ui/configGeneral.qml
+msgid "Value Formatting:"
+msgstr "Formatarea valorilor:"
+
+#: contents/ui/configGeneral.qml
+msgid "Format stock price with commas (e.g. 1,000.00)"
+msgstr "Formatează prețul acțiunii cu virgule (de ex. 1,000.00)"
+
+#: contents/ui/configGeneral.qml
+msgid "Remove decimals from stock price"
+msgstr "Elimină zecimalele din prețul acțiunii"
+
+#: contents/ui/configGeneral.qml
+msgid "Extended Hours:"
+msgstr "Program extins:"
+
+#: contents/ui/configGeneral.qml
+msgid "Show pre-market and after-hours values and market-closed status"
+msgstr "Afișează valorile dinainte de deschidere și de după închidere, plus starea pieței"
+
+#: contents/ui/configGeneral.qml
+msgid "When Closed:"
+msgstr "Când piața e închisă:"
+
+#: contents/ui/configGeneral.qml
+msgid "Keep showing the last pre-market/after-hours quote"
+msgstr "Continuă să afișezi ultima cotație dinainte de deschidere/de după închidere"
+
+#: contents/ui/configPanel.qml
+msgid "Price and percentage:"
+msgstr "Preț și procent:"
+
+#: contents/ui/configPanel.qml
+msgid "Alternate them in the same spot"
+msgstr "Alternează-le în același loc"
+
+#: contents/ui/configPanel.qml
+msgid "Switch every (seconds):"
+msgstr "Schimbă la fiecare (secunde):"
+
+#: contents/ui/configPanel.qml
+msgid "Stock Change Percentage:"
+msgstr "Procentul variației:"
+
+#: contents/ui/configPanel.qml
+msgid "Hide stock change percentage"
+msgstr "Ascunde procentul variației acțiunii"
+
+#: contents/ui/configPanel.qml
+msgid "Cycle panel stock:"
+msgstr "Rotirea acțiunii în panou:"
+
+#: contents/ui/configPanel.qml
+msgid "Automatically cycle through the stocks"
+msgstr "Rotește automat acțiunile"
+
+#: contents/ui/configPanel.qml
+msgid "Cycle every (seconds):"
+msgstr "Rotește la fiecare (secunde):"
+
+#: contents/ui/configPanel.qml
+msgid "Panel width:"
+msgstr "Lățime panou:"
+
+#: contents/ui/configPanel.qml
+msgid "Keep the panel indicator at a fixed width"
+msgstr "Menține indicatorul din panou la o lățime fixă"
+
+#: contents/ui/configPanel.qml
+msgid "Width (pixels):"
+msgstr "Lățime (pixeli):"
+
+#: contents/ui/configPanel.qml
+msgid "Fit the widest value"
+msgstr "Cea mai lată valoare"
+
+#: contents/ui/configPortfolio.qml
+msgid "Portfolio Mode:"
+msgstr "Mod portofoliu:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Show profit/loss calculations"
+msgstr "Afișează calculele de profit/pierdere"
+
+#: contents/ui/configPortfolio.qml
+msgid "Portfolio Currency:"
+msgstr "Moneda portofoliului:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Ticker:"
+msgstr "Simbol:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Shares:"
+msgstr "Număr de acțiuni:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Average Cost:"
+msgstr "Cost mediu:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Currency:"
+msgstr "Monedă:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Purchase Date:"
+msgstr "Data achiziției:"
+
+#: contents/ui/configPortfolio.qml contents/ui/main.qml
+msgid "Today"
+msgstr "Astăzi"
+
+#: contents/ui/configPortfolio.qml
+msgid "Details (optional):"
+msgstr "Detalii (opțional):"
+
+#: contents/ui/configPortfolio.qml
+msgid "e.g., E*TRADE - 8122"
+msgstr "de ex., E*TRADE - 8122"
+
+#: contents/ui/configPortfolio.qml
+msgid "Actions:"
+msgstr "Acțiuni:"
+
+#: contents/ui/configPortfolio.qml
+msgid "Save Lot"
+msgstr "Salvează lotul"
+
+#: contents/ui/configPortfolio.qml
+msgid "Add Lot"
+msgstr "Adaugă lot"
+
+#: contents/ui/configPortfolio.qml
+msgid "Cancel"
+msgstr "Anulează"
+
+#: contents/ui/configPortfolio.qml
+msgid "Export CSV"
+msgstr "Exportă CSV"
+
+#: contents/ui/configPortfolio.qml
+msgid "No portfolio data to export."
+msgstr "Nu există date de portofoliu de exportat."
+
+#: contents/ui/configPortfolio.qml
+msgid "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
+msgstr "Fiecare achiziție este un lot separat — dacă mai cumperi același simbol la un alt preț, se adaugă un lot nou în loc să fie suprascris cel vechi."
+
+#: contents/ui/configPortfolio.qml
+msgid "The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR)."
+msgstr "Costul mediu este în moneda lotului (implicit USD). Cursurile de schimb pentru toate monedele sunt descărcate o dată pe zi și sunt folosite pentru a afișa totalurile portofoliului în moneda portofoliului. Pentru piețele cotate în penny sau cenți (de ex. Londra), introdu costul în moneda principală (GBP, ZAR)."
+
+#: contents/ui/configPortfolio.qml
+msgid "Exchange rates are downloaded once a day."
+msgstr "Cursurile de schimb sunt descărcate o dată pe zi."
+
+#: contents/ui/configPortfolio.qml
+msgid "Exchange rates: not downloaded yet."
+msgstr "Cursuri de schimb: încă nedescărcate."
+
+#: contents/ui/configPortfolio.qml
+msgid "Exchange rates: updated %1"
+msgstr "Cursuri de schimb: actualizate la %1"
+
+#: contents/ui/configPortfolio.qml
+msgid "Your Lots"
+msgstr "Loturile tale"
+
+#: contents/ui/configPortfolio.qml
+msgid "No holdings added yet."
+msgstr "Nu ai adăugat încă nicio deținere."
+
+#: contents/ui/configPortfolio.qml
+msgid "%1 share"
+msgid_plural "%1 shares"
+msgstr[0] "%1 acțiune"
+msgstr[1] "%1 acțiuni"
+msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/configPortfolio.qml
+msgid "%1: %2 @ %3 %4"
+msgstr "%1: %2 la %3 %4"
+
+#: contents/ui/configPortfolio.qml
+msgid "Edit"
+msgstr "Editează"
+
+#: contents/ui/configPortfolio.qml
+msgid "Remove"
+msgstr "Elimină"
+
+#: contents/ui/configSearch.qml
+msgid "Enter a search term."
+msgstr "Introdu un termen de căutare."
+
+#: contents/ui/configSearch.qml
+msgid "Searching..."
+msgstr "Se caută..."
+
+#: contents/ui/configSearch.qml
+msgid "No symbols found."
+msgstr "Nu s-au găsit simboluri."
+
+#: contents/ui/configSearch.qml
+msgid "Suggestions:"
+msgstr "Sugestii:"
+
+#: contents/ui/configSearch.qml
+msgid "Error parsing search results."
+msgstr "Eroare la interpretarea rezultatelor căutării."
+
+#: contents/ui/configSearch.qml
+msgid "Search failed (HTTP %1)."
+msgstr "Căutarea a eșuat (HTTP %1)."
+
+#: contents/ui/configSearch.qml
+msgid "Search:"
+msgstr "Caută:"
+
+#: contents/ui/configSearch.qml
+msgid "e.g. Tesla, AAPL..."
+msgstr "de ex. Tesla, AAPL..."
+
+#: contents/ui/configSearch.qml
+msgid "Search"
+msgstr "Caută"
+
+#: contents/ui/configSearch.qml
+msgid "Type to find symbols and click Search."
+msgstr "Scrie pentru a găsi simboluri, apoi apasă Caută."
+
+#: contents/ui/configSearch.qml
+msgctxt "@action:button abbreviation for single stock"
+msgid "SS"
+msgstr "SS"
+
+#: contents/ui/configSearch.qml
+msgid "Add to Single Stock"
+msgstr "Adaugă ca acțiune unică"
+
+#: contents/ui/configSearch.qml
+msgid "Set %1 as Single Stock."
+msgstr "Am setat %1 ca acțiune unică."
+
+#: contents/ui/configSearch.qml
+msgctxt "@action:button abbreviation for multi stock list"
+msgid "MSL"
+msgstr "MSL"
+
+#: contents/ui/configSearch.qml
+msgid "Add to Multi Stock List"
+msgstr "Adaugă la lista de acțiuni"
+
+#: contents/ui/configSearch.qml
+msgid "Added %1 to Multi Stock List."
+msgstr "Am adăugat %1 la lista de acțiuni."
+
+#: contents/ui/main.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Loading..."
+msgstr "Se încarcă..."
+
+#: contents/ui/main.qml
+msgctxt "@item:panel stock market session tag"
+msgid "PRE"
+msgstr "PRE"
+
+#: contents/ui/main.qml
+msgctxt "@item:panel stock market session tag"
+msgid "AH"
+msgstr "AH"
+
+#: contents/ui/main.qml
+msgctxt "@item:panel stock market session tag"
+msgid "CLOSED"
+msgstr "ÎNCHIS"
+
+#: contents/ui/main.qml
+msgid "Pre-Market"
+msgstr "Dinainte de deschidere"
+
+#: contents/ui/main.qml
+msgid "After-Hours"
+msgstr "După închidere"
+
+#: contents/ui/main.qml
+msgid "Plasma Stock Monitor"
+msgstr "Monitor de acțiuni Plasma"
+
+#: contents/ui/main.qml
+msgid "%1 stock"
+msgid_plural "%1 stocks"
+msgstr[0] "%1 acțiune"
+msgstr[1] "%1 acțiuni"
+msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/main.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · updated %3"
+msgstr "%1 · %2 · actualizat la %3"
+
+#: contents/ui/main.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2"
+msgstr "%1 · %2"
+
+#: contents/ui/main.qml contents/ui/MultiStockView.qml
+msgctxt "@item:market status"
+msgid "closed"
+msgstr "închisă"
+
+#: contents/ui/main.qml
+msgid "loading…"
+msgstr "se încarcă…"
+
+#: contents/ui/main.qml
+msgid "… and %1 more"
+msgstr "… și încă %1"
+
+#: contents/ui/main.qml
+msgid "Loading…"
+msgstr "Se încarcă…"
+
+#: contents/ui/main.qml
+msgid "Session"
+msgstr "Sesiune"
+
+#: contents/ui/main.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Market closed"
+msgstr "Piața este închisă"
+
+#: contents/ui/main.qml
+msgid "Position"
+msgstr "Poziție"
+
+#: contents/ui/main.qml
+msgid "%1 share · avg %2"
+msgid_plural "%1 shares · avg %2"
+msgstr[0] "%1 acțiune · mediu %2"
+msgstr[1] "%1 acțiuni · mediu %2"
+msgstr[2] "%1 de acțiuni · mediu %2"
+
+#: contents/ui/main.qml contents/ui/PositionLine.qml
+msgid "P/L"
+msgstr "P/L"
+
+#: contents/ui/main.qml
+msgid "Updated"
+msgstr "Actualizat"
+
+#: contents/ui/MultiStockView.qml
+msgid "%1 position"
+msgid_plural "%1 positions"
+msgstr[0] "%1 poziție"
+msgstr[1] "%1 poziții"
+msgstr[2] "%1 de poziții"
+
+#: contents/ui/MultiStockView.qml
+msgctxt "@info:portfolio"
+msgid "%1 of %2 positions"
+msgstr "%1 din %2 poziții"
+
+#: contents/ui/MultiStockView.qml
+msgctxt "@info:portfolio"
+msgid "%1 · no rate for %2"
+msgstr "%1 · curs lipsă pentru %2"
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgctxt "@item:short stock market session"
+msgid "Pre"
+msgstr "Pre"
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgctxt "@item:short stock market session"
+msgid "After"
+msgstr "După"
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Updated: %1 • Next: %2"
+msgstr "Actualizat: %1 • Următorul: %2"
+
+#: contents/ui/PositionLine.qml
+msgid "%1 lot"
+msgid_plural "%1 lots"
+msgstr[0] "%1 lot"
+msgstr[1] "%1 loturi"
+msgstr[2] "%1 de loturi"
+
+#: contents/ui/PositionLine.qml
+msgid "%1 (%2)"
+msgstr "%1 (%2)"
+
+#: contents/ui/PositionLine.qml
+msgid "%1 @ %2"
+msgstr "%1 la %2"
+
+#: contents/ui/PositionLine.qml
+msgid "Value"
+msgstr "Valoare"

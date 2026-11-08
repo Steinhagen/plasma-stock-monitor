@@ -28,24 +28,25 @@ Item {
             ComboBox {
                 id: themeCombo
 
-                Kirigami.FormData.label: "Theme:"
-                model: ["Light", "Dark", "Plasma"]
+                Kirigami.FormData.label: i18n("Theme:")
+                // The theme is stored by index, so the labels can be translated freely.
+                model: [i18n("Light"), i18n("Dark"), i18n("Plasma")]
             }
 
             TextField {
                 id: posColorButton
-                Kirigami.FormData.label: "Positive Color (Hex):"
+                Kirigami.FormData.label: i18n("Positive Color (Hex):")
                 placeholderText: "#00ff00"
             }
 
             TextField {
                 id: negColorButton
-                Kirigami.FormData.label: "Negative Color (Hex):"
+                Kirigami.FormData.label: i18n("Negative Color (Hex):")
                 placeholderText: "#ff3b30"
             }
 
             RowLayout {
-                Kirigami.FormData.label: "Background Opacity:"
+                Kirigami.FormData.label: i18n("Background Opacity:")
                 visible: themeCombo.currentIndex !== 2
 
                 Slider {
@@ -65,18 +66,18 @@ Item {
 
             Item {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Ticker Symbol Text"
+                Kirigami.FormData.label: i18n("Ticker Symbol Text")
             }
 
             TextField {
                 id: tickerColorButton
 
-                Kirigami.FormData.label: "Color (Hex):"
+                Kirigami.FormData.label: i18n("Color (Hex):")
                 placeholderText: "#FFFFFF"
             }
 
             RowLayout {
-                Kirigami.FormData.label: "Opacity:"
+                Kirigami.FormData.label: i18n("Opacity:")
 
                 Slider {
                     id: tickerOpacitySlider
@@ -95,18 +96,18 @@ Item {
 
             Item {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Stock Price Text"
+                Kirigami.FormData.label: i18n("Stock Price Text")
             }
 
             TextField {
                 id: priceColorButton
 
-                Kirigami.FormData.label: "Color (Hex):"
+                Kirigami.FormData.label: i18n("Color (Hex):")
                 placeholderText: "#FFFFFF"
             }
 
             RowLayout {
-                Kirigami.FormData.label: "Opacity:"
+                Kirigami.FormData.label: i18n("Opacity:")
 
                 Slider {
                     id: priceOpacitySlider
@@ -125,14 +126,14 @@ Item {
 
             Item {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: "Chart"
+                Kirigami.FormData.label: i18n("Chart")
             }
 
             CheckBox {
                 id: showAxisSwitch
 
-                Kirigami.FormData.label: "Price scale:"
-                text: "Show price values on the left of the chart"
+                Kirigami.FormData.label: i18n("Price scale:")
+                text: i18n("Show price values on the left of the chart")
             }
 
         }

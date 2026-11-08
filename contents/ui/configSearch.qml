@@ -17,10 +17,10 @@ Item {
     function searchSymbols(query) {
         if (query.trim().length < 1) {
             resultsModel.clear();
-            searchHelpText.text = "Enter a search term.";
+            searchHelpText.text = i18n("Enter a search term.");
             return;
         }
-        searchHelpText.text = "Searching...";
+        searchHelpText.text = i18n("Searching...");
         resultsModel.clear();
         
         var xhr = new XMLHttpRequest();
@@ -32,10 +32,10 @@ Item {
                         var res = JSON.parse(xhr.responseText);
                         var results = res.quotes || [];
                         if (results.length === 0) {
-                            searchHelpText.text = "No symbols found.";
+                            searchHelpText.text = i18n("No symbols found.");
                             return;
                         }
-                        searchHelpText.text = "Suggestions:";
+                        searchHelpText.text = i18n("Suggestions:");
                         for (var i = 0; i < Math.min(results.length, 10); i++) {
                             var item = results[i];
                             if (item.symbol) {
@@ -46,10 +46,10 @@ Item {
                             }
                         }
                     } catch (e) {
-                        searchHelpText.text = "Error parsing search results.";
+                        searchHelpText.text = i18n("Error parsing search results.");
                     }
                 } else {
-                    searchHelpText.text = "Search failed (HTTP " + xhr.status + ").";
+                    searchHelpText.text = i18n("Search failed (HTTP %1).", xhr.status);
                 }
             }
         }
@@ -67,12 +67,12 @@ Item {
             width: parent.availableWidth
 
             RowLayout {
-                Kirigami.FormData.label: "Search:"
+                Kirigami.FormData.label: i18n("Search:")
                 Layout.fillWidth: true
 
                 TextField {
                     id: searchField
-                    placeholderText: "e.g. Tesla, AAPL..."
+                    placeholderText: i18n("e.g. Tesla, AAPL...")
                     Layout.fillWidth: true
                     onAccepted: page.searchSymbols(searchField.text)
                     Keys.onReturnPressed: {
@@ -86,7 +86,7 @@ Item {
                 }
                 
                 Button {
-                    text: "Search"
+                    text: i18n("Search")
                     icon.name: "search"
                     onClicked: page.searchSymbols(searchField.text)
                 }
@@ -94,7 +94,7 @@ Item {
 
             Label {
                 id: searchHelpText
-                text: "Type to find symbols and click Search."
+                text: i18n("Type to find symbols and click Search.")
                 font.pixelSize: 11
                 color: Kirigami.Theme.neutralTextColor
                 wrapMode: Text.WordWrap
@@ -117,20 +117,20 @@ Item {
                         }
 
                         Button {
-                            text: "SS"
+                            text: i18nc("@action:button abbreviation for single stock", "SS")
                             ToolTip.visible: hovered
-                            ToolTip.text: "Add to Single Stock"
+                            ToolTip.text: i18n("Add to Single Stock")
                             onClicked: {
                                 page.cfg_ticker = model.symbol;
                                 page.cfg_isMultiMode = false;
-                                searchHelpText.text = "Set " + model.symbol + " as Single Stock.";
+                                searchHelpText.text = i18n("Set %1 as Single Stock.", model.symbol);
                             }
                         }
 
                         Button {
-                            text: "MSL"
+                            text: i18nc("@action:button abbreviation for multi stock list", "MSL")
                             ToolTip.visible: hovered
-                            ToolTip.text: "Add to Multi Stock List"
+                            ToolTip.text: i18n("Add to Multi Stock List")
                             onClicked: {
                                 var currentList = page.cfg_multiTickers ? page.cfg_multiTickers.trim() : "";
                                 if (currentList === "") {
@@ -142,7 +142,7 @@ Item {
                                     }
                                 }
                                 page.cfg_isMultiMode = true;
-                                searchHelpText.text = "Added " + model.symbol + " to Multi Stock List.";
+                                searchHelpText.text = i18n("Added %1 to Multi Stock List.", model.symbol);
                             }
                         }
                     }

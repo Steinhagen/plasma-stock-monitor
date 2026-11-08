@@ -185,13 +185,13 @@ Item {
 
                 CheckBox {
                     id: portfolioModeSwitch
-                    Kirigami.FormData.label: "Portfolio Mode:"
-                    text: "Show profit/loss calculations"
+                    Kirigami.FormData.label: i18n("Portfolio Mode:")
+                    text: i18n("Show profit/loss calculations")
                 }
 
                 ComboBox {
                     id: portfolioCurrencyCombo
-                    Kirigami.FormData.label: "Portfolio Currency:"
+                    Kirigami.FormData.label: i18n("Portfolio Currency:")
                     model: Currency.LABELS
                     onCurrentIndexChanged: {
                         if (page.currencyPickerReady && currentIndex >= 0)
@@ -202,14 +202,14 @@ Item {
 
                 TextField {
                     id: portfolioTickerField
-                    Kirigami.FormData.label: "Ticker:"
-                    placeholderText: "e.g., AAPL"
+                    Kirigami.FormData.label: i18n("Ticker:")
+                    placeholderText: i18n("e.g., AAPL")
                     Layout.preferredWidth: 120
                 }
 
                 SpinBox {
                     id: portfolioSharesSpin
-                    Kirigami.FormData.label: "Shares:"
+                    Kirigami.FormData.label: i18n("Shares:")
                     from: 0
                     to: 999999
                     editable: true
@@ -217,7 +217,7 @@ Item {
 
                 TextField {
                     id: portfolioCostField
-                    Kirigami.FormData.label: "Average Cost:"
+                    Kirigami.FormData.label: i18n("Average Cost:")
                     placeholderText: "0.00"
                     // Plain digits + a single "." or "," decimal separator. Deliberately not a
                     // DoubleValidator: on locales where "," is the decimal separator (e.g. es_AR),
@@ -229,7 +229,7 @@ Item {
 
                 ComboBox {
                     id: lotCurrencyCombo
-                    Kirigami.FormData.label: "Currency:"
+                    Kirigami.FormData.label: i18n("Currency:")
                     model: Currency.LABELS
                     currentIndex: 0 // USD, the default for a new lot
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 18
@@ -237,7 +237,7 @@ Item {
 
                 Button {
                     id: purchaseDateButton
-                    Kirigami.FormData.label: "Purchase Date:"
+                    Kirigami.FormData.label: i18n("Purchase Date:")
                     icon.name: "view-calendar"
                     text: Qt.formatDate(page.purchaseDate, "dd MMM yyyy")
                     onClicked: datePopup.open()
@@ -364,7 +364,7 @@ Item {
 
                             Button {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: "Today"
+                                text: i18n("Today")
                                 onClicked: datePopup.pick(new Date())
                             }
                         }
@@ -373,34 +373,35 @@ Item {
 
                 TextField {
                     id: portfolioDetailsField
-                    Kirigami.FormData.label: "Details (optional):"
-                    placeholderText: "e.g., E*TRADE - 8122"
+                    Kirigami.FormData.label: i18n("Details (optional):")
+                    placeholderText: i18n("e.g., E*TRADE - 8122")
                     Layout.fillWidth: true
                     Layout.maximumWidth: Kirigami.Units.gridUnit * 20
                 }
 
                 RowLayout {
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.FormData.label: "Actions:"
+                    Kirigami.FormData.label: i18n("Actions:")
 
                     Button {
-                        text: page.editingIndex >= 0 ? "Save Lot" : "Add Lot"
+                        text: page.editingIndex >= 0 ? i18n("Save Lot") : i18n("Add Lot")
                         onClicked: page.addLot()
                     }
 
                     Button {
-                        text: "Cancel"
+                        text: i18n("Cancel")
                         visible: page.editingIndex >= 0
                         onClicked: page.clearForm()
                     }
 
                     Button {
-                        text: "Export CSV"
+                        text: i18n("Export CSV")
                         onClicked: {
                             if (page.portfolioList.length === 0) {
-                                csvOutput.text = "No portfolio data to export.";
+                                csvOutput.text = i18n("No portfolio data to export.");
                                 return;
                             }
+                            // NO I18N: the CSV header is part of the exported file format, not the UI.
                             var csv = "Ticker,Shares,Average Cost,Currency,Added Date,Details\n";
                             for (var i = 0; i < page.portfolioList.length; i++) {
                                 var lot = page.portfolioList[i];
@@ -412,7 +413,7 @@ Item {
                 }
 
                 Label {
-                    text: "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
+                    text: i18n("Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one.")
                     font.pixelSize: 10
                     font.italic: true
                     opacity: 0.7
@@ -422,7 +423,7 @@ Item {
                 }
 
                 Label {
-                    text: "The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR)."
+                    text: i18n("The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR).")
                     font.pixelSize: 10
                     font.italic: true
                     opacity: 0.7
@@ -434,12 +435,12 @@ Item {
                 Label {
                     text: {
                         if (typeof plasmoid === "undefined" || !plasmoid.configuration)
-                            return "Exchange rates are downloaded once a day.";
+                            return i18n("Exchange rates are downloaded once a day.");
                         var ts = Number(plasmoid.configuration.exchangeRatesUpdated);
                         if (!(ts > 0))
-                            return "Exchange rates: not downloaded yet.";
-                        return "Exchange rates: updated "
-                               + Qt.formatDateTime(new Date(ts * 1000), "dd MMM yyyy HH:mm");
+                            return i18n("Exchange rates: not downloaded yet.");
+                        return i18n("Exchange rates: updated %1",
+                                    Qt.formatDateTime(new Date(ts * 1000), "dd MMM yyyy HH:mm"));
                     }
                     font.pixelSize: 10
                     opacity: 0.7
@@ -452,14 +453,14 @@ Item {
             Kirigami.Separator { Layout.fillWidth: true }
 
             Label {
-                text: "Your Lots"
+                text: i18n("Your Lots")
                 font.bold: true
                 Layout.fillWidth: true
             }
 
             Label {
                 visible: page.portfolioList.length === 0
-                text: "No holdings added yet."
+                text: i18n("No holdings added yet.")
                 opacity: 0.7
                 font.pixelSize: 11
             }
@@ -475,7 +476,11 @@ Item {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             font.pixelSize: 11
-                            text: modelData.ticker + ":  " + modelData.shares + " shares @ " + (modelData.currency || "USD") + " " + Number(modelData.averageCost).toFixed(2)
+                            text: i18n("%1: %2 @ %3 %4",
+                                       modelData.ticker,
+                                       i18np("%1 share", "%1 shares", modelData.shares),
+                                       modelData.currency || "USD",
+                                       Number(modelData.averageCost).toFixed(2))
                                   + (modelData.addedDate ? "   (" + Qt.formatDateTime(new Date(modelData.addedDate), "dd MMM yyyy") + ")" : "")
                         }
                         // Where the shares are held, if the lot has details.
@@ -489,12 +494,12 @@ Item {
                         }
                     }
                     Button {
-                        text: "Edit"
+                        text: i18n("Edit")
                         enabled: page.editingIndex !== index
                         onClicked: page.editLot(index)
                     }
                     Button {
-                        text: "Remove"
+                        text: i18n("Remove")
                         onClicked: page.removeLot(index)
                     }
                 }

@@ -16,7 +16,9 @@
       }
     ],
     "Name": "Plasma Stock Monitor",
+    "Name[ro]": "Monitor de acțiuni Plasma",
     "Description": "Modernized stock monitor for KDE with badge UI and custom colors.",
+    "Description[ro]": "Monitor de acțiuni modernizat pentru KDE, cu interfață cu insigne și culori personalizate.",
     "Icon": "/icon.png",
     "Id": "io.github.steinhagen.plasmastockmonitor",
     "Version": "1.0",

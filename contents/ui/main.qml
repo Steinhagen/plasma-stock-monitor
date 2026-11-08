@@ -40,7 +40,7 @@ PlasmoidItem {
     // or when Yahoo only returned the ticker as the name.
     function nameAndTicker(name, ticker) {
         var t = (ticker || "").trim().toUpperCase();
-        if (!name || name === "Loading..." || name.trim().toUpperCase() === t) return t;
+        if (!name || name === root.loadingText || name.trim().toUpperCase() === t) return t;
         return root.swapNameAndTicker ? t + " (" + name + ")" : name + " (" + t + ")";
     }
 
@@ -67,8 +67,16 @@ PlasmoidItem {
     property int startMinute: Plasmoid.configuration.startMinute
     property int endHour: Plasmoid.configuration.endHour
     property int endMinute: Plasmoid.configuration.endMinute
+    // Placeholders shown while a quote is still being fetched. They are kept in
+    // properties so the text that is displayed is the same one the code compares against.
+    readonly property string loadingText: i18n("Loading...")
+    // Short session tags in the panel. Properties, because the width reserved for the
+    // widest tag is measured from the same strings that are displayed.
+    readonly property string tagPreMarket: i18nc("@item:panel stock market session tag", "PRE")
+    readonly property string tagAfterHours: i18nc("@item:panel stock market session tag", "AH")
+    readonly property string tagClosed: i18nc("@item:panel stock market session tag", "CLOSED")
     // Internal Properties for Single View
-    property string singleCompanyName: "Loading..."
+    property string singleCompanyName: root.loadingText
     property string currentPrice: "---"
     property double currentRawPrice: 0
     property string priceChange: "+0.00"
@@ -155,7 +163,7 @@ PlasmoidItem {
     property var portfolioSummary: root.getPortfolioSummary(root.singleTicker, root.portfolioData, root.currentRawPrice, root.previousClose, root.quoteCurrency)
     property bool hasPortfolioEntry: root.portfolioSummary !== null
     // What the change in the summary covers: today for the 1D chart, otherwise the chart range.
-    property string portfolioChangeLabel: root.chartRange === "1D" ? "Today" : root.chartRange
+    property string portfolioChangeLabel: root.chartRange === "1D" ? i18n("Today") : root.rangeLabel(root.chartRange)
     property string lastUpdated: ""
     property string nextUpdate: ""
     property color bgColor: getThemeColor("background")
@@ -441,6 +449,22 @@ PlasmoidItem {
         }
     }
 
+    // The stored data-range codes ("1D", "5D", …) are what the API and the config use;
+    // this is the (translated) label shown for them in the views and the tooltip.
+    function rangeLabel(range) {
+        switch (range) {
+            case "1D":  return i18n("1D");
+            case "5D":  return i18n("5D");
+            case "1M":  return i18n("1M");
+            case "6M":  return i18n("6M");
+            case "YTD": return i18n("YTD");
+            case "1Y":  return i18n("1Y");
+            case "5Y":  return i18n("5Y");
+            case "Max": return i18n("Max");
+            default:    return range;
+        }
+    }
+
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
     function getApiParams() {
         // Yahoo Finance requires specific intervals for specific ranges
@@ -562,8 +586,8 @@ PlasmoidItem {
         var period = status === "pre" ? s.pre : (status === "post" ? s.post : null);
         if (!period) return undefined;
         if (e.time < period.start || e.time >= period.end) return undefined;
-        if ((status === "pre" && e.label !== "Pre-Market")
-            || (status === "post" && e.label !== "After-Hours")) return undefined;
+        if ((status === "pre" && e.kind !== "pre")
+            || (status === "post" && e.kind !== "post")) return undefined;
         return e;
     }
 
@@ -595,17 +619,23 @@ PlasmoidItem {
 
             var session = root.marketSessions[symbol];
             var period = null;
+            // The session is kept as an untranslated kind as well, so the checks further down
+            // never depend on the wording of the (translated) label.
+            var kind = "";
             var label = "";
             if (status === "pre" || status === "post") {
                 period = status === "pre" ? session.pre : session.post;
-                label = status === "pre" ? "Pre-Market" : "After-Hours";
+                kind = status;
+                label = status === "pre" ? i18n("Pre-Market") : i18n("After-Hours");
             } else if (session.post && stamps[last] >= session.post.start && stamps[last] < session.post.end) {
                 // Closed: keep the last session's quote if the option asks for it.
                 period = session.post;
-                label = "After-Hours";
+                kind = "post";
+                label = i18n("After-Hours");
             } else if (session.pre && stamps[last] >= session.pre.start && stamps[last] < session.pre.end) {
                 period = session.pre;
-                label = "Pre-Market";
+                kind = "pre";
+                label = i18n("Pre-Market");
             }
             if (!period || stamps[last] < period.start || stamps[last] >= period.end) {
                 root.setExtendedData(symbol, null);
@@ -618,6 +648,7 @@ PlasmoidItem {
             var price = closes[last];
             var change = price - base;
             var entry = {
+                "kind": kind,
                 "label": label,
                 "time": stamps[last],
                 "price": getCurrencySymbol(meta.currency) + formatNumber(price, false),
@@ -744,7 +775,7 @@ PlasmoidItem {
             targetTickers.forEach(function(cleanSymbol) {
                 stockModel.append({
                     "ticker": cleanSymbol,
-                    "name": "Loading...",
+                    "name": root.loadingText,
                     "price": "---",
                     "change": "",
                     "pct": "",
@@ -956,7 +987,7 @@ PlasmoidItem {
         stockModel.clear();
         if (!isMultiMode) {
             root.singleTicker = Qt.binding(function() { return Plasmoid.configuration.ticker; });
-            root.singleCompanyName = "Loading...";
+            root.singleCompanyName = root.loadingText;
             root.currentPrice = "---";
             root.priceChange = "";
             root.percentChange = "";
@@ -999,13 +1030,15 @@ PlasmoidItem {
     readonly property string tooltipTitle: {
         if (!root.isMultiMode) {
             var title = root.nameAndTicker(root.singleCompanyName, root.singleTicker);
-            return title !== "" ? title : "Plasma Stock Monitor";
+            return title !== "" ? title : i18n("Plasma Stock Monitor");
         }
         var n = stockModel.count;
         if (n === 0)
-            return "Plasma Stock Monitor";
-        return n + (n === 1 ? " stock" : " stocks") + " · " + root.chartRange
-               + (root.lastUpdated !== "" ? " · updated " + root.lastUpdated : "");
+            return i18n("Plasma Stock Monitor");
+        var count = i18np("%1 stock", "%1 stocks", n);
+        return root.lastUpdated !== ""
+               ? i18nc("@info:tooltip", "%1 · %2 · updated %3", count, root.rangeLabel(root.chartRange), root.lastUpdated)
+               : i18nc("@info:tooltip", "%1 · %2", count, root.rangeLabel(root.chartRange));
     }
 
     function htmlEscape(value) {
@@ -1059,13 +1092,13 @@ PlasmoidItem {
                 var marker = "<td style=\"padding-right:6px; padding-top:1px; padding-bottom:1px;\">"
                              + (row.ticker === root.panelTicker ? "•" : "") + "</td>";
                 var closedMark = (root.showExtendedHours && root.isMarketClosedFor(row.ticker))
-                                 ? " " + muted("closed") : "";
+                                 ? " " + muted(i18nc("@item:market status", "closed")) : "";
                 var tickerCell = "<td style=\"" + tickerStyle + "\"><b>"
                                  + root.htmlEscape(row.ticker) + "</b>" + closedMark + "</td>";
                 if (row.price === "---" && !ext) {
                     rows.push("<tr>" + marker + tickerCell
                               + "<td colspan=\"2\" align=\"right\" style=\"padding-top:1px; padding-bottom:1px;\">"
-                              + muted("loading…") + "</td></tr>");
+                              + muted(i18n("loading…")) + "</td></tr>");
                     continue;
                 }
                 rows.push("<tr>" + marker + tickerCell
@@ -1078,18 +1111,18 @@ PlasmoidItem {
             }
             if (stockModel.count > maxRows) {
                 rows.push("<tr><td></td><td colspan=\"3\" style=\"padding-top:2px;\">"
-                          + muted("… and " + (stockModel.count - maxRows) + " more") + "</td></tr>");
+                          + muted(i18n("… and %1 more", stockModel.count - maxRows)) + "</td></tr>");
             }
             return rows.length > 0
                    ? "<table cellspacing=\"0\" cellpadding=\"0\">" + rows.join("") + "</table>"
-                   : "Loading…";
+                   : i18n("Loading…");
         }
 
         if (root.currentPrice === "" || root.currentPrice === "---")
-            return "Loading…";
+            return i18n("Loading…");
 
         var singleRows = [];
-        var period = root.chartRange === "1D" ? "Today" : root.chartRange;
+        var period = root.chartRange === "1D" ? i18n("Today") : root.rangeLabel(root.chartRange);
         singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(period) + "</td>"
                         + "<td align=\"right\" style=\"" + cell + "\"><b>"
                         + root.htmlEscape(root.currentPrice) + "</b></td>"
@@ -1105,9 +1138,9 @@ PlasmoidItem {
                             + root.tooltipChange(ext.isPos, ext.change, ext.pct) + "</td></tr>");
         }
         if (root.showExtendedHours && root.isMarketClosedFor(root.singleTicker)) {
-            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Session") + "</td>"
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(i18n("Session")) + "</td>"
                             + "<td colspan=\"2\" style=\"" + cell + "\">"
-                            + muted("Market closed") + "</td></tr>");
+                            + muted(i18n("Market closed")) + "</td></tr>");
         }
 
         // When the shown ticker is in the portfolio, add the summed position: shares,
@@ -1115,11 +1148,12 @@ PlasmoidItem {
         if (root.showPortfolioMode && root.hasPortfolioEntry) {
             var p = root.portfolioSummary;
             var pSym = root.getCurrencySymbol(p.currency);
-            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Position") + "</td>"
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(i18n("Position")) + "</td>"
                             + "<td colspan=\"2\" style=\"" + cell + "\">"
-                            + root.htmlEscape(root.formatNumber(p.shares, false)) + " shares · avg "
-                            + root.htmlEscape(root.formatMoney(pSym, p.avgCost, false)) + "</td></tr>");
-            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("P/L") + "</td>"
+                            + root.htmlEscape(i18np("%1 share · avg %2", "%1 shares · avg %2",
+                                                    p.shares,
+                                                    root.formatMoney(pSym, p.avgCost, false))) + "</td></tr>");
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(i18n("P/L")) + "</td>"
                             + "<td align=\"right\" style=\"" + cell + "\">"
                             + root.htmlColored(p.plIsPos, root.formatMoney(pSym, p.plValue, true)) + "</td>"
                             + "<td align=\"right\" style=\"" + cell + "\">"
@@ -1127,7 +1161,7 @@ PlasmoidItem {
         }
 
         if (root.lastUpdated !== "")
-            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Updated") + "</td>"
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(i18n("Updated")) + "</td>"
                             + "<td colspan=\"2\" style=\"" + cell + "\">"
                             + root.htmlEscape(root.lastUpdated) + "</td></tr>");
 
@@ -1335,8 +1369,12 @@ PlasmoidItem {
 
             // First line: ticker, arrow and, if extended hours are shown, the session tag.
             var arrowW = Math.max(widthOf(probeTag, "▲"), widthOf(probeTag, "▼"));
+            // Measured from the same (translated) tags the panel shows, so a longer
+            // translation still fits in the reserved width.
             var tagW = root.showExtendedHours
-                       ? Math.max(widthOf(probeTag, "AH"), widthOf(probeTag, "PRE"), widthOf(probeTag, "CLOSED"))
+                       ? Math.max(widthOf(probeTag, root.tagAfterHours),
+                                  widthOf(probeTag, root.tagPreMarket),
+                                  widthOf(probeTag, root.tagClosed))
                        : 0;
             var line1 = widest(tickers, probeTicker) + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
 
@@ -1429,9 +1467,9 @@ PlasmoidItem {
                     Text {
                         visible: (compactRoot.ext !== undefined || compactRoot.marketClosed) && !root.isVerticalPanel
                         text: compactRoot.marketClosed
-                              ? "CLOSED"
+                              ? root.tagClosed
                               : (compactRoot.ext
-                                 ? (compactRoot.ext.label === "Pre-Market" ? "PRE" : "AH")
+                                 ? (compactRoot.ext.kind === "pre" ? root.tagPreMarket : root.tagAfterHours)
                                  : "")
                         color: Kirigami.Theme.textColor
                         opacity: 0.6
