@@ -1,9 +1,12 @@
-# Stock Market Monitor for KDE Plasma 6
+# Plasma Stock Monitor for KDE Plasma 6
 
-This is a clean, modern stock market widget for KDE Plasma 6. It pulls data directly from Yahoo Finance, covering stocks, crypto, and currencies worldwide.
+Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It pulls data directly from Yahoo Finance, covering stocks, crypto, and currencies worldwide.
+
+> **Fork notice:** Plasma Stock Monitor is a fork of [Stock Monitor](https://github.com/vpsone/stock-monitor-widget) by [vps (vpsone)](https://github.com/vpsone), with UI contributions by [Cenk Tekin](https://github.com/cenktekin). See [Credits](#credits) for full attribution.
+
 <p align="center">
     <a href="https://www.pling.com/p/2332661/">
-        <img src="https://img.shields.io/badge/KDE_Store-Download-blue?style=for-the-badge&logo=kde" alt="KDE Store Collection">
+        <img src="https://img.shields.io/badge/KDE_Store-Original_listing-blue?style=for-the-badge&logo=kde" alt="Original KDE Store listing">
     </a>
     <a href="https://ko-fi.com/vsh07">
         <img src="https://img.shields.io/badge/Buy_me_a_Kofi-donate-blue?style=for-the-badge&logo=kofi&color=%23FF6433" alt="Support on Ko-fi">
@@ -73,8 +76,27 @@ You can right-click the widget and hit **"Configure..."** to tweak almost everyt
 
 ## 📦 How to Install
 
-### From KDE Store
+This fork is not published on the KDE Store yet. Install it from source:
 
-- Right-click Desktop -\> **Add Widgets**.
-- Click **"Get New Widgets"**.
-- Search for "Stock Monitor" and hit Install.
+```bash
+git clone https://github.com/Steinhagen/plasma-stock-monitor.git
+cd plasma-stock-monitor
+kpackagetool6 --type Plasma/Applet --install .
+```
+
+Then right-click the desktop or panel, choose **Add Widgets**, and search for **Plasma Stock Monitor**.
+
+When updating an existing installation, use `--upgrade` instead of `--install`.
+
+## Credits
+
+Plasma Stock Monitor is a fork of [Stock Monitor](https://github.com/vpsone/stock-monitor-widget).
+
+- **Original project:** [Stock Monitor](https://github.com/vpsone/stock-monitor-widget) by [vps (vpsone)](https://github.com/vpsone).
+- **UI contributions:** [Cenk Tekin](https://github.com/cenktekin) — modern badge UI, custom gain/loss color picker, and improved price precision.
+- **Original KDE Store listing:** [Stock Monitor on the KDE Store](https://store.kde.org/p/2332661/).
+- **Upstream contributors:** [contributors to the original project](https://github.com/vpsone/stock-monitor-widget/graphs/contributors).
+- **License:** GPL-3.0-or-later, inherited from the original project. Copyright remains with the original authors and contributors.
+- **Fork:** [Steinhagen/plasma-stock-monitor](https://github.com/Steinhagen/plasma-stock-monitor), maintained by [Viorel-Cătălin Răpițeanu (Steinhagen)](https://github.com/Steinhagen).
+
+This fork is independent and is not affiliated with or endorsed by the original authors. The KDE Store listing above belongs to the original project; this fork has no KDE Store release yet. Please report fork-specific issues in this repository rather than upstream.

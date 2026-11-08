@@ -9,14 +9,18 @@
       {
         "Name": "Cenk Tekin",
         "Email": ""
+      },
+      {
+        "Name": "Viorel-Cătălin Răpițeanu",
+        "Email": ""
       }
     ],
-    "Name": "Stock Monitor",
+    "Name": "Plasma Stock Monitor",
     "Description": "Modernized stock monitor for KDE with badge UI and custom colors.",
     "Icon": "/icon.png",
-    "Id": "com.vps.stockmonitor",
-    "Version": "2.2",
-    "Website": "https://github.com/vpsone/stock-monitor-widget",
+    "Id": "io.github.steinhagen.plasmastockmonitor",
+    "Version": "1.0",
+    "Website": "https://github.com/Steinhagen/plasma-stock-monitor",
     "License": "GPL-3.0+"
   },
   "X-Plasma-API-Minimum-Version": "6.0"
