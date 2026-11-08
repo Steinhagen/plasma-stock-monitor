@@ -589,6 +589,7 @@ PlasmoidItem {
                         color:  Kirigami.Theme.textColor
                         font.pixelSize: 9
                         font.weight: Font.Bold
+                        renderType: Text.NativeRendering
                         opacity: 0.6
                         Layout.alignment: Qt.AlignBottom
                     }
@@ -597,6 +598,7 @@ PlasmoidItem {
                         color: root.isPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 8
                         font.weight: Font.Bold
+                        renderType: Text.NativeRendering
                     }
                 }
 
@@ -609,6 +611,7 @@ PlasmoidItem {
                         color: root.isPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 11
                         font.weight: Font.Bold
+                        renderType: Text.NativeRendering
                         // Ensure the price text is fully opaque; color is controlled by the line above
                         opacity: 1.0
                     }
@@ -633,6 +636,7 @@ PlasmoidItem {
                             color: root.isPositive ? root.positiveColor : root.negativeColor
                             font.pixelSize: 10
                             font.weight: Font.Black
+                            renderType: Text.NativeRendering
                         }
                     }
                 }
