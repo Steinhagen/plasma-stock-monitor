@@ -78,6 +78,7 @@ Item {
         portfolioTickerField.text = "";
         portfolioSharesSpin.value = 0;
         portfolioCostField.text = "";
+        portfolioDetailsField.text = "";
         page.purchaseDate = new Date();
         page.editingIndex = -1;
     }
@@ -92,6 +93,9 @@ Item {
             averageCost: page.parseLocaleNumber(portfolioCostField.text) || 0,
             addedDate: page.dateToIso(page.purchaseDate)
         };
+        // Optional free text, e.g. which broker/account the shares are held at.
+        var details = portfolioDetailsField.text.trim();
+        if (details !== "") lot.details = details;
         if (page.editingIndex >= 0 && page.editingIndex < portfolio.length) {
             portfolio[page.editingIndex] = lot;
         } else {
@@ -110,6 +114,7 @@ Item {
         portfolioSharesSpin.value = Number(lot.shares) || 0;
         portfolioCostField.text = String(Number(lot.averageCost) || 0);
         page.purchaseDate = lot.addedDate ? new Date(lot.addedDate) : new Date();
+        portfolioDetailsField.text = lot.details || "";
         page.editingIndex = index;
     }
 
@@ -307,6 +312,14 @@ Item {
                     }
                 }
 
+                TextField {
+                    id: portfolioDetailsField
+                    Kirigami.FormData.label: "Details (optional):"
+                    placeholderText: "e.g., E*TRADE - 8122"
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 20
+                }
+
                 RowLayout {
                     spacing: Kirigami.Units.smallSpacing
                     Kirigami.FormData.label: "Actions:"
@@ -329,10 +342,10 @@ Item {
                                 csvOutput.text = "No portfolio data to export.";
                                 return;
                             }
-                            var csv = "Ticker,Shares,Average Cost,Added Date\n";
+                            var csv = "Ticker,Shares,Average Cost,Added Date,Details\n";
                             for (var i = 0; i < page.portfolioList.length; i++) {
                                 var lot = page.portfolioList[i];
-                                csv += page.escapeCsvField(lot.ticker) + "," + page.escapeCsvField(lot.shares) + "," + page.escapeCsvField(lot.averageCost) + "," + page.escapeCsvField(lot.addedDate) + "\n";
+                                csv += page.escapeCsvField(lot.ticker) + "," + page.escapeCsvField(lot.shares) + "," + page.escapeCsvField(lot.averageCost) + "," + page.escapeCsvField(lot.addedDate) + "," + page.escapeCsvField(lot.details || "") + "\n";
                             }
                             csvOutput.text = csv;
                         }
@@ -369,12 +382,25 @@ Item {
                 model: page.portfolioList
                 delegate: RowLayout {
                     Layout.fillWidth: true
-                    Label {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        font.pixelSize: 11
-                        text: modelData.ticker + ":  " + modelData.shares + " shares @ $" + Number(modelData.averageCost).toFixed(2)
-                              + (modelData.addedDate ? "   (" + Qt.formatDateTime(new Date(modelData.addedDate), "dd MMM yyyy") + ")" : "")
+                        spacing: 0
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            font.pixelSize: 11
+                            text: modelData.ticker + ":  " + modelData.shares + " shares @ $" + Number(modelData.averageCost).toFixed(2)
+                                  + (modelData.addedDate ? "   (" + Qt.formatDateTime(new Date(modelData.addedDate), "dd MMM yyyy") + ")" : "")
+                        }
+                        // Where the shares are held, if the lot has details.
+                        Label {
+                            Layout.fillWidth: true
+                            visible: !!modelData.details
+                            elide: Text.ElideRight
+                            font.pixelSize: 10
+                            opacity: 0.7
+                            text: modelData.details || ""
+                        }
                     }
                     Button {
                         text: "Edit"
