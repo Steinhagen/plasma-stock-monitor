@@ -28,6 +28,7 @@ var SETTINGS_KEYS = [
     "showNameAndTicker",
     "refreshInterval",
     "chartRange",
+    "showChartRangeButtons",
     "limitHours",
     "skipWeekendRefresh",
     "startHour",
@@ -76,7 +77,8 @@ var BOOL_KEYS = {
     keepExtendedAfterClose: true,
     hideDecimals: true,
     showChartAxis: true,
-    showTimeAxis: true
+    showTimeAxis: true,
+    showChartRangeButtons: true
 };
 
 // [minimum, maximum] for every integer setting. The ranges mirror the SpinBoxes and

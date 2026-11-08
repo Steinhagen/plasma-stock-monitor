@@ -46,6 +46,10 @@
             <label>Data History Range</label>
             <default>1D</default>
         </entry>
+        <entry name="showChartRangeButtons" type="Bool">
+            <label>Show the data range buttons in the chart</label>
+            <default>false</default>
+        </entry>
 
         <entry name="limitHours" type="Bool">
             <label>Only update during specific hours</label>

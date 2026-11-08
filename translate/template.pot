@@ -309,6 +309,14 @@ msgid "Swap company name and ticker symbol"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Range Selection:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Show the range buttons in the chart"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Data Range:"
 msgstr ""
 
@@ -649,6 +657,11 @@ msgstr ""
 #: contents/ui/main.qml
 msgctxt "@item:panel stock market session tag"
 msgid "CLOSED"
+msgstr ""
+
+#: contents/ui/main.qml
+msgctxt "@item:chart range"
+msgid "All"
 msgstr ""
 
 #: contents/ui/main.qml

@@ -26,6 +26,7 @@ Item {
     property bool cfg_showNameAndTicker
     property int cfg_refreshInterval
     property string cfg_chartRange
+    property bool cfg_showChartRangeButtons
     property bool cfg_limitHours
     property bool cfg_skipWeekendRefresh
     property int cfg_startHour

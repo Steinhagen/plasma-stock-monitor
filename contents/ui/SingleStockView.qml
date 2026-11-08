@@ -29,7 +29,12 @@ Rectangle {
         anchors.bottomMargin: 10
 
         MouseArea {
-            anchors.fill: parent
+            // Cover the chart and the values below it, but not the header or the range
+            // buttons: those have their own click handling.
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: chartArea.top
+            anchors.bottom: parent.bottom
             z: 100 // Ensure it's on top of everything
             cursorShape: Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton
@@ -130,7 +135,52 @@ Rectangle {
                     }
                 }
             }
+            // Data-range selector shown in the chart when enabled in the settings. It uses
+            // the same range values as the configuration page, but lets the range be changed
+            // without opening the configuration dialog.
+            Flow {
+                id: chartRangeButtons
+                objectName: "chartRangeButtons"
+                Layout.fillWidth: true
+                Layout.preferredHeight: chartRangeButtons.implicitHeight
+                Layout.topMargin: 6
+                Layout.bottomMargin: 2
+                spacing: 3
+                visible: rootItem.showChartRangeButtons
+
+                Repeater {
+                    model: ["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "Max"]
+                    delegate: Rectangle {
+                        id: rangeButton
+                        objectName: "chartRangeButton_" + modelData
+                        required property string modelData
+                        readonly property bool selected: rangeButton.modelData === rootItem.chartRange
+                        width: rangeButtonLabel.implicitWidth + 8
+                        height: 18
+                        radius: 4
+                        color: selected
+                               ? Qt.rgba(rootItem.tickerColor.r, rootItem.tickerColor.g, rootItem.tickerColor.b, 0.14)
+                               : "transparent"
+
+                        Text {
+                            id: rangeButtonLabel
+                            anchors.centerIn: parent
+                            text: rootItem.chartRangeButtonLabel(rangeButton.modelData)
+                            color: rangeButton.selected ? rootItem.tickerColor : rootItem.secondaryTextColor
+                            font.pixelSize: 9
+                            font.bold: rangeButton.selected
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: rootItem.setChartRange(rangeButton.modelData)
+                        }
+                    }
+                }
+            }
             Item {
+                id: chartArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.topMargin: 10

@@ -26,7 +26,7 @@ Plasma Stock Monitor is a clean, modern stock market widget for KDE Plasma 6. It
 
 - **Two Display Modes:** Single View and Multi-Stock List.
 - **Beautiful Charts:** Smooth, gradient-filled charts that change color (Green/Red) based on performance, with optional price and time scales.
-- **Data Ranges:** View history from 1 Day (1D) up to 5 Years (5Y) or Max. Time-scale labels adapt to the selected range (hours, days, months or years).
+- **Data Ranges:** View history from 1 Day (1D) up to 5 Years (5Y) or Max. Time-scale labels adapt to the selected range (hours, days, months or years), and the range can optionally be switched from buttons directly in the chart.
 - **Smart & Efficient:**
   - Automatic "Previous Close" dashed line.
   - **Market status:** Shows when a market is closed, including indices and symbols without pre-market/after-hours quotes.

@@ -28,6 +28,7 @@ Item {
     property alias cfg_endMinute: endMinuteSpin.value
 
     property string cfg_chartRange
+    property alias cfg_showChartRangeButtons: chartRangeButtonsSwitch.checked
 
     onCfg_chartRangeChanged: {
         var idx = rangeCombo.indexOfValue(cfg_chartRange)
@@ -96,8 +97,18 @@ Item {
                       : i18n("Swap company name and ticker symbol")
             }
 
+            CheckBox {
+                id: chartRangeButtonsSwitch
+                Kirigami.FormData.label: i18n("Range Selection:")
+                text: i18n("Show the range buttons in the chart")
+            }
+
             ComboBox {
                 id: rangeCombo
+                // With the in-chart selector enabled, this preset is redundant wherever the
+                // chart is visible; keep it for multi-stock mode without the chart column.
+                visible: !chartRangeButtonsSwitch.checked
+                         || (modeSwitch.checked && !showTwoListSwitch.checked)
                 Kirigami.FormData.label: i18n("Data Range:")
                 // `value` is what gets stored in the config, `text` is only the label, so
                 // translating the labels never changes the saved range.

@@ -60,6 +60,8 @@ PlasmoidItem {
         return before + metrics.elidedText(name, Qt.ElideRight, room) + after;
     }
     property string chartRange: Plasmoid.configuration.chartRange
+    // Show the range selector in the chart instead of using the preset from the settings.
+    property bool showChartRangeButtons: Plasmoid.configuration.showChartRangeButtons
     // Time Limits Config
     property bool limitHours: Plasmoid.configuration.limitHours
     property bool skipWeekendRefresh: Plasmoid.configuration.skipWeekendRefresh
@@ -466,6 +468,19 @@ PlasmoidItem {
             case "Max": return i18n("Max");
             default:    return range;
         }
+    }
+
+    // Label for the range buttons in the chart. The whole history is called "All" there,
+    // as in Yahoo Finance, while the stored/configured value stays "Max".
+    function chartRangeButtonLabel(range) {
+        return range === "Max" ? i18nc("@item:chart range", "All") : root.rangeLabel(range);
+    }
+
+    // Range selected from the chart buttons. It is stored in the applet configuration so
+    // the choice survives a restart and is used by the rest of the widget as well.
+    function setChartRange(range) {
+        if (range === root.chartRange) return;
+        Plasmoid.configuration.chartRange = range;
     }
 
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
