@@ -7,6 +7,8 @@ Item {
     id: page
 
     property alias cfg_hideChangePercentage: hidePercentSwitch.checked
+    property alias cfg_autoCycle: autoCycleSwitch.checked
+    property alias cfg_autoCycleInterval: autoCycleSpin.value
 
     ScrollView {
         anchors.fill: parent
@@ -21,6 +23,21 @@ Item {
                 id: hidePercentSwitch
                 Kirigami.FormData.label: "Stock Change Percentage:"
                 text: "Hide stock change percentage"
+            }
+
+            CheckBox {
+                id: autoCycleSwitch
+                Kirigami.FormData.label: "Cycle panel stock:"
+                text: "Automatically cycle through the stocks"
+            }
+
+            SpinBox {
+                id: autoCycleSpin
+                Kirigami.FormData.label: "Cycle every (seconds):"
+                enabled: autoCycleSwitch.checked
+                from: 3
+                to: 3600
+                stepSize: 1
             }
         }
     }

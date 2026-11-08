@@ -95,6 +95,14 @@
             <label>Hide Stock Change Percentage (Panel View)</label>
             <default>false</default>
         </entry>
+        <entry name="autoCycle" type="Bool">
+            <label>Automatically cycle the panel stock</label>
+            <default>false</default>
+        </entry>
+        <entry name="autoCycleInterval" type="Int">
+            <label>Seconds between panel stock changes</label>
+            <default>15</default>
+        </entry>
         <entry name="hideTimestamps" type="Bool">
             <label>Hide Update Timestamps</label>
             <default>true</default>

@@ -488,6 +488,33 @@ PlasmoidItem {
         onTriggered: root.checkTimeAndRefresh()
     }
 
+    // Optionally rotate the panel stock every N seconds (multi-stock mode).
+    // The panel text is filled from the already-fetched list data; a single
+    // request then refreshes the chart for the newly selected stock.
+    Timer {
+        interval: Math.max(3, Plasmoid.configuration.autoCycleInterval) * 1000
+        running: Plasmoid.configuration.autoCycle && root.isMultiMode && stockModel.count > 1
+        repeat: true
+        onTriggered: {
+            var current = 0;
+            for (var i = 0; i < stockModel.count; i++) {
+                if (stockModel.get(i).ticker === root.panelTicker) { current = i; break; }
+            }
+            var row = stockModel.get((current + 1) % stockModel.count);
+            root.manualPanelTickerOverride = row.ticker;
+            root.panelTicker = row.ticker;
+            root.singleTicker = row.ticker;
+            root.singleCompanyName = row.name;
+            root.currentPrice = row.price;
+            root.currentRawPrice = row.currentRaw;
+            root.priceChange = row.change;
+            root.percentChange = row.pct;
+            root.isPositive = row.isPos;
+            root.currencySym = row.currencySym;
+            root.fetchSingleStock(row.ticker);
+        }
+    }
+
     // --- PANEL VIEW (Compact Representation) ---
     compactRepresentation: MouseArea {
         id: compactRoot
