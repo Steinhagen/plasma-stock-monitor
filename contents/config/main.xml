@@ -136,6 +136,10 @@
             <label>Show pre-market and after-market values</label>
             <default>true</default>
         </entry>
+        <entry name="keepExtendedAfterClose" type="Bool">
+            <label>Keep the last extended-hours quote when the market is closed</label>
+            <default>true</default>
+        </entry>
         <entry name="hideDecimals" type="Bool">
             <label>Hide decimals in stock price</label>
             <default>false</default>

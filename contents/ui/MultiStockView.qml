@@ -141,9 +141,13 @@ Rectangle {
             // Base row, plus one summary line when the ticker has a position.
             height: 60 + (rowRoot.rowSummary !== null ? 20 : 0)
             property string rowCurrencySym: model.currencySym
-            // Pre-market / after-market quote for this ticker. Only present while that session is
-            // the latest one, i.e. when the regular market is closed (undefined otherwise).
-            property var rowExt: rootItem.showExtendedHours ? rootItem.extendedData[model.ticker] : undefined
+            // Pre-market / after-market quote for this ticker. Only present while that
+            // session is the latest one, i.e. when the regular market is closed
+            // (undefined otherwise).
+            property var rowExt: rootItem.extendedQuote(model.ticker)
+            // True while the market is closed, with or without a kept extended quote.
+            property bool rowClosed: rootItem.showExtendedHours
+                                     && rootItem.isMarketClosedFor(model.ticker)
 
             MouseArea {
                 anchors.fill: parent
@@ -243,13 +247,15 @@ Rectangle {
                                 FontMetrics { id: secondLineMetrics; font.pixelSize: 10; font.bold: true }
 
                                 // Longest wording that fits in `avail` pixels, richest first:
-                                // "After-Market $342.65 -0.28 (-0.08%)" ... down to just the price.
+                                // "After-Market · closed $342.65 -0.28 (-0.08%)" ... down to just the price.
                                 function extText(avail) {
                                     var e = secondLine.ext;
                                     if (!e) return "";
-                                    var shortLabel = e.label === "Pre-Market" ? "Pre" : "After";
+                                    var closedSuffix = rowRoot.rowClosed ? " · closed" : "";
+                                    var fullLabel = e.label + closedSuffix;
+                                    var shortLabel = (e.label === "Pre-Market" ? "Pre" : "After") + closedSuffix;
                                     var tiers = [
-                                        [e.label, e.price, e.change + " (" + e.pct + ")"],
+                                        [fullLabel, e.price, e.change + " (" + e.pct + ")"],
                                         [shortLabel, e.price, e.pct],
                                         [null, e.price, e.pct],
                                         [null, e.price, null]
@@ -271,8 +277,11 @@ Rectangle {
                                 textFormat: ext ? Text.StyledText : Text.PlainText
                                 // Line 1 already carries the company name when name and ticker are shown together.
                                 text: ext ? extText(width)
-                                          : (rootItem.showNameAndTicker ? ""
-                                             : (rootItem.swapNameAndTicker ? model.ticker : model.name))
+                                          : (rowRoot.rowClosed
+                                             ? "Market closed" + (rootItem.showNameAndTicker ? ""
+                                                 : " · " + (rootItem.swapNameAndTicker ? model.ticker : model.name))
+                                             : (rootItem.showNameAndTicker ? ""
+                                                : (rootItem.swapNameAndTicker ? model.ticker : model.name)))
                                 color: rootItem.secondaryTextColor
                                 font.pixelSize: 10
                                 elide: Text.ElideRight

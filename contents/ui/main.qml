@@ -460,10 +460,30 @@ PlasmoidItem {
 
     // --- PRE-MARKET / AFTER-MARKET ---
     // Latest pre-market or after-market quote per requested symbol, as
-    // { label, price, change, pct, isPos }. A symbol has no entry while its regular
-    // session is open, or when Yahoo has no extended-hours data for it.
+    // { label, time, price, change, pct, isPos }. Only the quote from the session
+    // running now is surfaced (see extendedQuote()).
     property bool showExtendedHours: Plasmoid.configuration.showExtendedHours
+    // Keep the last pre-/after-market quote visible after its session ends, marked
+    // as closed, instead of falling back to the regular close only.
+    property bool keepExtendedAfterClose: Plasmoid.configuration.keepExtendedAfterClose
     property var extendedData: ({})
+    // Last extended-hours quote seen per symbol, kept separately so it can still be
+    // shown (marked closed) after its session ends.
+    property var lastExtendedData: ({})
+
+    // Trading sessions from the latest quote metadata, per symbol. Keeping them
+    // lets the open/closed state be evaluated at display time instead of only
+    // when a quote was fetched.
+    property var marketSessions: ({})
+    // Bumped once a minute so bindings that call marketStatusFor() re-evaluate
+    // when a session starts or ends, even if no new quote arrived in between.
+    property int marketClock: 0
+    Timer {
+        interval: 60000
+        running: root.showExtendedHours
+        repeat: true
+        onTriggered: root.marketClock++
+    }
 
     function setExtendedData(symbol, entry) {
         var copy = Object.assign({}, root.extendedData);
@@ -472,28 +492,100 @@ PlasmoidItem {
         root.extendedData = copy;
     }
 
-    // True when timestamp t falls inside one of Yahoo's trading periods
-    // (an array of days, each an array of { start, end }).
-    function inTradingPeriods(periods, t) {
-        if (!periods) return false;
-        for (var i = 0; i < periods.length; i++) {
-            for (var j = 0; j < periods[i].length; j++) {
-                if (t >= periods[i][j].start && t < periods[i][j].end) return true;
-            }
-        }
-        return false;
+    function setLastExtendedData(symbol, entry) {
+        var copy = Object.assign({}, root.lastExtendedData);
+        if (entry) copy[symbol] = entry;
+        else delete copy[symbol];
+        root.lastExtendedData = copy;
     }
 
-    // The chart API returns pre/post candles when asked for them. The newest candle tells
-    // which session the symbol is in: after the regular close it is After-Market, before the
-    // open it is Pre-Market. Both are measured against the last regular-session price.
+    function setMarketSession(symbol, meta) {
+        var periods = meta.currentTradingPeriod || ({});
+        var copy = Object.assign({}, root.marketSessions);
+        copy[symbol] = {
+            "pre": periods.pre || null,
+            "regular": periods.regular || null,
+            "post": periods.post || null,
+            "hasPrePost": meta.hasPrePostMarketData !== 0 && meta.hasPrePostMarketData !== false,
+            "crypto": meta.instrumentType === "CRYPTOCURRENCY"
+        };
+        root.marketSessions = copy;
+    }
+
+    // "open", "pre", "post" or "closed" for the exchange the symbol trades on,
+    // from the trading periods in the latest quote. Crypto has no closing time.
+    function marketStatusFor(symbol) {
+        var s = root.marketSessions[symbol];
+        if (!s) return "";
+        // Read the clock so QML re-evaluates callers when a session boundary passes.
+        if (root.marketClock < 0) return "";
+        var now = Math.floor(Date.now() / 1000);
+        if (s.crypto) return "open";
+        if (s.regular && now >= s.regular.start && now < s.regular.end) return "open";
+        if (s.pre && now >= s.pre.start && now < s.pre.end) return "pre";
+        if (s.post && now >= s.post.start && now < s.post.end) return "post";
+        return "closed";
+    }
+
+    function hasPrePostDataFor(symbol) {
+        var s = root.marketSessions[symbol];
+        return s ? s.hasPrePost : true;
+    }
+
+    // True when the instrument's market is closed: outside every session, or in a
+    // pre/post window for an instrument that has no extended-hours trading at all
+    // (indices, for example). Unknown symbols are not marked closed.
+    function isMarketClosedFor(symbol) {
+        var s = root.marketSessions[symbol];
+        if (!s) return false;
+        var status = root.marketStatusFor(symbol);
+        if (status === "closed") return true;
+        return !s.hasPrePost && (status === "pre" || status === "post");
+    }
+
+    // The extended quote to show for a symbol: the live one while its session runs,
+    // or — when the option is enabled — the last one after the market closes. This
+    // keeps a Friday after-hours quote from being shown as "after-market" during a
+    // later pre-market session.
+    function extendedQuote(symbol) {
+        if (!root.showExtendedHours) return undefined;
+        var status = root.marketStatusFor(symbol);
+        if (status === "closed") {
+            if (!root.keepExtendedAfterClose) return undefined;
+            // The last extended quote of the most recent session, kept so it can
+            // still be shown once the market closes.
+            return root.lastExtendedData[symbol];
+        }
+        var e = root.extendedData[symbol];
+        var s = root.marketSessions[symbol];
+        if (!e || !s || !e.time) return undefined;
+        var period = status === "pre" ? s.pre : (status === "post" ? s.post : null);
+        if (!period) return undefined;
+        if (e.time < period.start || e.time >= period.end) return undefined;
+        if ((status === "pre" && e.label !== "Pre-Market")
+            || (status === "post" && e.label !== "After-Market")) return undefined;
+        return e;
+    }
+
+    // The chart API returns pre/post candles when asked for them. The current
+    // session comes from the metadata, not from the last candle alone: Yahoo keeps
+    // serving the last session's candles after it has ended.
     function processExtendedData(symbol, json) {
         try {
             var result = json.chart.result[0];
             var meta = result.meta;
+            root.setMarketSession(symbol, meta);
+            var status = root.marketStatusFor(symbol);
+            if (status === "open") { root.setExtendedData(symbol, null); return; }
+            if (status === "closed" && !root.keepExtendedAfterClose) {
+                root.setExtendedData(symbol, null);
+                return;
+            }
+            if (!root.hasPrePostDataFor(symbol)) { root.setExtendedData(symbol, null); return; }
+
             var closes = result.indicators.quote[0].close;
             var stamps = result.timestamp;
-            if (!meta.tradingPeriods || !stamps || !closes) { root.setExtendedData(symbol, null); return; }
+            if (!stamps || !closes) { root.setExtendedData(symbol, null); return; }
 
             var last = -1;
             for (var i = closes.length - 1; i >= 0; i--) {
@@ -501,22 +593,40 @@ PlasmoidItem {
             }
             if (last < 0) { root.setExtendedData(symbol, null); return; }
 
+            var session = root.marketSessions[symbol];
+            var period = null;
             var label = "";
-            if (root.inTradingPeriods(meta.tradingPeriods.post, stamps[last])) label = "After-Market";
-            else if (root.inTradingPeriods(meta.tradingPeriods.pre, stamps[last])) label = "Pre-Market";
+            if (status === "pre" || status === "post") {
+                period = status === "pre" ? session.pre : session.post;
+                label = status === "pre" ? "Pre-Market" : "After-Market";
+            } else if (session.post && stamps[last] >= session.post.start && stamps[last] < session.post.end) {
+                // Closed: keep the last session's quote if the option asks for it.
+                period = session.post;
+                label = "After-Market";
+            } else if (session.pre && stamps[last] >= session.pre.start && stamps[last] < session.pre.end) {
+                period = session.pre;
+                label = "Pre-Market";
+            }
+            if (!period || stamps[last] < period.start || stamps[last] >= period.end) {
+                root.setExtendedData(symbol, null);
+                return;
+            }
 
             var base = meta.regularMarketPrice;
-            if (label === "" || !base) { root.setExtendedData(symbol, null); return; }
+            if (!base) { root.setExtendedData(symbol, null); return; }
 
             var price = closes[last];
             var change = price - base;
-            root.setExtendedData(symbol, {
+            var entry = {
                 "label": label,
+                "time": stamps[last],
                 "price": getCurrencySymbol(meta.currency) + formatNumber(price, false),
                 "change": formatNumber(change, true),
                 "pct": formatNumber((change / base) * 100, true) + "%",
                 "isPos": change >= 0
-            });
+            };
+            root.setExtendedData(symbol, entry);
+            root.setLastExtendedData(symbol, entry);
         } catch (e) { console.log("Error parsing extended hours: " + e); }
     }
 
@@ -546,7 +656,15 @@ PlasmoidItem {
 
     onShowExtendedHoursChanged: {
         if (showExtendedHours) refreshExtendedHours();
-        else extendedData = ({});
+        else { extendedData = ({}); lastExtendedData = ({}); }
+    }
+
+    onKeepExtendedAfterCloseChanged: {
+        if (keepExtendedAfterClose) {
+            if (showExtendedHours) refreshExtendedHours();
+        } else {
+            lastExtendedData = ({});
+        }
     }
 
     function refreshData() {
@@ -658,6 +776,8 @@ PlasmoidItem {
         try {
             var result = json.chart.result[0];
             var meta = result.meta;
+            var symbol = fallbackSymbol || root.singleTicker;
+            root.setMarketSession(symbol, meta);
             var quotes = result.indicators.quote[0].close;
             var timestamps = result.timestamp;
 
@@ -726,6 +846,7 @@ PlasmoidItem {
         try {
             var result = json.chart.result[0];
             var meta = result.meta;
+            root.setMarketSession(symbol, meta);
             var quotes = result.indicators.quote[0].close;
             var timestamps = result.timestamp;
 
@@ -934,11 +1055,13 @@ PlasmoidItem {
             var tickerStyle = "padding-right:16px; padding-top:1px; padding-bottom:1px;";
             for (var i = 0; i < stockModel.count && i < maxRows; i++) {
                 var row = stockModel.get(i);
-                var ext = root.showExtendedHours ? root.extendedData[row.ticker] : undefined;
+                var ext = root.extendedQuote(row.ticker);
                 var marker = "<td style=\"padding-right:6px; padding-top:1px; padding-bottom:1px;\">"
                              + (row.ticker === root.panelTicker ? "•" : "") + "</td>";
+                var closedMark = (root.showExtendedHours && root.isMarketClosedFor(row.ticker))
+                                 ? " " + muted("closed") : "";
                 var tickerCell = "<td style=\"" + tickerStyle + "\"><b>"
-                                 + root.htmlEscape(row.ticker) + "</b></td>";
+                                 + root.htmlEscape(row.ticker) + "</b>" + closedMark + "</td>";
                 if (row.price === "---" && !ext) {
                     rows.push("<tr>" + marker + tickerCell
                               + "<td colspan=\"2\" align=\"right\" style=\"padding-top:1px; padding-bottom:1px;\">"
@@ -973,13 +1096,18 @@ PlasmoidItem {
                         + "<td align=\"right\" style=\"" + cell + "\">"
                         + root.tooltipChange(root.isPositive, root.priceChange, root.percentChange) + "</td></tr>");
 
-        var ext = root.showExtendedHours ? root.extendedData[root.singleTicker] : undefined;
+        var ext = root.extendedQuote(root.singleTicker);
         if (ext) {
             singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(ext.label) + "</td>"
                             + "<td align=\"right\" style=\"" + cell + "\"><b>"
                             + root.htmlEscape(ext.price) + "</b></td>"
                             + "<td align=\"right\" style=\"" + cell + "\">"
                             + root.tooltipChange(ext.isPos, ext.change, ext.pct) + "</td></tr>");
+        }
+        if (root.showExtendedHours && root.isMarketClosedFor(root.singleTicker)) {
+            singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted("Session") + "</td>"
+                            + "<td colspan=\"2\" style=\"" + cell + "\">"
+                            + muted("Market closed") + "</td></tr>");
         }
 
         // When the shown ticker is in the portfolio, add the summed position: shares,
@@ -1144,12 +1272,14 @@ PlasmoidItem {
             onTriggered: if (priceText) priceText.opacity = 1.0;
         }
 
-        // While the regular market is closed, the ticker has a pre-market / after-market
-        // quote (see extendedData). The panel then shows that quote instead of the regular
-        // price and change, and a small tag next to the ticker says which session it is.
-        readonly property var ext: root.showExtendedHours
-                                   ? root.extendedData[root.isMultiMode ? root.panelTicker : root.singleTicker]
-                                   : undefined
+        // While an extended-hours session is running, the ticker has a pre-market /
+        // after-market quote (see extendedQuote()). The panel then shows that quote
+        // instead of the regular price and change, and a small tag next to the ticker
+        // says which session it is. Without an extended quote, the tag says CLOSED
+        // while the market is closed.
+        readonly property var ext: root.extendedQuote(root.isMultiMode ? root.panelTicker : root.singleTicker)
+        readonly property bool marketClosed: root.showExtendedHours
+                                             && root.isMarketClosedFor(root.isMultiMode ? root.panelTicker : root.singleTicker)
         readonly property string shownPrice: ext ? ext.price : root.currentPrice
         readonly property string shownPercent: ext ? ext.pct : root.percentChange
         readonly property bool shownPositive: ext ? ext.isPos : root.isPositive
@@ -1179,7 +1309,7 @@ PlasmoidItem {
                 tickers.push(String(ticker || "").toUpperCase());
                 prices.push(String(price || ""));
                 pcts.push(String(pct || ""));
-                var e = root.showExtendedHours ? root.extendedData[ticker] : undefined;
+                var e = root.extendedQuote(ticker);
                 if (e) { prices.push(e.price); pcts.push(e.pct); }
             };
             if (root.isMultiMode) {
@@ -1205,7 +1335,9 @@ PlasmoidItem {
 
             // First line: ticker, arrow and, if extended hours are shown, the session tag.
             var arrowW = Math.max(widthOf(probeTag, "▲"), widthOf(probeTag, "▼"));
-            var tagW = root.showExtendedHours ? Math.max(widthOf(probeTag, "AH"), widthOf(probeTag, "PRE")) : 0;
+            var tagW = root.showExtendedHours
+                       ? Math.max(widthOf(probeTag, "AH"), widthOf(probeTag, "PRE"), widthOf(probeTag, "CLOSED"))
+                       : 0;
             var line1 = widest(tickers, probeTicker) + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
 
             // Second line: price and change badge (or the wider of the two when they alternate).
@@ -1292,11 +1424,15 @@ PlasmoidItem {
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
                     }
-                    // Session tag: AH = after-market, PRE = pre-market. Only shown while the
-                    // regular market is closed.
+                    // Session tag: AH = after-market, PRE = pre-market, CLOSED = the
+                    // exchange is not trading and there is no extended quote to show.
                     Text {
-                        visible: compactRoot.ext !== undefined && !root.isVerticalPanel
-                        text: compactRoot.ext ? (compactRoot.ext.label === "Pre-Market" ? "PRE" : "AH") : ""
+                        visible: (compactRoot.ext !== undefined || compactRoot.marketClosed) && !root.isVerticalPanel
+                        text: compactRoot.marketClosed
+                              ? "CLOSED"
+                              : (compactRoot.ext
+                                 ? (compactRoot.ext.label === "Pre-Market" ? "PRE" : "AH")
+                                 : "")
                         color: Kirigami.Theme.textColor
                         opacity: 0.6
                         font.pixelSize: 8

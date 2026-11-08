@@ -163,7 +163,7 @@ Rectangle {
             // the list and the panel use.
             RowLayout {
                 id: extendedRow
-                readonly property var ext: rootItem.showExtendedHours ? rootItem.extendedData[rootItem.singleTicker] : undefined
+                readonly property var ext: rootItem.extendedQuote(rootItem.singleTicker)
                 readonly property color accent: ext && ext.isPos ? rootItem.positiveColor : rootItem.negativeColor
 
                 // Caption fitting: "After-Market" if it fits next to the price and the change,
@@ -223,6 +223,18 @@ Rectangle {
                     }
                 }
                 Item { Layout.fillWidth: true }
+            }
+            // Shown when the symbol has no extended-hours quote (indices, for
+            // example) and its exchange is not trading, so the card still says why
+            // the price is not moving.
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 2
+                visible: rootItem.showExtendedHours
+                         && rootItem.isMarketClosedFor(rootItem.singleTicker)
+                text: "Market closed"
+                color: rootItem.secondaryTextColor
+                font.pixelSize: 11
             }
             // One line for the whole position: all the lots of this ticker added up (shares,
             // average cost, value, total gain, gain over the shown period).

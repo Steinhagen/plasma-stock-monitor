@@ -21,6 +21,7 @@ Item {
     property alias cfg_formatPrices: formatPricesSwitch.checked
     property alias cfg_hideDecimals: hideDecimalsSwitch.checked
     property alias cfg_showExtendedHours: extendedHoursSwitch.checked
+    property alias cfg_keepExtendedAfterClose: keepExtendedAfterCloseSwitch.checked
     property alias cfg_startHour: startHourSpin.value
     property alias cfg_startMinute: startMinuteSpin.value
     property alias cfg_endHour: endHourSpin.value
@@ -160,7 +161,14 @@ Item {
             CheckBox {
                 id: extendedHoursSwitch
                 Kirigami.FormData.label: "Extended Hours:"
-                text: "Show pre-market and after-market values"
+                text: "Show pre-/after-market values and market-closed status"
+            }
+
+            CheckBox {
+                id: keepExtendedAfterCloseSwitch
+                Kirigami.FormData.label: "When Closed:"
+                text: "Keep showing the last pre-/after-market quote"
+                enabled: extendedHoursSwitch.checked
             }
             
         }
