@@ -143,6 +143,72 @@ Rectangle {
 
                 Behavior on opacity { NumberAnimation { duration: 150 } }
             }
+            // Pre-market / after-market quote, when enabled and the symbol has one:
+            // a muted caption, the price, and the change in the same tinted badge style
+            // the list and the panel use.
+            RowLayout {
+                id: extendedRow
+                readonly property var ext: rootItem.showExtendedHours ? rootItem.extendedData[rootItem.singleTicker] : undefined
+                readonly property color accent: ext && ext.isPos ? rootItem.positiveColor : rootItem.negativeColor
+
+                // Caption fitting: "After-Market" if it fits next to the price and the change,
+                // else just "After" / "Pre", else nothing. Measured with the same font as the
+                // caption so the row never needs more width than the card provides.
+                readonly property real chipWidth: extendedChange.implicitWidth + (Kirigami.Units.smallSpacing * 2)
+                readonly property real baseWidth: extendedPrice.implicitWidth + chipWidth + spacing
+                readonly property string shortLabel: ext ? (ext.label === "Pre-Market" ? "Pre" : "After") : ""
+                readonly property string captionText: {
+                    if (!ext) return "";
+                    if (width >= baseWidth + spacing + fullMetrics.width) return ext.label;
+                    if (width >= baseWidth + spacing + shortMetrics.width) return shortLabel;
+                    return "";
+                }
+                TextMetrics { id: fullMetrics; font.pixelSize: 11; text: extendedRow.ext ? extendedRow.ext.label : "" }
+                TextMetrics { id: shortMetrics; font.pixelSize: 11; text: extendedRow.shortLabel }
+
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                Layout.bottomMargin: 2
+                visible: ext !== undefined
+                spacing: 8
+
+                // The two spacers centre the content while there is room. The caption is
+                // chosen by the width available (see captionText), so the row never asks
+                // for more width than the card has.
+                Item { Layout.fillWidth: true }
+                Text {
+                    visible: text !== ""
+                    text: extendedRow.captionText
+                    color: rootItem.secondaryTextColor
+                    font.pixelSize: 11
+                }
+                Text {
+                    id: extendedPrice
+                    text: extendedRow.ext ? extendedRow.ext.price : ""
+                    color: rootItem.priceColor
+                    opacity: rootItem.priceOpacity / 100.0
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+                Rectangle {
+                    radius: 4
+                    color: Qt.rgba(extendedRow.accent.r, extendedRow.accent.g, extendedRow.accent.b, 0.15)
+                    border.color: extendedRow.accent
+                    border.width: 1
+                    Layout.preferredWidth: extendedRow.chipWidth
+                    Layout.preferredHeight: extendedChange.implicitHeight + (Kirigami.Units.smallSpacing / 2)
+
+                    Text {
+                        id: extendedChange
+                        anchors.centerIn: parent
+                        text: extendedRow.ext ? extendedRow.ext.change + " (" + extendedRow.ext.pct + ")" : ""
+                        color: extendedRow.accent
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                    }
+                }
+                Item { Layout.fillWidth: true }
+            }
             // One line per purchased lot: each lot's own (fixed) purchase price compared
             // against the live current price, independently of the others.
             ColumnLayout {

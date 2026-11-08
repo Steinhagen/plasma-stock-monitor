@@ -19,6 +19,7 @@ Item {
     property alias cfg_hideTimestamps: hideTimestampsSwitch.checked
     property alias cfg_formatPrices: formatPricesSwitch.checked
     property alias cfg_hideDecimals: hideDecimalsSwitch.checked
+    property alias cfg_showExtendedHours: extendedHoursSwitch.checked
     property alias cfg_startHour: startHourSpin.value
     property alias cfg_startMinute: startMinuteSpin.value
     property alias cfg_endHour: endHourSpin.value
@@ -146,6 +147,12 @@ Item {
             CheckBox {
                 id: hideDecimalsSwitch
                 text: "Remove decimals from stock price"
+            }
+
+            CheckBox {
+                id: extendedHoursSwitch
+                Kirigami.FormData.label: "Extended Hours:"
+                text: "Show pre-market and after-market values"
             }
             
         }

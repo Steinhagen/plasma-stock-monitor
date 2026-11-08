@@ -46,6 +46,9 @@ Rectangle {
             // Captured here (not read inside the nested Repeater below) because that Repeater's
             // own delegate shadows the ListView's "model" context property with its own.
             property string rowCurrencySym: model.currencySym
+            // Pre-market / after-market quote for this ticker. Only present while that session is
+            // the latest one, i.e. when the regular market is closed (undefined otherwise).
+            property var rowExt: rootItem.showExtendedHours ? rootItem.extendedData[model.ticker] : undefined
 
             MouseArea {
                 anchors.fill: parent
@@ -124,15 +127,54 @@ Rectangle {
                         }
 
                         // Line 2: secondary text (elided when too long), change badge.
+                        // While the market is closed and the ticker has a pre-market / after-market
+                        // quote, that quote takes the place of the secondary text, so the row keeps
+                        // its two lines.
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
                             Text {
-                                text: rootItem.swapNameAndTicker ? model.ticker : model.name
+                                id: secondLine
+                                readonly property var ext: rowRoot.rowExt
+
+                                FontMetrics { id: secondLineMetrics; font.pixelSize: 10; font.bold: true }
+
+                                // Longest wording that fits in `avail` pixels, richest first:
+                                // "After-Market $342.65 -0.28 (-0.08%)" ... down to just the price.
+                                function extText(avail) {
+                                    var e = secondLine.ext;
+                                    if (!e) return "";
+                                    var shortLabel = e.label === "Pre-Market" ? "Pre" : "After";
+                                    var tiers = [
+                                        [e.label, e.price, e.change + " (" + e.pct + ")"],
+                                        [shortLabel, e.price, e.pct],
+                                        [null, e.price, e.pct],
+                                        [null, e.price, null]
+                                    ];
+                                    var pick = tiers[tiers.length - 1];
+                                    for (var i = 0; i < tiers.length; i++) {
+                                        var plain = tiers[i].filter(function(p) { return p !== null; }).join(" ");
+                                        if (secondLineMetrics.advanceWidth(plain) <= avail) { pick = tiers[i]; break; }
+                                    }
+                                    var accent = e.isPos ? rootItem.positiveColor : rootItem.negativeColor;
+                                    var out = "";
+                                    if (pick[0] !== null) out += '<font color="' + rootItem.secondaryTextColor + '">' + pick[0] + '</font> ';
+                                    // With no change shown, colour the price itself so the direction is still visible.
+                                    out += '<font color="' + (pick[2] === null ? accent : rootItem.priceColor) + '"><b>' + pick[1] + '</b></font>';
+                                    if (pick[2] !== null) out += ' <font color="' + accent + '"><b>' + pick[2] + '</b></font>';
+                                    return out;
+                                }
+
+                                textFormat: ext ? Text.StyledText : Text.PlainText
+                                text: ext ? extText(width) : (rootItem.swapNameAndTicker ? model.ticker : model.name)
                                 color: rootItem.secondaryTextColor
                                 font.pixelSize: 10
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
+                                // Width comes only from the space the badge leaves, never from the
+                                // text, so choosing the wording by width cannot loop.
+                                Layout.minimumWidth: 0
+                                Layout.preferredWidth: 0
                             }
                             Rectangle {
                                 radius: 4
