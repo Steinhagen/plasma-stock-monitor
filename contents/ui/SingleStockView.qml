@@ -224,26 +224,19 @@ Rectangle {
                 }
                 Item { Layout.fillWidth: true }
             }
-            // One line per purchased lot: each lot's own (fixed) purchase price compared
-            // against the live current price, independently of the others.
-            ColumnLayout {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 2
-                spacing: 1
-                visible: rootItem.showPortfolioMode && rootItem.hasPortfolioEntry
-
-                Repeater {
-                    model: rootItem.portfolioLots
-                    delegate: Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: modelData.shares + " @ " + rootItem.currencySym + modelData.avgCost.toFixed(2)
-                              + "  →  " + rootItem.formatNumber(modelData.plValue, true)
-                              + " (" + rootItem.formatNumber(modelData.plPercent, true) + "%)"
-                        color: modelData.plIsPos ? rootItem.positiveColor : rootItem.negativeColor
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                }
+            // One line for the whole position: all the lots of this ticker added up (shares,
+            // average cost, value, total gain, gain over the shown period).
+            PositionLine {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                // The width comes only from the space in the card, never from the line itself,
+                // so choosing the parts by width cannot loop.
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 0
+                rootItem: singleStockRoot.rootItem
+                summary: singleStockRoot.rootItem.showPortfolioMode ? singleStockRoot.rootItem.portfolioSummary : null
+                sym: singleStockRoot.rootItem.currencySym
+                centered: true
             }
         }
     }

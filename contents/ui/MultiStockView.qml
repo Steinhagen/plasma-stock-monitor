@@ -12,6 +12,61 @@ Rectangle {
     radius: rootItem.isPlasmaTheme ? 0 : 22
     clip: true
 
+    // --- Portfolio total ---
+    // The value, total gain and period gain of all the positions together, shown as the last
+    // line of the list. null when it does not apply: the feature is off, fewer than two tickers
+    // have lots, or the positions are in different currencies (those cannot be added up).
+    property var totals: null
+    property string totalsSym: ""
+    property string totalsLabel: ""
+
+    function recomputeTotals() {
+        multiStockRoot.totals = null;
+        if (!rootItem || !listModel || !rootItem.showPortfolioMode) return;
+        var held = rootItem.getPortfolioTickers(rootItem.portfolioData);
+        if (held.length < 2) return;
+        var value = 0, cost = 0, day = 0, dayKnown = true, priced = 0, currencies = {};
+        for (var i = 0; i < listModel.count; i++) {
+            var row = listModel.get(i);
+            if (!(row.currentRaw > 0)) continue;
+            var s = rootItem.getPortfolioSummary(row.ticker, rootItem.portfolioData, row.currentRaw, row.prevClose);
+            if (!s) continue;
+            priced++;
+            value += s.value;
+            cost += s.cost;
+            currencies[row.currencySym] = true;
+            if (s.dayValue === null) dayKnown = false;
+            else day += s.dayValue;
+        }
+        var symbols = Object.keys(currencies);
+        if (priced === 0 || symbols.length !== 1) return;
+        var pl = value - cost;
+        multiStockRoot.totalsSym = symbols[0];
+        // Say so when some positions have no price yet (still loading, or not in the list).
+        multiStockRoot.totalsLabel = priced === held.length ? held.length + " positions"
+                                                            : priced + " of " + held.length + " positions";
+        multiStockRoot.totals = {
+            value: value, cost: cost, plValue: pl, plPercent: cost > 0 ? (pl / cost) * 100 : 0, plIsPos: pl >= 0,
+            dayValue: dayKnown ? day : null, dayIsPos: !dayKnown || day >= 0
+        };
+    }
+
+    // Prices arrive one ticker at a time, so recompute once they settle.
+    Timer { id: totalsTimer; interval: 100; onTriggered: multiStockRoot.recomputeTotals() }
+    Component.onCompleted: multiStockRoot.recomputeTotals()
+    Connections {
+        target: multiStockRoot.listModel
+        function onDataChanged() { totalsTimer.restart(); }
+        function onRowsInserted() { totalsTimer.restart(); }
+        function onRowsRemoved() { totalsTimer.restart(); }
+        function onModelReset() { totalsTimer.restart(); }
+    }
+    Connections {
+        target: multiStockRoot.rootItem
+        function onPortfolioDataChanged() { totalsTimer.restart(); }
+        function onShowPortfolioModeChanged() { totalsTimer.restart(); }
+    }
+
     Text {
         anchors.centerIn: parent
         text: "Loading..."
@@ -31,20 +86,43 @@ Rectangle {
         model: listModel
         spacing: 0
 
+        // The portfolio total, after the last row.
+        footer: Component {
+            Item {
+                width: multiView.width
+                height: multiStockRoot.totals !== null ? 40 : 0
+                visible: multiStockRoot.totals !== null
+
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: multiStockRoot.rootItem.chartBaseColor
+                }
+                PositionLine {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    rootItem: multiStockRoot.rootItem
+                    summary: multiStockRoot.totals
+                    sym: multiStockRoot.totalsSym
+                    heldOverride: multiStockRoot.totalsLabel
+                }
+            }
+        }
+
         delegate: Item {
             id: rowRoot
             width: multiView.width
-            // Computed here (not stored as a model role) because ListModel silently converts
-            // an array-of-objects role into a nested QQmlListModel on append(), which breaks
-            // plain JS array access like .length/[i] in a nested Repeater. Calling the helper
-            // directly keeps it a real JS array, and it's still reactive since the expression
-            // reads rootItem.portfolioData and model.currentRaw directly.
-            property var rowLots: (rootItem.showPortfolioMode && model.currentRaw > 0) ? rootItem.getPortfolioLots(model.ticker, rootItem.portfolioData, model.currentRaw) : []
-            // Base row + one extra line per portfolio lot for this ticker (each lot's own
-            // purchase price compared against the live price).
-            height: 60 + (rowRoot.rowLots.length > 0 ? (rowRoot.rowLots.length * 13 + 4) : 0)
-            // Captured here (not read inside the nested Repeater below) because that Repeater's
-            // own delegate shadows the ListView's "model" context property with its own.
+            // The position for this ticker: all its lots added up, or null when there are none (or
+            // the feature is off). Computed here, not stored as a model role, so it stays reactive
+            // to rootItem.portfolioData and the live price.
+            property var rowSummary: (rootItem.showPortfolioMode && model.currentRaw > 0)
+                                     ? rootItem.getPortfolioSummary(model.ticker, rootItem.portfolioData, model.currentRaw, model.prevClose)
+                                     : null
+            // Base row, plus one summary line when the ticker has a position.
+            height: 60 + (rowRoot.rowSummary !== null ? 20 : 0)
             property string rowCurrencySym: model.currencySym
             // Pre-market / after-market quote for this ticker. Only present while that session is
             // the latest one, i.e. when the regular market is closed (undefined otherwise).
@@ -213,19 +291,20 @@ Rectangle {
                     }
                 }
 
-                // One line per lot bought for this ticker (own purchase price vs. live price),
-                // below the core row so it never affects that row's own alignment.
-                Repeater {
-                    model: rowRoot.rowLots
-                    delegate: Text {
-                        Layout.fillWidth: true
-                        horizontalAlignment: Text.AlignRight
-                        text: modelData.shares + " @ " + rowRoot.rowCurrencySym + modelData.avgCost.toFixed(2)
-                              + " → " + rootItem.formatNumber(modelData.plValue, true)
-                              + " (" + rootItem.formatNumber(modelData.plPercent, true) + "%)"
-                        color: modelData.plIsPos ? rootItem.positiveColor : rootItem.negativeColor
-                        font.pixelSize: 9
-                    }
+                // One line for the whole position of this ticker, below the core row so it never
+                // affects that row's own alignment.
+                PositionLine {
+                    Layout.fillWidth: true
+                    // The core row above is vertically centred in 60 px, so pull this line up
+                    // towards its content and leave room before the separator.
+                    Layout.topMargin: -4
+                    // The width comes only from the row, never from the line itself, so choosing
+                    // the parts by width cannot loop.
+                    Layout.minimumWidth: 0
+                    Layout.preferredWidth: 0
+                    rootItem: multiStockRoot.rootItem
+                    summary: rowRoot.rowSummary
+                    sym: rowRoot.rowCurrencySym
                 }
             }
             Rectangle {

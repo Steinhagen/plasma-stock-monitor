@@ -125,12 +125,14 @@ PlasmoidItem {
     property bool hideDecimals: Plasmoid.configuration.hideDecimals
     property bool showChartAxis: Plasmoid.configuration.showChartAxis
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
-    // (same ticker can have several, bought at different prices) and is shown individually,
-    // each one's static purchase price compared against the live current price.
+    // (same ticker can have several, bought at different prices); the lots of a ticker are
+    // added up into one position, summarised on a single line.
     property bool showPortfolioMode: Plasmoid.configuration.showPortfolioMode
     property string portfolioData: Plasmoid.configuration.portfolioData
-    property var portfolioLots: root.getPortfolioLots(root.singleTicker, root.portfolioData, root.currentRawPrice)
-    property bool hasPortfolioEntry: root.portfolioLots.length > 0
+    property var portfolioSummary: root.getPortfolioSummary(root.singleTicker, root.portfolioData, root.currentRawPrice, root.previousClose)
+    property bool hasPortfolioEntry: root.portfolioSummary !== null
+    // What the change in the summary covers: today for the 1D chart, otherwise the chart range.
+    property string portfolioChangeLabel: root.chartRange === "1D" ? "Today" : root.chartRange
     property string lastUpdated: ""
     property string nextUpdate: ""
     property color bgColor: getThemeColor("background")
@@ -202,30 +204,60 @@ PlasmoidItem {
     }
 
     // --- PORTFOLIO TRACKING HELPERS ---
-    // A ticker can have several saved lots (bought at different times/prices). Each lot's
-    // purchase price is fixed; only the live price moves, so every lot is compared against
-    // it individually rather than blended into one average.
-    function getPortfolioLots(ticker, dataStr, rawPrice) {
-        if (!ticker || !dataStr || !rawPrice) return [];
+    // A ticker can have several saved lots (bought at different times/prices). They are added up
+    // into one position with the figures a portfolio view leads with: shares, average cost,
+    // market value, total gain (against the cost of all the lots) and the gain over the period
+    // the widget shows (today for the 1D chart). Returns null when the ticker has no lots.
+    function getPortfolioSummary(ticker, dataStr, rawPrice, prevClose) {
+        if (!ticker || !dataStr || !rawPrice) return null;
         try {
             var portfolio = JSON.parse(dataStr);
             var upperTicker = ticker.trim().toUpperCase();
-            var lots = [];
+            var lots = 0, shares = 0, cost = 0;
             for (var i = 0; i < portfolio.length; i++) {
-                if (portfolio[i].ticker === upperTicker) {
-                    var shares = Number(portfolio[i].shares) || 0;
-                    var cost = Number(portfolio[i].averageCost) || 0;
-                    if (shares <= 0) continue;
-                    var plValue = (rawPrice - cost) * shares;
-                    var plPercent = cost > 0 ? ((rawPrice - cost) / cost) * 100 : 0;
-                    lots.push({ shares: shares, avgCost: cost, plValue: plValue, plPercent: plPercent, plIsPos: plValue >= 0 });
-                }
+                if (portfolio[i].ticker !== upperTicker) continue;
+                var s = Number(portfolio[i].shares) || 0;
+                if (s <= 0) continue;
+                lots++;
+                shares += s;
+                cost += s * (Number(portfolio[i].averageCost) || 0);
             }
-            return lots;
+            if (lots === 0) return null;
+            var value = shares * rawPrice;
+            var plValue = value - cost;
+            var day = prevClose > 0 ? shares * (rawPrice - prevClose) : null;
+            return {
+                lots: lots, shares: shares, avgCost: cost / shares, cost: cost, value: value,
+                plValue: plValue, plPercent: cost > 0 ? (plValue / cost) * 100 : 0, plIsPos: plValue >= 0,
+                dayValue: day, dayIsPos: day === null || day >= 0
+            };
         } catch (e) {
             console.log("Error parsing portfolio data: " + e);
         }
-        return [];
+        return null;
+    }
+
+    // "-$1,234.50", or "+$1,234.50" when `signed` and the amount is positive.
+    function formatMoney(sym, v, signed) {
+        var sign = v < 0 ? "-" : (signed && v > 0 ? "+" : "");
+        return sign + sym + root.formatNumber(Math.abs(v), false);
+    }
+
+    // The tickers that have at least one lot with shares, upper-cased, each once.
+    function getPortfolioTickers(dataStr) {
+        if (!dataStr) return [];
+        try {
+            var portfolio = JSON.parse(dataStr), seen = {}, out = [];
+            for (var i = 0; i < portfolio.length; i++) {
+                var t = String(portfolio[i].ticker || "").trim().toUpperCase();
+                if (t === "" || seen[t] || !(Number(portfolio[i].shares) > 0)) continue;
+                seen[t] = true;
+                out.push(t);
+            }
+            return out;
+        } catch (e) {
+            return [];
+        }
     }
 
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
