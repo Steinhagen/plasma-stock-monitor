@@ -692,6 +692,16 @@ PlasmoidItem {
             onTriggered: if (priceText) priceText.opacity = 1.0;
         }
 
+        // While the regular market is closed, the ticker has a pre-market / after-market
+        // quote (see extendedData). The panel then shows that quote instead of the regular
+        // price and change, and a small tag next to the ticker says which session it is.
+        readonly property var ext: root.showExtendedHours
+                                   ? root.extendedData[root.isMultiMode ? root.panelTicker : root.singleTicker]
+                                   : undefined
+        readonly property string shownPrice: ext ? ext.price : root.currentPrice
+        readonly property string shownPercent: ext ? ext.pct : root.percentChange
+        readonly property bool shownPositive: ext ? ext.isPos : root.isPositive
+
         RowLayout {
             id: panelRow
             anchors.centerIn: parent
@@ -713,8 +723,18 @@ PlasmoidItem {
                         Layout.alignment: Qt.AlignBottom
                     }
                     Text {
-                        text: root.isPositive ? "▲" : "▼"
-                        color: root.isPositive ? root.positiveColor : root.negativeColor
+                        text: compactRoot.shownPositive ? "▲" : "▼"
+                        color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
+                        font.pixelSize: 8
+                        font.weight: Font.Bold
+                    }
+                    // Session tag: AH = after-market, PRE = pre-market. Only shown while the
+                    // regular market is closed.
+                    Text {
+                        visible: compactRoot.ext !== undefined
+                        text: compactRoot.ext ? (compactRoot.ext.label === "Pre-Market" ? "PRE" : "AH") : ""
+                        color: Kirigami.Theme.textColor
+                        opacity: 0.6
                         font.pixelSize: 8
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
@@ -726,8 +746,8 @@ PlasmoidItem {
                     Layout.alignment: Qt.AlignLeft
                     
                     Text {
-                        text: root.currentPrice
-                        color: root.isPositive ? root.positiveColor : root.negativeColor
+                        text: compactRoot.shownPrice
+                        color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         font.pixelSize: 11
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
@@ -740,10 +760,10 @@ PlasmoidItem {
                         // Vertical Panel Support: Hide badge in vertical panels to avoid overlap
                         visible: Plasmoid.formFactor !== PlasmaCore.Types.Vertical && !root.hideChangePercentage
                         // Background: translucent tint of the positive/negative color for theme independence
-                        color: root.isPositive
+                        color: compactRoot.shownPositive
                                ? Qt.rgba(root.positiveColor.r, root.positiveColor.g, root.positiveColor.b, 0.18)
                                : Qt.rgba(root.negativeColor.r, root.negativeColor.g, root.negativeColor.b, 0.18)
-                        border.color: root.isPositive ? root.positiveColor : root.negativeColor
+                        border.color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                         border.width: 1
                         Layout.preferredWidth: pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2)
                         Layout.preferredHeight: pctText2.implicitHeight + (Kirigami.Units.smallSpacing / 2)
@@ -751,8 +771,8 @@ PlasmoidItem {
                         Text {
                             id: pctText2
                             anchors.centerIn: parent
-                            text: root.percentChange
-                            color: root.isPositive ? root.positiveColor : root.negativeColor
+                            text: compactRoot.shownPercent
+                            color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
                             font.pixelSize: 10
                             font.weight: Font.Black
                             renderType: Text.NativeRendering
