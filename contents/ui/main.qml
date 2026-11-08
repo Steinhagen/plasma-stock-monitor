@@ -1069,6 +1069,18 @@ PlasmoidItem {
         return root.htmlColored(isPos, change + " (" + pct + ")");
     }
 
+    // The slice of the stock list the tooltip shows: at most `maxRows` consecutive rows,
+    // always including the selected one (the row with the marker) and centred on it when
+    // there is room. Returns a half-open [start, end) range.
+    function tooltipWindow(count, active, maxRows) {
+        var start = 0;
+        if (count > maxRows) {
+            var focus = active >= 0 ? active : 0;
+            start = Math.max(0, Math.min(focus - Math.floor(maxRows / 2), count - maxRows));
+        }
+        return { start: start, end: Math.min(count, start + maxRows) };
+    }
+
     function buildTooltipBody() {
         // Reading the revision makes the body re-evaluate when the list changes.
         var revision = root.tooltipRevision;
@@ -1084,9 +1096,23 @@ PlasmoidItem {
         if (root.isMultiMode) {
             var rows = [];
             // Keep the tooltip compact: a long list would make it taller than the screen.
+            // Within that limit the window follows the stock selected in the panel, so its
+            // marker stays visible; the rows hidden above and below are counted instead.
             var maxRows = 7;
+            var activeRow = -1;
+            for (var a = 0; a < stockModel.count; a++) {
+                if (stockModel.get(a).ticker === root.panelTicker) { activeRow = a; break; }
+            }
+            var visible = root.tooltipWindow(stockModel.count, activeRow, maxRows);
+            var moreRow = function(hidden, atTop) {
+                return "<tr><td></td><td colspan=\"3\" style=\""
+                       + (atTop ? "padding-bottom:2px;" : "padding-top:2px;") + "\">"
+                       + muted(i18n("… and %1 more", hidden)) + "</td></tr>";
+            };
+            if (visible.start > 0) rows.push(moreRow(visible.start, true));
+
             var tickerStyle = "padding-right:16px; padding-top:1px; padding-bottom:1px;";
-            for (var i = 0; i < stockModel.count && i < maxRows; i++) {
+            for (var i = visible.start; i < visible.end; i++) {
                 var row = stockModel.get(i);
                 var ext = root.extendedQuote(row.ticker);
                 var marker = "<td style=\"padding-right:6px; padding-top:1px; padding-bottom:1px;\">"
@@ -1109,10 +1135,7 @@ PlasmoidItem {
                                                ext ? ext.change : row.change,
                                                ext ? ext.pct : row.pct) + "</td></tr>");
             }
-            if (stockModel.count > maxRows) {
-                rows.push("<tr><td></td><td colspan=\"3\" style=\"padding-top:2px;\">"
-                          + muted(i18n("… and %1 more", stockModel.count - maxRows)) + "</td></tr>");
-            }
+            if (visible.end < stockModel.count) rows.push(moreRow(stockModel.count - visible.end, false));
             return rows.length > 0
                    ? "<table cellspacing=\"0\" cellpadding=\"0\">" + rows.join("") + "</table>"
                    : i18n("Loading…");
