@@ -164,7 +164,7 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.MiddleButton) {
-                        parent.opacity = 0.4;
+                        rowRoot.opacity = 0.4;
                         rootItem.refreshData();
                         timerListFlicker.restart();
                     } else if (mouse.button === Qt.LeftButton) {
@@ -181,7 +181,7 @@ Rectangle {
                 Timer {
                     id: timerListFlicker
                     interval: 300
-                    onTriggered: parent.opacity = 1.0;
+                    onTriggered: rowRoot.opacity = 1.0;
                 }
             }
 
