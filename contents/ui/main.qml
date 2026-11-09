@@ -17,6 +17,9 @@ PlasmoidItem {
     property string singleTicker: Plasmoid.configuration.ticker
     property bool isMultiMode: Plasmoid.configuration.isMultiMode
     property bool showTwoList: Plasmoid.configuration.showTwoList
+    // Left column width in the side-by-side desktop view, in pixels. 0 means automatic
+    // (both columns share the available width).
+    property int twoColumnLeftWidth: Plasmoid.configuration.twoColumnLeftWidth
     property string panelTicker: ""
     property string manualPanelTickerOverride: ""
     property string multiTickers: Plasmoid.configuration.multiTickers
@@ -532,6 +535,22 @@ PlasmoidItem {
             console.log("Error saving chart style: " + e);
         }
     }
+
+    // Side-by-side layout: the divider applies the width live and the configuration is
+    // written only when the drag ends, so moving it does not hammer the config file.
+    function setTwoColumnLeftWidth(width) {
+        var value = Math.round(width);
+        if (value < 0) value = 0;
+        if (value !== root.twoColumnLeftWidth) root.twoColumnLeftWidth = value;
+    }
+    function saveTwoColumnLeftWidth() {
+        try {
+            Plasmoid.configuration.twoColumnLeftWidth = root.twoColumnLeftWidth;
+        } catch (e) {
+            console.log("Error saving two-column width: " + e);
+        }
+    }
+
     // Copy the list row's values (configured data range) into the panel indicator.
     function updatePanelFromRow(ticker) {
         for (var i = 0; i < stockModel.count; i++) {
@@ -1887,32 +1906,93 @@ PlasmoidItem {
     // --- DESKTOP VIEW (Full Representation) ---
 
     fullRepresentation: Item {
+        id: fullRoot
+
         // Desktop only: the panel uses compactRepresentation, whose size is unchanged.
         // Two columns only in multi mode with the side-by-side list.
         readonly property bool twoColumns: root.isMultiMode && root.showTwoList
+        // Width of the drag zone between the two columns, including its visual line.
+        readonly property int dividerWidth: root.isPlasmaTheme ? 8 : 10
+        // A stored width of 0 keeps the automatic layout: both columns share the card.
+        readonly property bool manualSplit: twoColumns && root.twoColumnLeftWidth > 0
+        // The stored width can be too large for the current widget width; clamp it so the
+        // list keeps its own minimum.
+        readonly property real maxLeftColumnWidth: Math.max(singleColumn.minimumContentWidth,
+            fullRow.width - dividerWidth - listColumn.minimumContentWidth)
+        readonly property real leftColumnWidth: Math.max(singleColumn.minimumContentWidth,
+            Math.min(root.twoColumnLeftWidth, maxLeftColumnWidth))
+
         Layout.minimumWidth: twoColumns
-            ? singleColumn.minimumContentWidth + fullRow.spacing + listColumn.minimumContentWidth
+            ? singleColumn.minimumContentWidth + dividerWidth + listColumn.minimumContentWidth
             : (root.isMultiMode ? listColumn.minimumContentWidth : singleColumn.minimumContentWidth)
         Layout.minimumHeight: twoColumns
             ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
             : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
-        // Layout.preferredWidth: 260
-        // Layout.preferredHeight: 300
 
         RowLayout {
             id: fullRow
             anchors.fill: parent
             anchors.margins: 0
-            spacing: root.isPlasmaTheme ? 0 : 10
+            spacing: 0
 
             SingleStockView {
                 id: singleColumn
                 visible: !root.isMultiMode || root.showTwoList
-                Layout.fillWidth: true
+                Layout.fillWidth: !fullRoot.manualSplit
+                Layout.preferredWidth: fullRoot.manualSplit ? fullRoot.leftColumnWidth : 0
                 Layout.fillHeight: true
                 Layout.minimumWidth: singleColumn.minimumContentWidth
                 Layout.minimumHeight: singleColumn.minimumContentHeight
                 rootItem: root
+            }
+
+            Item {
+                id: divider
+                objectName: "columnDivider"
+                visible: fullRoot.twoColumns
+                Layout.preferredWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                Layout.minimumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                Layout.maximumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                Layout.fillHeight: true
+                z: 1
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 2
+                    height: Math.min(parent.height, 40)
+                    radius: 1
+                    color: root.tickerColor
+                    // The divider is invisible until the pointer enters its (wider) hit area.
+                    opacity: dividerMouse.containsMouse || dividerMouse.pressed ? 0.9 : 0
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                }
+
+                MouseArea {
+                    id: dividerMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.SplitHCursor
+                    preventStealing: true
+
+                    property real pressX: 0
+                    property real pressWidth: 0
+
+                    onPressed: {
+                        pressX = mapToItem(fullRow, mouse.x, mouse.y).x;
+                        pressWidth = singleColumn.width;
+                    }
+                    onPositionChanged: {
+                        if (!pressed) return;
+                        var dx = mapToItem(fullRow, mouse.x, mouse.y).x - pressX;
+                        var minLeft = singleColumn.minimumContentWidth;
+                        var maxLeft = Math.max(minLeft,
+                            fullRow.width - fullRoot.dividerWidth - listColumn.minimumContentWidth);
+                        root.setTwoColumnLeftWidth(Math.max(minLeft,
+                            Math.min(maxLeft, pressWidth + dx)));
+                    }
+                    onReleased: root.saveTwoColumnLeftWidth()
+                    onCanceled: root.saveTwoColumnLeftWidth()
+                }
             }
 
             MultiStockView {

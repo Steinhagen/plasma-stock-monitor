@@ -23,6 +23,7 @@ var DATA_KEYS = [
 // part of a backup: it is downloaded again and is not a user preference.
 var SETTINGS_KEYS = [
     "selectedTheme",
+    "twoColumnLeftWidth",
     "sortAlphabetically",
     "swapNameAndTicker",
     "showNameAndTicker",
@@ -92,6 +93,7 @@ var BOOL_KEYS = {
 // it would not let the user create.
 var INT_RANGES = {
     selectedTheme: [0, 2],
+    twoColumnLeftWidth: [0, 20000],
     chartStyle: [0, 1],
     refreshInterval: [1, 360],
     startHour: [0, 23],

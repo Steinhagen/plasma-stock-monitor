@@ -21,6 +21,10 @@
             <label>Show Two List</label>
             <default>false</default>
         </entry>
+        <entry name="twoColumnLeftWidth" type="Int">
+            <label>Left column width in the two-column desktop view, in pixels (0 = automatic)</label>
+            <default>0</default>
+        </entry>
         <entry name="multiTickers" type="String">
             <label>Comma separated list of tickers</label>
             <default>AAPL, TSLA</default>

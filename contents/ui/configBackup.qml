@@ -17,6 +17,7 @@ Item {
     property string cfg_ticker
     property bool cfg_isMultiMode
     property bool cfg_showTwoList
+    property int cfg_twoColumnLeftWidth
     property string cfg_multiTickers
     property string cfg_portfolioData
     property bool cfg_showPortfolioMode
