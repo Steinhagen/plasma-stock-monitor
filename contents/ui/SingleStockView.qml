@@ -345,6 +345,10 @@ Rectangle {
                             objectName: "chartRangeButton_" + modelData
                             required property string modelData
                             readonly property bool selected: rangeButton.modelData === rootItem.effectiveChartRange
+                            // Same weight in both states, so the selected range changes only the
+                            // colors. A bold selected label would change this row's implicit width,
+                            // and with it the content-derived minimum width of the card, shifting
+                            // the two desktop columns by a pixel whenever another range is picked.
                             width: rangeButtonLabel.implicitWidth + 8
                             height: 18
                             radius: 4
@@ -358,7 +362,7 @@ Rectangle {
                                 text: rootItem.chartRangeButtonLabel(rangeButton.modelData)
                                 color: rangeButton.selected ? rootItem.tickerColor : rootItem.secondaryTextColor
                                 font.pixelSize: 9
-                                font.bold: rangeButton.selected
+                                font.bold: true
                             }
 
                             MouseArea {
@@ -393,6 +397,8 @@ Rectangle {
                             objectName: "chartStyleButton_" + modelData.style
                             required property var modelData
                             readonly property bool selected: styleButton.modelData.style === rootItem.chartStyle
+                            // Same as the range buttons: same weight in both states, so switching
+                            // between Line and Candles cannot resize the card either.
                             width: styleButtonLabel.implicitWidth + 8
                             height: 18
                             radius: 4
@@ -405,7 +411,7 @@ Rectangle {
                                 text: styleButton.modelData.label
                                 color: styleButton.selected ? rootItem.tickerColor : rootItem.secondaryTextColor
                                 font.pixelSize: 9
-                                font.bold: styleButton.selected
+                                font.bold: true
                             }
                             MouseArea {
                                 anchors.fill: parent
