@@ -8,6 +8,11 @@ Rectangle {
     property var rootItem
     property var listModel
 
+    // Smallest list column that keeps the price, the change badge and a few characters of the
+    // name on each row; the name, the second line and the position line elide or shorten by design.
+    readonly property real minimumContentWidth: 250
+    readonly property real minimumContentHeight: 200
+
     color: rootItem.bgColor
     radius: rootItem.isPlasmaTheme ? 0 : 22
     clip: true

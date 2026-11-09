@@ -41,6 +41,12 @@ Rectangle {
         return i18n("No after-hours");
     }
 
+    // Smallest size at which nothing in the card is cut off or wrapped: the content's own
+    // implicit size (hidden rows drop out) plus the singleView margins, never below a floor
+    // that covers the loading state.
+    readonly property real minimumContentWidth: Math.max(260, Math.ceil(contentColumn.implicitWidth) + 32)
+    readonly property real minimumContentHeight: Math.max(240, Math.ceil(contentColumn.implicitHeight) + 26)
+
     color: rootItem.bgColor
     radius: rootItem.isPlasmaTheme ? 0 : 22
     clip: true
@@ -63,6 +69,7 @@ Rectangle {
         anchors.bottomMargin: 10
 
         ColumnLayout {
+            id: contentColumn
             anchors.fill: parent
             spacing: 0
 
@@ -281,6 +288,7 @@ Rectangle {
                     opacity: rootItem.priceOpacity / 100.0
                     font.pixelSize: 25
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.minimumWidth: implicitWidth
 
                     Behavior on opacity { NumberAnimation { duration: 150 } }
                 }
@@ -292,6 +300,7 @@ Rectangle {
                     font.pixelSize: 10
                     font.bold: true
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.minimumWidth: implicitWidth
                 }
 
                 Item { Layout.fillWidth: true }
@@ -319,13 +328,13 @@ Rectangle {
                 Layout.bottomMargin: 2
                 Layout.preferredHeight: Math.max(singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0, singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0)
                 spacing: 6
-                Flow {
+                // A Row, not a Flow: the buttons stay on one row and its implicitWidth (the
+                // one-row width) feeds the card's minimum width.
+                Row {
                     id: chartRangeButtons
                     objectName: "chartRangeButtons"
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
+                    Layout.minimumWidth: implicitWidth
                     Layout.alignment: Qt.AlignTop
-                    Layout.preferredHeight: chartRangeButtons.implicitHeight
                     spacing: 3
                     visible: rootItem.showChartRangeButtons
 
@@ -361,10 +370,9 @@ Rectangle {
                     }
                 }
 
-                // Keeps the chart type selector on the right when the range buttons are hidden.
+                // Pushes the chart type selector to the right edge.
                 Item {
                     Layout.fillWidth: true
-                    visible: !singleStockRoot.rootItem.showChartRangeButtons
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
                 // setting as the Appearance page.
@@ -372,6 +380,7 @@ Rectangle {
                     id: chartStyleButtons
                     objectName: "chartStyleButtons"
                     visible: rootItem.showChartStyleButtons
+                    Layout.minimumWidth: implicitWidth
                     Layout.alignment: Qt.AlignTop | Qt.AlignRight
                     spacing: 3
                     Repeater {
@@ -411,6 +420,9 @@ Rectangle {
                 id: chartArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                // Room for the price scale, the time axis and, with candles, the volume bars.
+                Layout.minimumHeight: 130
+                Layout.preferredHeight: 130
                 Layout.topMargin: 8
                 Layout.bottomMargin: 4
 

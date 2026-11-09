@@ -1884,27 +1884,41 @@ PlasmoidItem {
     // --- DESKTOP VIEW (Full Representation) ---
 
     fullRepresentation: Item {
-        Layout.minimumWidth: root.showTwoList ? 380 : 190 // Leave room for both columns in multi mode
-        Layout.minimumHeight: 170
+        // Desktop only: the panel uses compactRepresentation, whose size is unchanged.
+        // Two columns only in multi mode with the side-by-side list.
+        readonly property bool twoColumns: root.isMultiMode && root.showTwoList
+        Layout.minimumWidth: twoColumns
+            ? singleColumn.minimumContentWidth + fullRow.spacing + listColumn.minimumContentWidth
+            : (root.isMultiMode ? listColumn.minimumContentWidth : singleColumn.minimumContentWidth)
+        Layout.minimumHeight: twoColumns
+            ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
+            : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
         // Layout.preferredWidth: 260
         // Layout.preferredHeight: 300
 
         RowLayout {
+            id: fullRow
             anchors.fill: parent
             anchors.margins: 0
             spacing: root.isPlasmaTheme ? 0 : 10
 
             SingleStockView {
+                id: singleColumn
                 visible: !root.isMultiMode || root.showTwoList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.minimumWidth: singleColumn.minimumContentWidth
+                Layout.minimumHeight: singleColumn.minimumContentHeight
                 rootItem: root
             }
 
             MultiStockView {
+                id: listColumn
                 visible: root.isMultiMode
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.minimumWidth: listColumn.minimumContentWidth
+                Layout.minimumHeight: listColumn.minimumContentHeight
                 rootItem: root
                 listModel: stockModel
             }
