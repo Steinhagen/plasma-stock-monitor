@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish the .plasmoid
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+
+      - name: Read the applet version
+        id: app
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import json; print(json.load(open("metadata.json"))["KPlugin"]["Version"])')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$tag_version" != "$version" ]; then
+            echo "::warning::Tag ${GITHUB_REF_NAME} does not match metadata version ${version}"
+          fi
+
+      - name: Build the .plasmoid
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -q -r "dist/plasma-stock-monitor-${VERSION}.plasmoid" \
+            metadata.json contents LICENSE
+          (cd dist && sha256sum ./*.plasmoid > SHA256SUMS)
+        env:
+          VERSION: ${{ steps.app.outputs.version }}
+
+      - name: Verify the package layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          package="dist/plasma-stock-monitor-${VERSION}.plasmoid"
+          test -s "$package"
+          unzip -Z1 "$package" | grep -qx "metadata.json"
+          unzip -Z1 "$package" | grep -qx "contents/ui/main.qml"
+          unzip -Z1 "$package" | grep -q '^contents/locale/ro/LC_MESSAGES/.*\.mo$'
+          unzip -l "$package"
+        env:
+          VERSION: ${{ steps.app.outputs.version }}
+
+      - name: Create the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Plasma Stock Monitor ${{ steps.app.outputs.version }}"
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.plasmoid
+            dist/SHA256SUMS

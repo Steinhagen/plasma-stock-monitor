@@ -1,4 +1,6 @@
 stockmonitor.plasmoid
+# Local release artifacts (the GitHub workflow builds these in CI)
+dist/
 # Temporary file written by translate/merge.sh
 translate/infiles.list
 translate/*.new
