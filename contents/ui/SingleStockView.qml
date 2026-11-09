@@ -429,6 +429,7 @@ Rectangle {
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartOpenPriceChanged() { singleCanvas.requestPaint(); }
+                        function onChartSessionsChanged() { singleCanvas.requestPaint(); }
                         function onShowChartHoverChanged() {
                             if (!rootItem.showChartHover) singleStockRoot.chartHoverActive = false;
                             singleCanvas.requestPaint();
@@ -438,6 +439,7 @@ Rectangle {
                         target: singleStockRoot
                         function onChartHoverActiveChanged() { singleCanvas.requestPaint(); }
                         function onChartHoverXChanged() { singleCanvas.requestPaint(); }
+                        function onExtendedQuoteChanged() { singleCanvas.requestPaint(); }
                     }
                 }
 
@@ -564,21 +566,24 @@ Rectangle {
 
     // A smooth line through the closes. The original YQL series is noisy; a small
     // Catmull-Rom-style smoothing keeps the shape without hiding the moves.
-    function traceSmooth(ctx, data, right, getY) {
+    // `xs` (optional) gives the pixel x of every point; without it the points are spread
+    // evenly over 0..right.
+    function traceSmooth(ctx, data, right, getY, xs) {
         var n = data.length;
         if (n < 2) return;
         var stepX = right / (n - 1);
+        function px(i) { return xs ? xs[i] : i * stepX; }
         ctx.beginPath();
-        ctx.moveTo(0, getY(data[0]));
+        ctx.moveTo(px(0), getY(data[0]));
 
         for (var i = 0; i < n - 1; i++) {
-            var x1 = i * stepX;
+            var x1 = px(i);
             var y1 = getY(data[i]);
-            var x2 = (i + 1) * stepX;
+            var x2 = px(i + 1);
             var y2 = getY(data[i + 1]);
-            var x0 = i > 0 ? (i - 1) * stepX : x1;
+            var x0 = i > 0 ? px(i - 1) : x1;
             var y0 = i > 0 ? getY(data[i - 1]) : y1;
-            var x3 = i + 2 < n ? (i + 2) * stepX : x2;
+            var x3 = i + 2 < n ? px(i + 2) : x2;
             var y3 = i + 2 < n ? getY(data[i + 2]) : y2;
             var tension = 0.85 / 6;
             ctx.bezierCurveTo(
@@ -684,6 +689,79 @@ Rectangle {
         ctx.restore();
     }
 
+    // Time scale for the full-day chart. The session boundaries come first, then the
+    // first and last points; a label that would touch one already placed is skipped.
+    function drawSessionTimeAxis(ctx, plotRight, plotH, allTimes, xAt, s, nPre, nPost) {
+        if (plotRight < 24) return;
+        var span = allTimes[allTimes.length - 1] - allTimes[0];
+        var candidates = [];
+        if (nPre > 0) candidates.push(s.regStart);
+        if (nPost > 0) candidates.push(s.regEnd);
+        candidates.push(allTimes[0]);
+        candidates.push(allTimes[allTimes.length - 1]);
+        var placed = [];
+        ctx.save();
+        ctx.font = "9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = rootItem.secondaryTextColor;
+        ctx.strokeStyle = rootItem.chartBaseColor;
+        ctx.lineWidth = 1;
+        for (var i = 0; i < candidates.length; i++) {
+            var label = timeAxisLabel(candidates[i], span);
+            var textW = ctx.measureText(label).width;
+            var x = xAt(candidates[i]);
+            var center = Math.max(textW / 2, Math.min(plotRight - textW / 2, x));
+            var left = center - textW / 2, right = center + textW / 2;
+            var clash = false;
+            for (var j = 0; j < placed.length; j++) {
+                if (left < placed[j][1] + 8 && right > placed[j][0] - 8) { clash = true; break; }
+            }
+            if (clash) continue;
+            ctx.beginPath();
+            ctx.moveTo(Math.round(x) + 0.5, plotH);
+            ctx.lineTo(Math.round(x) + 0.5, plotH + 3);
+            ctx.stroke();
+            ctx.fillText(label, center, plotH + 3);
+            placed.push([left, right]);
+        }
+        ctx.restore();
+    }
+    // Diagonal hatch over an extended-hours zone.
+    function drawHatch(ctx, x0, x1, plotH) {
+        if (x1 <= x0) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x0, 0, x1 - x0, plotH);
+        ctx.clip();
+        ctx.strokeStyle = rootItem.isLightTheme ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (var k = x0 - plotH; k < x1; k += 6) {
+            ctx.moveTo(k, plotH);
+            ctx.lineTo(k + plotH, 0);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+    // Direction colour of an extended-hours zone ("pre" or "post"). While the extended
+    // quote of that zone is shown in the header, its own flag decides, so the line never
+    // contradicts the badge. Otherwise the zone's last close is compared with `base`
+    // (previous close before the open, regular close after it). Pre-market falls back to
+    // the line's normal colour when there is no base.
+    function sessionLineColor(zone, s, base, lastValue) {
+        var pos = rootItem.positiveColor;
+        var neg = rootItem.negativeColor;
+        if (singleStockRoot.hasExtendedQuote) {
+            var q = singleStockRoot.extendedQuote;
+            var inZone = zone === "pre"
+                ? (q.time >= s.preStart && q.time < s.regStart)
+                : (q.time >= s.regEnd && q.time < s.postEnd);
+            if (q.kind === zone && inZone) return q.isPos ? pos : neg;
+        }
+        if (base > 0) return lastValue >= base ? pos : neg;
+        return rootItem.isPositive ? pos : neg;
+    }
     // Date/time shown in the hover tooltip. Longer ranges use a coarser label because
     // one point covers a day/week/month rather than a minute.
     function hoverTimeLabel(timestamp) {
@@ -817,9 +895,22 @@ Rectangle {
     function drawReferenceChart(ctx, w, h, data, times, prevClose, showPriceAxis, showTimeAxis) {
         var ref = rootItem.chartOpenPrice > 0 ? rootItem.chartOpenPrice : (prevClose > 0 ? prevClose : data[0]);
         if (!(ref > 0)) ref = data[0];
-
-        var minVal = Math.min.apply(null, data);
-        var maxVal = Math.max.apply(null, data);
+        // Full-day layout (regular session plus pre-market / after-hours). Line style only.
+        var s = (rootItem.chartStyle !== 1) ? rootItem.chartSessions : null;
+        var nReg = data.length;
+        var nPre = s ? s.preValues.length : 0;
+        var nPost = s ? s.postValues.length : 0;
+        var allData = s ? s.preValues.concat(data, s.postValues) : data;
+        var allTimes = s ? s.preTimes.concat(times, s.postTimes) : times;
+        if (s && (!times || times.length !== nReg || !(allTimes[allTimes.length - 1] > allTimes[0]))) {
+            s = null;
+            nPre = 0;
+            nPost = 0;
+            allData = data;
+            allTimes = times;
+        }
+        var minVal = Math.min.apply(null, allData);
+        var maxVal = Math.max.apply(null, allData);
         if (ref < minVal) minVal = ref;
         if (ref > maxVal) maxVal = ref;
         var range = maxVal - minVal;
@@ -829,7 +920,7 @@ Rectangle {
         maxVal += padding;
         range = maxVal - minVal;
 
-        var timeAxisHeight = (showTimeAxis && times && times.length === data.length && times[0] > 0) ? 16 : 0;
+        var timeAxisHeight = (showTimeAxis && times && times.length === nReg && times[0] > 0) ? 16 : 0;
         var plotH = h - timeAxisHeight;
         if (plotH < 10) {
             timeAxisHeight = 0;
@@ -840,10 +931,20 @@ Rectangle {
         var plotRight = showPriceAxis ? drawRightAxis(ctx, w, minVal, maxVal, getY, false) : w;
         if (plotRight < 24) plotRight = w;
         var refY = getY(ref);
-
         var pos = rootItem.positiveColor;
         var neg = rootItem.negativeColor;
-
+        // Pixel x of every point. Without extended hours the points are evenly spaced.
+        var t0 = s ? allTimes[0] : 0;
+        var tSpan = s ? allTimes[allTimes.length - 1] - allTimes[0] : 1;
+        function xAt(t) { return plotRight * (t - t0) / tSpan; }
+        var xsAll = null, xsReg = null;
+        if (s) {
+            xsAll = [];
+            for (var xi = 0; xi < allTimes.length; xi++) xsAll.push(xAt(allTimes[xi]));
+            xsReg = xsAll.slice(nPre, nPre + nReg);
+        }
+        var xFirst = xsReg ? xsReg[0] : 0;
+        var xLast = xsReg ? xsReg[nReg - 1] : plotRight;
         // Fill above the reference.
         ctx.save();
         ctx.beginPath();
@@ -853,9 +954,9 @@ Rectangle {
         above.addColorStop(0.0, Qt.rgba(pos.r, pos.g, pos.b, 0.30));
         above.addColorStop(0.55, Qt.rgba(pos.r, pos.g, pos.b, 0.10));
         above.addColorStop(1.0, Qt.rgba(pos.r, pos.g, pos.b, 0.012));
-        traceSmooth(ctx, data, plotRight, getY);
-        ctx.lineTo(plotRight, refY);
-        ctx.lineTo(0, refY);
+        traceSmooth(ctx, data, plotRight, getY, xsReg);
+        ctx.lineTo(xLast, refY);
+        ctx.lineTo(xFirst, refY);
         ctx.closePath();
         ctx.fillStyle = above;
         ctx.fill();
@@ -870,14 +971,40 @@ Rectangle {
         below.addColorStop(0.0, Qt.rgba(neg.r, neg.g, neg.b, 0.012));
         below.addColorStop(0.5, Qt.rgba(neg.r, neg.g, neg.b, 0.11));
         below.addColorStop(1.0, Qt.rgba(neg.r, neg.g, neg.b, 0.30));
-        traceSmooth(ctx, data, plotRight, getY);
-        ctx.lineTo(plotRight, refY);
-        ctx.lineTo(0, refY);
+        traceSmooth(ctx, data, plotRight, getY, xsReg);
+        ctx.lineTo(xLast, refY);
+        ctx.lineTo(xFirst, refY);
         ctx.closePath();
         ctx.fillStyle = below;
         ctx.fill();
         ctx.restore();
 
+        if (s) {
+            var xOpen = xAt(s.regStart);
+            var xClose = xAt(s.regEnd);
+            if (nPre > 0) drawHatch(ctx, 0, xOpen, plotH);
+            if (nPost > 0) drawHatch(ctx, xClose, plotRight, plotH);
+            var sec = rootItem.secondaryTextColor;
+            ctx.save();
+            ctx.strokeStyle = Qt.rgba(sec.r, sec.g, sec.b, 0.5);
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 3]);
+            ctx.beginPath();
+            if (nPre > 0) { ctx.moveTo(Math.round(xOpen) + 0.5, 0); ctx.lineTo(Math.round(xOpen) + 0.5, plotH); }
+            if (nPost > 0) { ctx.moveTo(Math.round(xClose) + 0.5, 0); ctx.lineTo(Math.round(xClose) + 0.5, plotH); }
+            ctx.stroke();
+            ctx.restore();
+            ctx.save();
+            ctx.font = "8px sans-serif";
+            ctx.fillStyle = Qt.rgba(sec.r, sec.g, sec.b, 0.8);
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            if (nPre > 0 && xOpen >= ctx.measureText(rootItem.tagPreMarket).width + 8)
+                ctx.fillText(rootItem.tagPreMarket, 4, 22);
+            if (nPost > 0 && plotRight - xClose >= ctx.measureText(rootItem.tagAfterHours).width + 8)
+                ctx.fillText(rootItem.tagAfterHours, xClose + 4, 22);
+            ctx.restore();
+        }
         // Reference line.
         ctx.save();
         ctx.strokeStyle = Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g, rootItem.secondaryTextColor.b, 0.48);
@@ -895,7 +1022,7 @@ Rectangle {
         ctx.clip();
         ctx.strokeStyle = pos;
         ctx.lineWidth = 2;
-        traceSmooth(ctx, data, plotRight, getY);
+        traceSmooth(ctx, data, plotRight, getY, xsReg);
         ctx.stroke();
         ctx.restore();
 
@@ -905,13 +1032,36 @@ Rectangle {
         ctx.clip();
         ctx.strokeStyle = neg;
         ctx.lineWidth = 2;
-        traceSmooth(ctx, data, plotRight, getY);
+        traceSmooth(ctx, data, plotRight, getY, xsReg);
         ctx.stroke();
         ctx.restore();
 
+        // Extended-hours parts of the line: same line, no fill. Each segment starts or ends
+        // on the neighbouring regular point so the line stays continuous.
+        var regularClose = rootItem.currentRawPrice > 0 ? rootItem.currentRawPrice : data[nReg - 1];
+        var preColor = pos, postColor = pos;
+        if (nPre > 0) {
+            preColor = sessionLineColor("pre", s, prevClose, s.preValues[nPre - 1]);
+            ctx.save();
+            ctx.strokeStyle = preColor;
+            ctx.lineWidth = 2;
+            traceSmooth(ctx, allData.slice(0, nPre + 1), plotRight, getY, xsAll.slice(0, nPre + 1));
+            ctx.stroke();
+            ctx.restore();
+        }
+        if (nPost > 0) {
+            postColor = sessionLineColor("post", s, regularClose, s.postValues[nPost - 1]);
+            ctx.save();
+            ctx.strokeStyle = postColor;
+            ctx.lineWidth = 2;
+            traceSmooth(ctx, allData.slice(nPre + nReg - 1), plotRight, getY, xsAll.slice(nPre + nReg - 1));
+            ctx.stroke();
+            ctx.restore();
+        }
         // End dot.
-        var lastValue = data[data.length - 1];
-        drawEndDot(ctx, plotRight, getY(lastValue), lastValue >= ref ? pos : neg);
+        var lastValue = allData[allData.length - 1];
+        var dotColor = nPost > 0 ? postColor : lastValue >= ref ? pos : neg;
+        drawEndDot(ctx, xsAll ? xsAll[xsAll.length - 1] : plotRight, getY(lastValue), dotColor);
 
         // Legend in the empty top-left corner.
         var legend = rootItem.chartOpenLabel + " " + rootItem.formatNumber(ref, false);
@@ -932,22 +1082,46 @@ Rectangle {
         // Hover crosshair: snap to the nearest close and show its time and value.
         if (singleStockRoot.chartHoverActive && times && times.length === data.length) {
             var hx = Math.max(0, Math.min(plotRight, singleStockRoot.chartHoverX));
-            var index = Math.round((data.length - 1) * hx / plotRight);
-            index = Math.max(0, Math.min(data.length - 1, index));
-            var hoverX = plotRight * index / (data.length - 1);
-            var hoverY = getY(data[index]);
-            var hoverPrice = data[index];
-            var hoverTime = times[index] ? hoverTimeLabel(times[index]) : "";
-            var hoverChange = hoverPrice - ref;
-            var hoverPct = ref > 0 ? (hoverChange / ref) * 100 : 0;
-            var hoverAccent = hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor);
+            var index, hoverX, hoverPrice, hoverTime, hoverBase = ref, hoverZoneColor = null;
+            if (s) {
+                index = 0;
+                for (var hi = 1; hi < xsAll.length; hi++) {
+                    if (Math.abs(xsAll[hi] - hx) < Math.abs(xsAll[index] - hx)) index = hi;
+                }
+                hoverX = xsAll[index];
+                hoverPrice = allData[index];
+                hoverTime = hoverTimeLabel(allTimes[index]);
+                if (index < nPre) {
+                    hoverTime += " " + rootItem.tagPreMarket;
+                    if (prevClose > 0) hoverBase = prevClose;
+                    hoverZoneColor = preColor;
+                } else if (index >= nPre + nReg) {
+                    hoverTime += " " + rootItem.tagAfterHours;
+                    hoverBase = regularClose;
+                    hoverZoneColor = postColor;
+                }
+            } else {
+                index = Math.round((data.length - 1) * hx / plotRight);
+                index = Math.max(0, Math.min(data.length - 1, index));
+                hoverX = plotRight * index / (data.length - 1);
+                hoverPrice = data[index];
+                hoverTime = times[index] ? hoverTimeLabel(times[index]) : "";
+            }
+            var hoverY = getY(hoverPrice);
+            var hoverChange = hoverPrice - hoverBase;
+            var hoverPct = hoverBase > 0 ? (hoverChange / hoverBase) * 100 : 0;
+            var hoverAccent = hoverZoneColor ? hoverZoneColor
+                              : (hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor));
             var hoverDetail = rootItem.formatNumber(hoverChange, true) + " (" + rootItem.formatNumber(hoverPct, true) + "%)";
             drawHover(ctx, plotRight, plotH, plotH, hoverX, hoverY, hoverAccent, hoverTime,
                       rootItem.currencySym + rootItem.formatNumber(hoverPrice, false),
                       hoverDetail, hoverAccent, "");
         }
 
-        if (timeAxisHeight > 0) drawTimeAxis(ctx, plotRight, 0, plotH, data, times);
+        if (timeAxisHeight > 0) {
+            if (s) drawSessionTimeAxis(ctx, plotRight, plotH, allTimes, xAt, s, nPre, nPost);
+            else drawTimeAxis(ctx, plotRight, 0, plotH, data, times);
+        }
     }
 
     // Candlestick chart with a volume strip. The candles are already aggregated in

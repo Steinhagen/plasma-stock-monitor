@@ -94,6 +94,9 @@ PlasmoidItem {
     property var chartDataPoints: []
     // Unix timestamps (seconds) parallel to chartDataPoints, used for the chart's time scale.
     property var chartTimestamps: []
+    // Pre-market / after-hours points around the displayed 1D session (see
+    // extendedSessionSeries), or null when the chart shows the regular session only.
+    property var chartSessions: null
     // Candle aggregates (open/high/low/close/volume/time) for the candlestick chart, and
     // the price at which the latest session opened, used by the reference-line chart.
     property var chartCandles: []
@@ -546,7 +549,7 @@ PlasmoidItem {
         // Yahoo Finance requires specific intervals for specific ranges
         // to return valid data and look good.
         switch (range) {
-            case "1D":  return "range=2d&interval=2m"; // Use 2d to get reliable previous close for indices
+            case "1D":  return "range=2d&interval=2m" + (root.showExtendedHours ? "&includePrePost=true" : ""); // Use 2d to get reliable previous close for indices
             case "5D":  return "range=5d&interval=15m";
             case "1M":  return "range=1mo&interval=60m"; // '1mo' is Yahoo syntax
             case "6M":  return "range=6mo&interval=1d";
@@ -762,8 +765,9 @@ PlasmoidItem {
     }
 
     onShowExtendedHoursChanged: {
-        if (showExtendedHours) refreshExtendedHours();
-        else { extendedData = ({}); lastExtendedData = ({}); }
+        if (!showExtendedHours) { extendedData = ({}); lastExtendedData = ({}); }
+        // The 1D chart request includes pre/post data only while this is on.
+        refreshData();
     }
 
     onKeepExtendedAfterCloseChanged: {
@@ -913,7 +917,63 @@ PlasmoidItem {
     // days (so the previous close is available) but only the current session is plotted.
     // When `quote` is supplied, the open/high/low/volume series are filtered in lockstep
     // with the closes, so the candlestick chart can aggregate them without re-fetching.
-    function cleanChartData(quotes, timestamps, startTime, range, quote) {
+    // Trading days described by meta.tradingPeriods (oldest to newest) as
+    // { pre, regular, post }, each a { start, end } or null. Zero-length periods count as absent.
+    function tradingDays(meta) {
+        function period(p) {
+            if (p && p.length) p = p[0];
+            return (p && p.start < p.end) ? p : null;
+        }
+        var days = [];
+        var tp = meta ? meta.tradingPeriods : null;
+        if (tp && tp.regular && tp.regular.length) {
+            for (var i = 0; i < tp.regular.length; i++) {
+                days.push({
+                    pre: tp.pre ? period(tp.pre[i]) : null,
+                    regular: period(tp.regular[i]),
+                    post: tp.post ? period(tp.post[i]) : null
+                });
+            }
+        } else if (tp && tp.length) {
+            for (var j = 0; j < tp.length; j++) days.push({ pre: null, regular: period(tp[j]), post: null });
+        } else if (meta && meta.currentTradingPeriod) {
+            var c = meta.currentTradingPeriod;
+            days.push({ pre: period(c.pre), regular: period(c.regular), post: period(c.post) });
+        }
+        return days;
+    }
+    // Latest trading day whose regular session has at least one data point, or null.
+    function displayedDay(meta, timestamps) {
+        if (!timestamps) return null;
+        var days = root.tradingDays(meta);
+        for (var d = days.length - 1; d >= 0; d--) {
+            var reg = days[d].regular;
+            if (!reg) continue;
+            for (var i = 0; i < timestamps.length; i++) {
+                if (timestamps[i] >= reg.start && timestamps[i] < reg.end) return days[d];
+            }
+        }
+        return null;
+    }
+    // Pre-market and after-hours closes of `day`, or null when neither has any point.
+    function extendedSessionSeries(quotes, timestamps, day) {
+        var preTimes = [], preValues = [], postTimes = [], postValues = [];
+        for (var i = 0; i < quotes.length; i++) {
+            var v = quotes[i], t = timestamps[i];
+            if (v === null || v === undefined) continue;
+            if (day.pre && t >= day.pre.start && t < day.pre.end) { preTimes.push(t); preValues.push(v); }
+            else if (day.post && t >= day.post.start && t < day.post.end) { postTimes.push(t); postValues.push(v); }
+        }
+        if (preValues.length === 0 && postValues.length === 0) return null;
+        return {
+            preTimes: preTimes, preValues: preValues,
+            postTimes: postTimes, postValues: postValues,
+            regStart: day.regular.start, regEnd: day.regular.end,
+            preStart: day.pre ? day.pre.start : 0,
+            postEnd: day.post ? day.post.end : 0
+        };
+    }
+    function cleanChartData(quotes, timestamps, startTime, range, quote, day) {
         var chartRange = range || root.effectiveChartRange;
         var q = quote || {};
         var opens = q.open || null;
@@ -934,13 +994,17 @@ PlasmoidItem {
             outVolumes.push(volumes && volumes[i] !== null && volumes[i] !== undefined ? volumes[i] : 0);
         }
 
+        var bounded = chartRange === "1D" && day && day.regular && timestamps;
         for (var i = 0; i < quotes.length; i++) {
-            if (chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
+            if (bounded) {
+                // Extended-hours points are requested but belong to chartSessions, not here.
+                if (timestamps[i] < day.regular.start || timestamps[i] >= day.regular.end) continue;
+            } else if (chartRange === "1D" && startTime > 0 && timestamps && timestamps[i] < startTime)
                 continue;
             addPoint(i);
         }
 
-        if (chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
+        if (!bounded && chartRange === "1D" && values.length === 0 && timestamps && timestamps.length > 0) {
             var dayStartIndex = 0;
             for (var j = timestamps.length - 1; j > 0; j--) {
                 if (timestamps[j] - timestamps[j-1] > 4 * 3600) {
@@ -1070,8 +1134,10 @@ PlasmoidItem {
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange, quote);
+            var day = (chartRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
+            var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange, quote, day);
             var cleanData = chart.values;
+            root.chartSessions = (day && cleanData.length >= 2) ? root.extendedSessionSeries(quotes, timestamps, day) : null;
             root.chartDataPoints = cleanData;
             root.chartTimestamps = chart.times;
 
@@ -1131,7 +1197,8 @@ PlasmoidItem {
             var curSym = getCurrencySymbol(meta.currency);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var cleanData = root.cleanChartData(quotes, timestamps, startTime, listRange).values;
+            var listDay = (listRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
+            var cleanData = root.cleanChartData(quotes, timestamps, startTime, listRange, null, listDay).values;
             var prev;
             if (listRange === "1D") {
                 prev = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -1217,6 +1284,7 @@ PlasmoidItem {
             root.percentChange = "";
             root.chartDataPoints = [];
             root.chartTimestamps = [];
+            root.chartSessions = null;
             root.chartCandles = [];
             root.chartOpenPrice = 0;
         }
