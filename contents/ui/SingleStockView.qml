@@ -1040,52 +1040,47 @@ Rectangle {
         ctx.stroke();
         ctx.restore();
 
+        // Draw a polyline split at the reference: green above it, red below it.
+        function strokeSplit(values, xs) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 0, plotRight, refY);
+            ctx.clip();
+            ctx.strokeStyle = pos;
+            ctx.lineWidth = 2;
+            traceSmooth(ctx, values, plotRight, getY, xs);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, refY, plotRight, Math.max(1, plotH - refY));
+            ctx.clip();
+            ctx.strokeStyle = neg;
+            ctx.lineWidth = 2;
+            traceSmooth(ctx, values, plotRight, getY, xs);
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // The line changes colour exactly at the reference.
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, plotRight, refY);
-        ctx.clip();
-        ctx.strokeStyle = pos;
-        ctx.lineWidth = 2;
-        traceSmooth(ctx, data, plotRight, getY, xsReg);
-        ctx.stroke();
-        ctx.restore();
+        strokeSplit(data, xsReg);
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, refY, plotRight, Math.max(1, plotH - refY));
-        ctx.clip();
-        ctx.strokeStyle = neg;
-        ctx.lineWidth = 2;
-        traceSmooth(ctx, data, plotRight, getY, xsReg);
-        ctx.stroke();
-        ctx.restore();
-
-        // Extended-hours parts of the line: same line, no fill. Each segment starts or ends
-        // on the neighbouring regular point so the line stays continuous.
+        // Extended-hours parts of the line: same reference split, no fill. Each segment
+        // starts or ends on the neighbouring regular point so the line stays continuous.
         var regularClose = rootItem.currentRawPrice > 0 ? rootItem.currentRawPrice : data[nReg - 1];
         var preColor = pos, postColor = pos;
         if (nPre > 0) {
             preColor = sessionLineColor("pre", s, prevClose, s.preValues[nPre - 1]);
-            ctx.save();
-            ctx.strokeStyle = preColor;
-            ctx.lineWidth = 2;
-            traceSmooth(ctx, allData.slice(0, nPre + 1), plotRight, getY, xsAll.slice(0, nPre + 1));
-            ctx.stroke();
-            ctx.restore();
+            strokeSplit(allData.slice(0, nPre + 1), xsAll.slice(0, nPre + 1));
         }
         if (nPost > 0) {
             postColor = sessionLineColor("post", s, regularClose, s.postValues[nPost - 1]);
-            ctx.save();
-            ctx.strokeStyle = postColor;
-            ctx.lineWidth = 2;
-            traceSmooth(ctx, allData.slice(nPre + nReg - 1), plotRight, getY, xsAll.slice(nPre + nReg - 1));
-            ctx.stroke();
-            ctx.restore();
+            strokeSplit(allData.slice(nPre + nReg - 1), xsAll.slice(nPre + nReg - 1));
         }
         // End dot.
         var lastValue = allData[allData.length - 1];
-        var dotColor = nPost > 0 ? postColor : lastValue >= ref ? pos : neg;
+        var dotColor = lastValue >= ref ? pos : neg;
         drawEndDot(ctx, xsAll ? xsAll[xsAll.length - 1] : plotRight, getY(lastValue), dotColor);
 
         // Legend in the empty top-left corner.
