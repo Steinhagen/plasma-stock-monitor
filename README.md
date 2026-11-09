@@ -2,6 +2,8 @@
 
 A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo Finance.
 
+[![KDE Store](https://img.shields.io/badge/KDE%20Store-Install-blue)](https://store.kde.org/p/2381512/)
+
 ![Plasma Stock Monitor](screenshots/main.png)
 
 ## Features
@@ -17,7 +19,13 @@ A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo
 
 ## Installation
 
-This fork is not published on the KDE Store yet, so install it from source:
+### KDE Store
+
+Install **Plasma Stock Monitor** from the [KDE Store](https://store.kde.org/p/2381512/).
+
+You can also open **Add Widgets → Get New Widgets → Download New Plasma Widgets** on your desktop or panel and search for **Plasma Stock Monitor**.
+
+### From source
 
 ```bash
 git clone https://github.com/Steinhagen/plasma-stock-monitor.git
@@ -27,7 +35,7 @@ kpackagetool6 --type Plasma/Applet --install .
 
 Then right-click the desktop or panel, choose **Add Widgets**, and search for **Plasma Stock Monitor**.
 
-To update an existing installation, use `--upgrade` instead of `--install`.
+To update an existing source installation, use `--upgrade` instead of `--install`.
 
 ## Configuration
 
