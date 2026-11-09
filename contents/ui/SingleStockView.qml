@@ -41,10 +41,14 @@ Rectangle {
         return i18n("No after-hours");
     }
 
-    // Smallest size at which nothing in the card is cut off or wrapped: the content's own
-    // implicit size (hidden rows drop out) plus the singleView margins, never below a floor
-    // that covers the loading state.
-    readonly property real minimumContentWidth: Math.max(260, Math.ceil(contentColumn.implicitWidth) + 32)
+    // Minimum width of the card. It deliberately comes from the chart controls and a fixed
+    // floor, not from contentColumn.implicitWidth: prices, percentages, company names and
+    // positions change with the selected ticker and range, and using them made the minimum
+    // (and therefore the split between the two desktop columns) move by a few pixels. Text
+    // that grows with data no longer widens the card; it keeps its own elision/clipping.
+    readonly property real chartControlsWidth: (rootItem.showChartRangeButtons || rootItem.showChartStyleButtons)
+                                                ? chartHeaderRow.implicitWidth : 0
+    readonly property real minimumContentWidth: Math.max(300, Math.ceil(chartControlsWidth) + 32)
     readonly property real minimumContentHeight: Math.max(240, Math.ceil(contentColumn.implicitHeight) + 26)
 
     color: rootItem.bgColor
