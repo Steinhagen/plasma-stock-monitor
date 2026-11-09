@@ -15,6 +15,9 @@ PlasmoidItem {
     preferredRepresentation: (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical) ? root.compactRepresentation : root.fullRepresentation
 
     property string singleTicker: Plasmoid.configuration.ticker
+    // True while fetchMultiStocks assigns panelTicker/singleTicker: the list response
+    // already refreshes the selected chart, so the change handler must not fetch again.
+    property bool bulkListRefresh: false
     property bool isMultiMode: Plasmoid.configuration.isMultiMode
     property bool showTwoList: Plasmoid.configuration.showTwoList
     // Left column width in the side-by-side desktop view, in pixels. 0 means automatic
@@ -563,6 +566,57 @@ PlasmoidItem {
         }
     }
 
+    // Select a watchlist row. The list already has the row's quote, so only the chart
+    // needs a request; refreshing the whole list here made all rows update in chunks
+    // before the selected ticker's chart arrived.
+    function selectTicker(ticker) {
+        var clean = ticker ? String(ticker).trim() : "";
+        if (clean === "") return;
+        root.manualPanelTickerOverride = clean;
+        root.panelTicker = clean;
+        root.updatePanelFromRow(clean);
+
+        // Use the row that is already in the list so the title, quote, portfolio and
+        // graph switch together, then refresh the chart in the background. Without
+        // this, the header changed immediately while the chart waited for the reply.
+        var row = null;
+        for (var i = 0; i < stockModel.count; i++) {
+            if (stockModel.get(i).ticker === clean) {
+                row = stockModel.get(i);
+                break;
+            }
+        }
+        if (row) {
+            root.singleCompanyName = row.name;
+            root.currentRawPrice = row.currentRaw;
+            root.currentPrice = row.price;
+            root.currencySym = row.currencySym;
+            root.quoteCurrency = row.currency;
+            root.previousClose = row.prevClose;
+            // The change and the chart itself depend on the selected range. They can only
+            // be reused when the list and the chart share the range.
+            if (root.effectiveChartRange === root.chartRange) {
+                root.isPositive = row.isPos;
+                root.priceChange = row.change;
+                root.percentChange = row.pct;
+                root.chartDataPoints = row.chartPoints;
+                root.chartTimestamps = row.chartTimes;
+                var sessions = row.chartSessions;
+                root.chartSessions = (sessions && sessions.preValues !== undefined)
+                                     ? sessions : null;
+                root.chartCandles = row.chartCandles;
+                root.chartReferencePrice = row.chartRef;
+            }
+        }
+
+        if (root.singleTicker !== clean) {
+            root.singleTicker = clean; // onSingleTickerChanged fetches the chart
+        } else {
+            root.fetchSingleStock(clean, root.effectiveChartRange);
+            if (root.showExtendedHours) root.fetchExtendedHours(clean);
+        }
+    }
+
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
     function getApiParams(range) {
         // Yahoo Finance requires specific intervals for specific ranges
@@ -891,8 +945,10 @@ PlasmoidItem {
         }
         
         var defaultPanelTicker = targetTickers.length > 0 ? targetTickers[0] : "";
+        root.bulkListRefresh = true;
         root.panelTicker = root.manualPanelTickerOverride !== "" && targetTickers.indexOf(root.manualPanelTickerOverride) !== -1 ? root.manualPanelTickerOverride : defaultPanelTicker;
         root.singleTicker = root.panelTicker;
+        root.bulkListRefresh = false;
 
         // Initialize placeholders to maintain display order before async completion
         if (stockModel.count !== targetTickers.length) {
@@ -906,6 +962,12 @@ PlasmoidItem {
                     "pct": "",
                     "isPos": true,
                     "chartPoints": [],
+                    "chartTimes": [],
+                    // ListModel does not create a role from a null value; use an empty
+                    // object as the placeholder and treat it as "no sessions" on read.
+                    "chartSessions": ({}),
+                    "chartCandles": [],
+                    "chartRef": 0.0,
                     "prevClose": 0.0,
                     "currentRaw": 0.0,
                     "currencySym": "",
@@ -1212,7 +1274,8 @@ PlasmoidItem {
             var result = json.chart.result[0];
             var meta = result.meta;
             root.setMarketSession(symbol, meta);
-            var quotes = result.indicators.quote[0].close;
+            var quote = result.indicators.quote[0] || {};
+            var quotes = quote.close || [];
             var timestamps = result.timestamp;
 
             var current = meta.regularMarketPrice;
@@ -1220,7 +1283,8 @@ PlasmoidItem {
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
             var listDay = (listRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
-            var cleanData = root.cleanChartData(quotes, timestamps, startTime, listRange, null, listDay).values;
+            var cleanChart = root.cleanChartData(quotes, timestamps, startTime, listRange, quote, listDay);
+            var cleanData = cleanChart.values;
             var prev;
             if (listRange === "1D") {
                 prev = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -1234,6 +1298,13 @@ PlasmoidItem {
             var change = current - prev;
             var pct = prev > 0 ? (change / prev) * 100 : 0;
 
+            // Keep the chart state of the list range with the row, so selecting it can
+            // show its graph immediately instead of waiting for another request.
+            var chartSessions = (listDay && cleanData.length >= 2)
+                                ? root.extendedSessionSeries(quotes, timestamps, listDay) : null;
+            var chartCandles = root.buildCandles(cleanChart, listRange);
+            var chartRef = root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
+
             var itemData = {
                 "ticker": symbol,
                 "name": root.companyName(meta, symbol),
@@ -1242,6 +1313,10 @@ PlasmoidItem {
                 "pct": formatNumber(pct, true) + "%",
                 "isPos": change >= 0,
                 "chartPoints": cleanData,
+                "chartTimes": cleanChart.times,
+                "chartSessions": chartSessions,
+                "chartCandles": chartCandles,
+                "chartRef": chartRef,
                 "prevClose": prev,
                 "currentRaw": current,
                 "currencySym": curSym,
@@ -1295,7 +1370,17 @@ PlasmoidItem {
         return sign + formatted;
     }
 
-    onSingleTickerChanged: refreshData()
+    onSingleTickerChanged: {
+        if (root.isMultiMode) {
+            if (root.bulkListRefresh) return;
+            if (root.singleTicker.trim() !== "") {
+                root.fetchSingleStock(root.singleTicker, root.effectiveChartRange);
+                if (root.showExtendedHours) root.fetchExtendedHours(root.singleTicker);
+            }
+        } else {
+            root.refreshData();
+        }
+    }
     onIsMultiModeChanged: {
         stockModel.clear();
         if (!isMultiMode) {
@@ -1575,12 +1660,8 @@ PlasmoidItem {
                 if (stockModel.get(i).ticker === root.panelTicker) { current = i; break; }
             }
             var row = stockModel.get((current + 1) % stockModel.count);
-            root.manualPanelTickerOverride = row.ticker;
-            root.panelTicker = row.ticker;
-            root.singleTicker = row.ticker;
-            // The panel follows the list range; the chart is refreshed separately.
-            root.updatePanelFromRow(row.ticker);
-            root.fetchSingleStock(row.ticker);
+            // The panel takes the cached list row; only the chart is fetched.
+            root.selectTicker(row.ticker);
         }
     }
 
@@ -1632,11 +1713,7 @@ PlasmoidItem {
             var n = stockModel.count;
             var next = (((current + steps) % n) + n) % n;
             var row = stockModel.get(next);
-            root.manualPanelTickerOverride = row.ticker;
-            root.panelTicker = root.manualPanelTickerOverride;
-            root.singleTicker = root.panelTicker;
-            root.updatePanelFromRow(row.ticker);
-            root.refreshData();
+            root.selectTicker(row.ticker);
         }
 
         onClicked: (mouse) => {

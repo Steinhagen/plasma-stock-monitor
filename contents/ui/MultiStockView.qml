@@ -171,11 +171,7 @@ Rectangle {
                         console.log("Opening URL: " + model.ticker);
                         Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker);
                     } else if (mouse.button === Qt.RightButton) {
-                        rootItem.manualPanelTickerOverride = model.ticker;
-                        rootItem.panelTicker = model.ticker;
-                        rootItem.singleTicker = model.ticker; // Also update singleTicker to keep singleView in sync
-                        rootItem.updatePanelFromRow(model.ticker);
-                        rootItem.refreshData();
+                        rootItem.selectTicker(model.ticker);
                     }
                 }
                 Timer {
