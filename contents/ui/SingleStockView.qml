@@ -439,7 +439,7 @@ Rectangle {
                 Canvas {
                     id: singleCanvas
                     anchors.fill: parent
-                    visible: rootItem.chartDataPoints && rootItem.chartDataPoints.length > 0
+                    visible: Array.isArray(rootItem.chartDataPoints) && rootItem.chartDataPoints.length > 0
                     renderStrategy: Canvas.Threaded
                     renderTarget: Canvas.Image
                     onPaint: { drawChart(getContext("2d"), width, height, rootItem.chartDataPoints, rootItem.chartTimestamps, rootItem.previousClose, rootItem.isPositive, true, rootItem.showChartAxis, rootItem.showTimeAxis); }
@@ -920,6 +920,7 @@ Rectangle {
         var ref = rootItem.chartReferencePrice > 0 ? rootItem.chartReferencePrice
                                                    : (prevClose > 0 ? prevClose : data[0]);
         if (!(ref > 0)) ref = data[0];
+        if (!isFinite(ref)) return;
         // Full-day layout (regular session plus pre-market / after-hours). Line style only.
         var s = (rootItem.chartStyle !== 1) ? rootItem.chartSessions : null;
         var nReg = data.length;
@@ -936,6 +937,11 @@ Rectangle {
         }
         var minVal = Math.min.apply(null, allData);
         var maxVal = Math.max.apply(null, allData);
+        if (!isFinite(minVal) || !isFinite(maxVal)) {
+            // A malformed cache or a bad quote must not take the whole chart down.
+            minVal = ref - 1;
+            maxVal = ref + 1;
+        }
         if (ref < minVal) minVal = ref;
         if (ref > maxVal) maxVal = ref;
         var range = maxVal - minVal;
@@ -956,6 +962,9 @@ Rectangle {
         var plotRight = showPriceAxis ? drawRightAxis(ctx, w, minVal, maxVal, getY, false) : w;
         if (plotRight < 24) plotRight = w;
         var refY = getY(ref);
+        // createLinearGradient() aborts the whole paint if given a non-finite value.
+        if (!isFinite(refY)) refY = plotH / 2;
+        refY = Math.max(0, Math.min(plotH, refY));
         var pos = rootItem.positiveColor;
         var neg = rootItem.negativeColor;
         // Pixel x of every point. Without extended hours the points are evenly spaced.
@@ -1149,7 +1158,7 @@ Rectangle {
     // and the time scale below are shared with the reference chart.
     function drawCandleChart(ctx, w, h, showPriceAxis, showTimeAxis) {
         var candles = rootItem.chartCandles;
-        if (!candles || candles.length < 2) return;
+        if (!candles || !Array.isArray(candles) || candles.length < 2) return;
 
         var minVal = Infinity;
         var maxVal = -Infinity;
@@ -1269,9 +1278,10 @@ Rectangle {
 
     function drawChart(ctx, w, h, data, times, prevClose, isPos, drawBackground, showPriceAxis, showTimeAxis) {
         ctx.clearRect(0, 0, w, h);
-        if (!data || data.length < 2 || w < 20 || h < 20) return;
+        if (!data || !Array.isArray(data) || data.length < 2
+                || !isFinite(w) || !isFinite(h) || w < 20 || h < 20) return;
 
-        if (rootItem.chartStyle === 1 && rootItem.chartCandles && rootItem.chartCandles.length > 1)
+        if (rootItem.chartStyle === 1 && Array.isArray(rootItem.chartCandles) && rootItem.chartCandles.length > 1)
             drawCandleChart(ctx, w, h, showPriceAxis, showTimeAxis);
         else
             drawReferenceChart(ctx, w, h, data, times, prevClose, showPriceAxis, showTimeAxis);

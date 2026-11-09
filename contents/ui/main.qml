@@ -566,6 +566,20 @@ PlasmoidItem {
         }
     }
 
+    // ListModel turns a top-level array role into a nested ListModel, so the chart
+    // arrays are cached as JSON strings and decoded here. Without this, selecting a
+    // list row handed a ListModel to the Canvas, which blanked the chart.
+    function chartArray(value) {
+        if (Array.isArray(value)) return value;
+        if (typeof value === "string") {
+            try {
+                var parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) { return []; }
+        }
+        return [];
+    }
+
     // Select a watchlist row. The list already has the row's quote, so only the chart
     // needs a request; refreshing the whole list here made all rows update in chunks
     // before the selected ticker's chart arrived.
@@ -599,12 +613,12 @@ PlasmoidItem {
                 root.isPositive = row.isPos;
                 root.priceChange = row.change;
                 root.percentChange = row.pct;
-                root.chartDataPoints = row.chartPoints;
-                root.chartTimestamps = row.chartTimes;
+                root.chartDataPoints = root.chartArray(row.chartPoints);
+                root.chartTimestamps = root.chartArray(row.chartTimes);
                 var sessions = row.chartSessions;
                 root.chartSessions = (sessions && sessions.preValues !== undefined)
                                      ? sessions : null;
-                root.chartCandles = row.chartCandles;
+                root.chartCandles = root.chartArray(row.chartCandles);
                 root.chartReferencePrice = row.chartRef;
             }
         }
@@ -961,12 +975,12 @@ PlasmoidItem {
                     "change": "",
                     "pct": "",
                     "isPos": true,
-                    "chartPoints": [],
-                    "chartTimes": [],
+                    "chartPoints": "[]",
+                    "chartTimes": "[]",
                     // ListModel does not create a role from a null value; use an empty
                     // object as the placeholder and treat it as "no sessions" on read.
                     "chartSessions": ({}),
-                    "chartCandles": [],
+                    "chartCandles": "[]",
                     "chartRef": 0.0,
                     "prevClose": 0.0,
                     "currentRaw": 0.0,
@@ -1312,10 +1326,10 @@ PlasmoidItem {
                 "change": formatNumber(change, true),
                 "pct": formatNumber(pct, true) + "%",
                 "isPos": change >= 0,
-                "chartPoints": cleanData,
-                "chartTimes": cleanChart.times,
+                "chartPoints": JSON.stringify(cleanData),
+                "chartTimes": JSON.stringify(cleanChart.times),
                 "chartSessions": chartSessions,
-                "chartCandles": chartCandles,
+                "chartCandles": JSON.stringify(chartCandles),
                 "chartRef": chartRef,
                 "prevClose": prev,
                 "currentRaw": current,
