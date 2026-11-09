@@ -2,8 +2,6 @@
 
 A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo Finance.
 
-> This is a fork of [Stock Monitor](https://github.com/vpsone/stock-monitor-widget) by [vps (vpsone)](https://github.com/vpsone), with UI contributions by [Cenk Tekin](https://github.com/cenktekin). See [Credits](#credits).
-
 ![Plasma Stock Monitor](screenshots/main.png)
 
 ## Features
@@ -50,9 +48,10 @@ All user-visible text is translatable through Ki18n, and a Romanian translation 
 
 ## Credits
 
-- **Original project:** [Stock Monitor](https://github.com/vpsone/stock-monitor-widget) by [vps (vpsone)](https://github.com/vpsone)
-- **UI contributions:** [Cenk Tekin](https://github.com/cenktekin) — badge UI, gain/loss color picker and price precision
-- **Fork maintained by:** [Viorel-Cătălin Răpițeanu (Steinhagen)](https://github.com/Steinhagen)
-- **License:** GPL-3.0-or-later. Copyright remains with the original authors and contributors.
+Plasma Stock Monitor is a fork of [Stock Monitor](https://github.com/vpsone/stock-monitor-widget) by [vps (vpsone)](https://github.com/vpsone), with UI contributions by [Cenk Tekin](https://github.com/cenktekin) (badge UI, gain/loss color picker and price precision). The fork is maintained by [Viorel-Cătălin Răpițeanu (Steinhagen)](https://github.com/Steinhagen).
 
-This fork is independent and is not affiliated with or endorsed by the original authors. Please report fork-specific issues in this repository.
+Parts of this fork were developed with the assistance of AI coding tools.
+
+This fork is independent and is not affiliated with or endorsed by the original authors.
+
+**License:** GPL-3.0-or-later. Copyright remains with the original authors and contributors.
