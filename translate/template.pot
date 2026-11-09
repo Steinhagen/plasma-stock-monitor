@@ -693,6 +693,16 @@ msgctxt "@item:chart range"
 msgid "All"
 msgstr ""
 
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Line"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Candles"
+msgstr ""
+
 #: contents/ui/main.qml
 msgid "Pre-Market"
 msgstr ""
@@ -848,4 +858,8 @@ msgstr ""
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Show chart style buttons"
 msgstr ""

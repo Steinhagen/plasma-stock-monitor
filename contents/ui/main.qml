@@ -178,6 +178,8 @@ PlasmoidItem {
     property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
     // 0 = reference line split at the session open, 1 = candles + volume.
     property int chartStyle: Plasmoid.configuration.chartStyle === 1 ? 1 : 0
+    // Show the Line/Candles toggle in the chart.
+    property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
     property bool showChartHover: Plasmoid.configuration.showChartHover
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
     // (same ticker can have several, bought at different prices); the lots of a ticker are
@@ -517,6 +519,16 @@ PlasmoidItem {
         }
     }
 
+    // Chart type selected from the chart buttons. It writes the same setting as the
+    // Appearance page, so both stay in sync.
+    function setChartStyle(style) {
+        if (style === root.chartStyle) return;
+        try {
+            Plasmoid.configuration.chartStyle = style;
+        } catch (e) {
+            console.log("Error saving chart style: " + e);
+        }
+    }
     // Copy the list row's values (configured data range) into the panel indicator.
     function updatePanelFromRow(ticker) {
         for (var i = 0; i < stockModel.count; i++) {

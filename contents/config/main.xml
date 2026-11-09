@@ -60,6 +60,10 @@
             <label>Chart style (0 = reference line, 1 = candles + volume)</label>
             <default>0</default>
         </entry>
+        <entry name="showChartStyleButtons" type="Bool">
+            <label>Show the chart style buttons (line/candles) in the chart</label>
+            <default>false</default>
+        </entry>
 
         <entry name="showChartHover" type="Bool">
             <label>Show values when hovering over the chart</label>

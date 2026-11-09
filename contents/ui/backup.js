@@ -31,6 +31,7 @@ var SETTINGS_KEYS = [
     "chartViewRange",
     "showChartRangeButtons",
     "chartStyle",
+    "showChartStyleButtons",
     "showChartHover",
     "limitHours",
     "skipWeekendRefresh",
@@ -82,6 +83,7 @@ var BOOL_KEYS = {
     showChartAxis: true,
     showTimeAxis: true,
     showChartRangeButtons: true,
+    showChartStyleButtons: true,
     showChartHover: true
 };
 

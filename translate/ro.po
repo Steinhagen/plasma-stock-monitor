@@ -693,6 +693,16 @@ msgctxt "@item:chart range"
 msgid "All"
 msgstr "Tot"
 
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Line"
+msgstr "Linie"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Candles"
+msgstr "Candele"
+
 #: contents/ui/main.qml
 msgid "Pre-Market"
 msgstr "Dinainte de deschidere"
@@ -853,6 +863,10 @@ msgstr "Fără after-hours"
 msgctxt "@item:compact quote"
 msgid "Regular"
 msgstr "Regular"
+
+#: contents/ui/configAppearance.qml
+msgid "Show chart style buttons"
+msgstr "Afișează butoanele de stil al graficului"
 
 #~ msgid "Open"
 #~ msgstr "Deschidere"
