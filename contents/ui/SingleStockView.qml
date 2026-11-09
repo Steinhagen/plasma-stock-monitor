@@ -311,11 +311,13 @@ Rectangle {
             // without opening the configuration dialog.
             RowLayout {
                 id: chartHeaderRow
-                visible: chartRangeButtons.visible || chartStyleButtons.visible
+                // Bind to the settings, not to the children's visible: a child reads as
+                // invisible while this row is hidden, which would keep the row hidden for good.
+                visible: singleStockRoot.rootItem.showChartRangeButtons || singleStockRoot.rootItem.showChartStyleButtons
                 Layout.fillWidth: true
                 Layout.topMargin: 6
                 Layout.bottomMargin: 2
-                Layout.preferredHeight: Math.max(chartRangeButtons.visible ? chartRangeButtons.implicitHeight : 0, chartStyleButtons.visible ? 18 : 0)
+                Layout.preferredHeight: Math.max(singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0, singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0)
                 spacing: 6
                 Flow {
                     id: chartRangeButtons
@@ -362,7 +364,7 @@ Rectangle {
                 // Keeps the chart type selector on the right when the range buttons are hidden.
                 Item {
                     Layout.fillWidth: true
-                    visible: !chartRangeButtons.visible
+                    visible: !singleStockRoot.rootItem.showChartRangeButtons
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
                 // setting as the Appearance page.
