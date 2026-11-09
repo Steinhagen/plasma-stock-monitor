@@ -684,8 +684,8 @@ msgid "CLOSED"
 msgstr ""
 
 #: contents/ui/main.qml
-msgctxt "@item:chart session open price"
-msgid "Open"
+msgctxt "@item:chart previous close"
+msgid "Previous close"
 msgstr ""
 
 #: contents/ui/main.qml

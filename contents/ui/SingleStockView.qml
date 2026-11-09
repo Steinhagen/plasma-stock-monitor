@@ -452,7 +452,7 @@ Rectangle {
                         function onShowTimeAxisChanged() { singleCanvas.requestPaint(); }
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
-                        function onChartOpenPriceChanged() { singleCanvas.requestPaint(); }
+                        function onChartReferencePriceChanged() { singleCanvas.requestPaint(); }
                         function onChartSessionsChanged() { singleCanvas.requestPaint(); }
                         function onShowChartHoverChanged() {
                             if (!rootItem.showChartHover) singleStockRoot.chartHoverActive = false;
@@ -526,7 +526,7 @@ Rectangle {
 
     // ── Chart drawing ────────────────────────────────────────────
     // Settings → Appearance → Chart selects between:
-    //   0 = reference line split at the open of the latest session
+    //   0 = reference line split at yesterday's close
     //   1 = candlesticks with volume
     // Both use the same right-hand price scale and the same time scale below.
 
@@ -913,11 +913,12 @@ Rectangle {
         ctx.restore();
     }
 
-    // Reference chart: the area above the open is green and the area below it is red; the
-    // line changes colour when it crosses the reference. The right-hand scale is optional
-    // through the existing "Price scale" setting, but is on by default.
+    // Reference chart: the area above yesterday's close is green and the area below it is
+    // red; the line changes colour when it crosses the reference. The right-hand scale is
+    // optional through the existing "Price scale" setting, but is on by default.
     function drawReferenceChart(ctx, w, h, data, times, prevClose, showPriceAxis, showTimeAxis) {
-        var ref = rootItem.chartOpenPrice > 0 ? rootItem.chartOpenPrice : (prevClose > 0 ? prevClose : data[0]);
+        var ref = rootItem.chartReferencePrice > 0 ? rootItem.chartReferencePrice
+                                                   : (prevClose > 0 ? prevClose : data[0]);
         if (!(ref > 0)) ref = data[0];
         // Full-day layout (regular session plus pre-market / after-hours). Line style only.
         var s = (rootItem.chartStyle !== 1) ? rootItem.chartSessions : null;
@@ -1088,7 +1089,7 @@ Rectangle {
         drawEndDot(ctx, xsAll ? xsAll[xsAll.length - 1] : plotRight, getY(lastValue), dotColor);
 
         // Legend in the empty top-left corner.
-        var legend = rootItem.chartOpenLabel + " " + rootItem.formatNumber(ref, false);
+        var legend = rootItem.chartReferenceLabel + " " + rootItem.formatNumber(ref, false);
         ctx.save();
         ctx.strokeStyle = Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g, rootItem.secondaryTextColor.b, 0.55);
         ctx.lineWidth = 1;

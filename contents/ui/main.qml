@@ -98,12 +98,12 @@ PlasmoidItem {
     // extendedSessionSeries), or null when the chart shows the regular session only.
     property var chartSessions: null
     // Candle aggregates (open/high/low/close/volume/time) for the candlestick chart, and
-    // the price at which the latest session opened, used by the reference-line chart.
+    // yesterday's close, used as the reference line of the reference-line chart.
     property var chartCandles: []
-    property double chartOpenPrice: 0
+    property double chartReferencePrice: 0
     // Evaluated here rather than in the threaded Canvas paint, so the legend text is
     // translated on the main thread.
-    readonly property string chartOpenLabel: i18nc("@item:chart session open price", "Open")
+    readonly property string chartReferenceLabel: i18nc("@item:chart previous close", "Previous close")
     property double previousClose: 0
     property bool isPositive: true
     property string currencySym: ""
@@ -1033,20 +1033,25 @@ PlasmoidItem {
         }
     }
 
-    // Open of the latest session in the series. Intraday data is split at the overnight
-    // gap; daily/weekly/monthly data has one point per session, so its last open is the
-    // open of the last period.
-    function lastSessionOpen(chart) {
-        if (!chart || !chart.times || chart.times.length === 0) return 0;
-        var start = 0;
-        for (var i = chart.times.length - 1; i > 0; i--) {
-            if (chart.times[i] - chart.times[i - 1] > 4 * 3600) {
-                start = i;
-                break;
-            }
+    // Yesterday's close, independent of the chart range. Yahoo sends `previousClose` only
+    // for the 1D range; longer ranges still carry the day's change, so derive it from
+    // regularMarketPrice - fulldayChange (or from the change percentage).
+    function dailyPreviousClose(meta, fallback) {
+        if (meta) {
+            var prev = meta.regularMarketPreviousClose || meta.previousClose || 0;
+            if (prev > 0) return prev;
+            // `fulldayChange` is the most precise day change, but it can follow an
+            // after-hours price; only use it while it still refers to the regular price.
+            var regular = meta.regularMarketPrice;
+            var fullDay = meta.fulldayPrice;
+            if (regular > 0 && typeof meta.fulldayChange === "number"
+                    && (!(fullDay > 0) || Math.abs(fullDay - regular) < 0.005))
+                return regular - meta.fulldayChange;
+            if (regular > 0 && typeof meta.regularMarketChangePercent === "number"
+                    && meta.regularMarketChangePercent > -100)
+                return regular / (1 + meta.regularMarketChangePercent / 100);
         }
-        var open = chart.opens && chart.opens[start] !== undefined ? chart.opens[start] : 0;
-        return open > 0 ? open : (chart.values[start] || 0);
+        return fallback > 0 ? fallback : 0;
     }
 
     // Aggregate the aligned OHLCV series into `target` candles. Aggregating by count
@@ -1142,12 +1147,10 @@ PlasmoidItem {
             root.chartTimestamps = chart.times;
 
             // The candlestick chart can be drawn from the same response; the reference
-            // chart marks the open of the latest session in the series.
+            // chart marks yesterday's close, so it reads the same way as the daily change.
             root.chartCandles = root.buildCandles(chart, chartRange);
-            var sessionOpen = meta.regularMarketOpen && meta.regularMarketOpen > 0
-                              ? meta.regularMarketOpen
-                              : (chartRange === "1D" ? (chart.opens[0] || 0) : root.lastSessionOpen(chart));
-            root.chartOpenPrice = sessionOpen > 0 ? sessionOpen : (cleanData.length > 0 ? cleanData[0] : 0);
+            root.chartReferencePrice = root.dailyPreviousClose(meta,
+                cleanData.length > 0 ? cleanData[0] : 0);
 
             if (chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -1286,7 +1289,7 @@ PlasmoidItem {
             root.chartTimestamps = [];
             root.chartSessions = null;
             root.chartCandles = [];
-            root.chartOpenPrice = 0;
+            root.chartReferencePrice = 0;
         }
         refreshData();
     }
