@@ -742,7 +742,7 @@ msgstr ""
 msgid "Session"
 msgstr ""
 
-#: contents/ui/main.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/main.qml contents/ui/MultiStockView.qml
 msgid "Market closed"
 msgstr ""
 
@@ -780,12 +780,12 @@ msgctxt "@info:portfolio"
 msgid "%1 · no rate for %2"
 msgstr ""
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
 msgstr ""
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "After"
 msgstr ""
@@ -810,4 +810,42 @@ msgstr ""
 
 #: contents/ui/PositionLine.qml
 msgid "Value"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Pre-market"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Open"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Closed"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "Pre-market"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "After-hours"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "No pre-market"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "No after-hours"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "Regular"
 msgstr ""

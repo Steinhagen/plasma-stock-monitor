@@ -11,6 +11,36 @@ Rectangle {
     property bool chartHoverActive: false
     property real chartHoverX: 0
 
+    // Extended quote and market session for the compact quote block. `extendedQuote`
+    // is undefined while the regular session is running or when extended data is off.
+    readonly property var extendedQuote: rootItem.extendedQuote(rootItem.singleTicker)
+    readonly property bool hasExtendedQuote: extendedQuote !== undefined && extendedQuote !== null
+    readonly property string marketSession: rootItem.marketStatusFor(rootItem.singleTicker)
+    readonly property string marketSessionText: {
+        switch (marketSession) {
+            case "pre":    return i18nc("@item:market session status", "Pre-market");
+            case "open":   return i18nc("@item:market session status", "Open");
+            case "post":
+            case "closed": return i18nc("@item:market session status", "Closed");
+            default:       return "";
+        }
+    }
+    readonly property color marketSessionColor: marketSession === "pre"
+        ? (rootItem.isLightTheme ? "#b47a12" : "#d9a441")
+        : (marketSession === "open" ? rootItem.positiveColor : rootItem.secondaryTextColor)
+    readonly property string extendedQuoteLabel: {
+        if (!hasExtendedQuote) return "";
+        return (extendedQuote.kind === "pre"
+                ? i18nc("@item:compact quote", "Pre-market")
+                : i18nc("@item:compact quote", "After-hours")).toUpperCase();
+    }
+    readonly property string noExtendedNote: {
+        if (hasExtendedQuote || !rootItem.showExtendedHours || marketSession === "") return "";
+        if (marketSession === "open") return "";
+        if (marketSession === "pre") return i18n("No pre-market");
+        return i18n("No after-hours");
+    }
+
     color: rootItem.bgColor
     radius: rootItem.isPlasmaTheme ? 0 : 22
     clip: true
@@ -32,74 +62,33 @@ Rectangle {
         anchors.topMargin: 16
         anchors.bottomMargin: 10
 
-        MouseArea {
-            id: chartMouseArea
-            // Cover the chart and the values below it, but not the header or the range
-            // buttons: those have their own click handling.
-            anchors.left: parent.left
-            anchors.right: parent.right
-            // chartArea is inside the ColumnLayout, so it is not a sibling of this
-            // MouseArea. Anchoring to chartArea.top would silently leave the area
-            // with zero height; map its top into singleView instead.
-            y: chartArea.mapToItem(singleView, 0, 0).y
-            height: singleView.height - y
-            z: 100 // Ensure it is on top of everything
-            hoverEnabled: true
-            cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-
-            // The chart is a Canvas, so hover has to be tracked by the MouseArea that
-            // already covers it. Only the chart rectangle activates the crosshair; the
-            // price and after-hours rows below keep their normal pointer cursor.
-            function updateHover(mx, my) {
-                var p = chartArea.mapFromItem(chartMouseArea, mx, my);
-                var inside = rootItem.showChartHover && p.x >= 0 && p.x <= chartArea.width && p.y >= 0 && p.y <= chartArea.height;
-                singleStockRoot.chartHoverActive = inside;
-                if (inside) singleStockRoot.chartHoverX = p.x;
-            }
-            onPositionChanged: (mouse) => updateHover(mouse.x, mouse.y)
-            onExited: singleStockRoot.chartHoverActive = false
-
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.MiddleButton) {
-                    if (priceText) priceText.opacity = 0.3;
-                    rootItem.refreshData();
-                    timerFullFlicker.restart();
-                } else {
-                    console.log("Opening URL: " + rootItem.singleTicker);
-                    Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker);
-                }   
-            }
-
-            Timer {
-                id: timerFullFlicker
-                interval: 300
-                onTriggered: if (priceText) priceText.opacity = Qt.binding(function() { return rootItem.priceOpacity / 100.0; });
-            }
-        }
-
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
+
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 0
+
                 ColumnLayout {
                     spacing: 2
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                    // Take the space left of the change column, so a long "Name (TICK)"
-                    // is elided instead of pushing the percentage out of the card.
+                    // Take the space left of the status, so a long "Name (TICK)"
+                    // is elided instead of pushing the status out of the card.
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
+
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 5
+
                         Text {
                             text: rootItem.isPositive ? "▲" : "▼"
                             color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
                             font.pixelSize: 12
                             Layout.alignment: Qt.AlignVCenter
                         }
+
                         Text {
                             id: singleNameText
                             FontMetrics { id: singleNameMetrics; font: singleNameText.font }
@@ -120,6 +109,7 @@ Rectangle {
                             Layout.fillWidth: true
                         }
                     }
+
                     Text {
                         // The first line already carries the company name when name and ticker are shown together.
                         visible: !rootItem.showNameAndTicker
@@ -129,34 +119,193 @@ Rectangle {
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
+
                     Text {
                         text: (rootItem.lastUpdated && rootItem.nextUpdate)
                               ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
-                        color: rootItem.secondaryTextColor // Slightly brighter
+                        color: rootItem.secondaryTextColor
                         font.pixelSize: 9
                         visible: rootItem.lastUpdated !== "" && !rootItem.isMultiMode && !rootItem.hideTimestamps
                     }
                 }
-                ColumnLayout {
-                    spacing: 0
-                    Layout.leftMargin: 8
+
+                RowLayout {
                     Layout.alignment: Qt.AlignRight | Qt.AlignTop
-                    Text {
-                        text: rootItem.percentChange
-                        color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
-                        font.pixelSize: 13
-                        Layout.alignment: Qt.AlignRight
-                        font.bold: true
+                    Layout.leftMargin: 8
+                    spacing: 4
+                    visible: singleStockRoot.marketSessionText !== ""
+
+                    Rectangle {
+                        width: 5
+                        height: 5
+                        radius: 2.5
+                        color: singleStockRoot.marketSessionColor
+                        Layout.alignment: Qt.AlignVCenter
                     }
+
                     Text {
-                        text: rootItem.priceChange
-                        color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
-                        font.pixelSize: 13
-                        Layout.alignment: Qt.AlignRight
-                        font.bold: true
+                        text: singleStockRoot.marketSessionText
+                        color: rootItem.secondaryTextColor
+                        font.pixelSize: 9
+                        Layout.alignment: Qt.AlignVCenter
                     }
                 }
             }
+
+            // Two quote columns: the regular session and the extended session that is
+            // relevant now (pre-market or after-hours). When there is no extended quote,
+            // the single row below takes over instead of leaving an empty column.
+            RowLayout {
+                id: extendedQuoteRow
+                readonly property color accent: singleStockRoot.hasExtendedQuote && singleStockRoot.extendedQuote.isPos
+                                                ? rootItem.positiveColor : rootItem.negativeColor
+                visible: singleStockRoot.hasExtendedQuote
+                Layout.fillWidth: true
+                Layout.preferredHeight: 64
+                Layout.topMargin: 4
+                spacing: 0
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    spacing: 1
+
+                    Text {
+                        text: i18nc("@item:compact quote", "Regular").toUpperCase()
+                        color: rootItem.secondaryTextColor
+                        font.pixelSize: 8
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: 0.5
+                    }
+
+                    Text {
+                        id: priceText
+                        text: rootItem.currentPrice
+                        color: rootItem.priceColor
+                        opacity: rootItem.priceOpacity / 100.0
+                        font.pixelSize: 25
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                    }
+
+                    Text {
+                        text: rootItem.priceChange !== ""
+                              ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : ""
+                        color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
+                        font.pixelSize: 10
+                        font.bold: true
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 46
+                    Layout.leftMargin: 12
+                    Layout.rightMargin: 12
+                    Layout.alignment: Qt.AlignVCenter
+                    color: rootItem.isLightTheme ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.075)
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    spacing: 1
+
+                    Text {
+                        text: singleStockRoot.extendedQuoteLabel
+                        color: singleStockRoot.hasExtendedQuote && singleStockRoot.extendedQuote.kind === "pre"
+                               ? singleStockRoot.marketSessionColor : rootItem.secondaryTextColor
+                        font.pixelSize: 8
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: 0.5
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: singleStockRoot.hasExtendedQuote ? singleStockRoot.extendedQuote.price : ""
+                        color: rootItem.priceColor
+                        opacity: rootItem.priceOpacity / 100.0
+                        font.pixelSize: 18
+                        font.bold: true
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+
+                    Rectangle {
+                        readonly property color accent: extendedQuoteRow.accent
+                        Layout.preferredWidth: extendedChange.implicitWidth + 8
+                        Layout.preferredHeight: extendedChange.implicitHeight + 4
+                        radius: 4
+                        color: Qt.rgba(accent.r, accent.g, accent.b, 0.13)
+                        border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.4)
+                        border.width: 1
+
+                        Text {
+                            id: extendedChange
+                            anchors.centerIn: parent
+                            text: singleStockRoot.hasExtendedQuote
+                                  ? singleStockRoot.extendedQuote.change + " (" + singleStockRoot.extendedQuote.pct + ")" : ""
+                            color: parent.accent
+                            font.pixelSize: 9
+                            font.weight: Font.Bold
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                visible: !singleStockRoot.hasExtendedQuote
+                Layout.fillWidth: true
+                Layout.preferredHeight: 52
+                Layout.topMargin: 4
+                spacing: 10
+
+                Text {
+                    text: i18nc("@item:compact quote", "Regular").toUpperCase()
+                    color: rootItem.secondaryTextColor
+                    font.pixelSize: 8
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 0.5
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Text {
+                    id: priceTextCompact
+                    text: rootItem.currentPrice
+                    color: rootItem.priceColor
+                    opacity: rootItem.priceOpacity / 100.0
+                    font.pixelSize: 25
+                    Layout.alignment: Qt.AlignVCenter
+
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                }
+
+                Text {
+                    text: rootItem.priceChange !== ""
+                          ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : ""
+                    color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
+                    font.pixelSize: 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Text {
+                    text: singleStockRoot.noExtendedNote
+                    visible: text !== ""
+                    color: rootItem.secondaryTextColor
+                    opacity: 0.72
+                    font.pixelSize: 8
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                }
+            }
+
             // Data-range selector shown in the chart when enabled in the settings. It uses
             // the same range values as the configuration page, but lets the range be changed
             // without opening the configuration dialog.
@@ -201,12 +350,14 @@ Rectangle {
                     }
                 }
             }
+
             Item {
                 id: chartArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.topMargin: 10
-                Layout.bottomMargin: 5
+                Layout.topMargin: 8
+                Layout.bottomMargin: 4
+
                 Canvas {
                     id: singleCanvas
                     anchors.fill: parent
@@ -235,103 +386,51 @@ Rectangle {
                         function onChartHoverXChanged() { singleCanvas.requestPaint(); }
                     }
                 }
-            }
-            Text {
-                id: priceText
-                Layout.alignment: Qt.AlignHCenter
-                text: rootItem.currentPrice
-                color: rootItem.priceColor
-                opacity: rootItem.priceOpacity / 100.0
-                font.pixelSize: 26
 
-                Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-            // Pre-market / after-hours quote, when enabled and the symbol has one:
-            // a muted caption, the price, and the change in the same tinted badge style
-            // the list and the panel use.
-            RowLayout {
-                id: extendedRow
-                readonly property var ext: rootItem.extendedQuote(rootItem.singleTicker)
-                readonly property color accent: ext && ext.isPos ? rootItem.positiveColor : rootItem.negativeColor
+                // The hover/click area lives inside the chart now. It must not cover the
+                // range buttons above the plot.
+                MouseArea {
+                    id: chartMouseArea
+                    anchors.fill: parent
+                    z: 100
+                    hoverEnabled: true
+                    cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
-                // Caption fitting: "After-Hours" if it fits next to the price and the change,
-                // else just "After" / "Pre", else nothing. Measured with the same font as the
-                // caption so the row never needs more width than the card provides.
-                readonly property real chipWidth: extendedChange.implicitWidth + (Kirigami.Units.smallSpacing * 2)
-                readonly property real baseWidth: extendedPrice.implicitWidth + chipWidth + spacing
-                readonly property string shortLabel: ext
-                    ? (ext.kind === "pre" ? i18nc("@item:short stock market session", "Pre")
-                                          : i18nc("@item:short stock market session", "After"))
-                    : ""
-                readonly property string captionText: {
-                    if (!ext) return "";
-                    if (width >= baseWidth + spacing + fullMetrics.width) return ext.label;
-                    if (width >= baseWidth + spacing + shortMetrics.width) return shortLabel;
-                    return "";
-                }
-                TextMetrics { id: fullMetrics; font.pixelSize: 11; text: extendedRow.ext ? extendedRow.ext.label : "" }
-                TextMetrics { id: shortMetrics; font.pixelSize: 11; text: extendedRow.shortLabel }
+                    onPositionChanged: (mouse) => {
+                        singleStockRoot.chartHoverActive = true;
+                        singleStockRoot.chartHoverX = mouse.x;
+                    }
+                    onExited: singleStockRoot.chartHoverActive = false
 
-                Layout.fillWidth: true
-                Layout.topMargin: 4
-                Layout.bottomMargin: 2
-                visible: ext !== undefined
-                spacing: 10
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.MiddleButton) {
+                            if (priceText) priceText.opacity = 0.3;
+                            if (priceTextCompact) priceTextCompact.opacity = 0.3;
+                            rootItem.refreshData();
+                            timerFullFlicker.restart();
+                        } else {
+                            console.log("Opening URL: " + rootItem.singleTicker);
+                            Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker);
+                        }
+                    }
 
-                // The two spacers centre the content while there is room. The caption is
-                // chosen by the width available (see captionText), so the row never asks
-                // for more width than the card has.
-                Item { Layout.fillWidth: true }
-                Text {
-                    visible: text !== ""
-                    text: extendedRow.captionText
-                    color: rootItem.secondaryTextColor
-                    font.pixelSize: 11
-                }
-                Text {
-                    id: extendedPrice
-                    text: extendedRow.ext ? extendedRow.ext.price : ""
-                    color: rootItem.priceColor
-                    opacity: rootItem.priceOpacity / 100.0
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-                Rectangle {
-                    radius: 4
-                    color: Qt.rgba(extendedRow.accent.r, extendedRow.accent.g, extendedRow.accent.b, 0.15)
-                    border.color: extendedRow.accent
-                    border.width: 1
-                    Layout.preferredWidth: extendedRow.chipWidth
-                    Layout.preferredHeight: extendedChange.implicitHeight + (Kirigami.Units.smallSpacing / 2)
-
-                    Text {
-                        id: extendedChange
-                        anchors.centerIn: parent
-                        text: extendedRow.ext ? extendedRow.ext.change + " (" + extendedRow.ext.pct + ")" : ""
-                        color: extendedRow.accent
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
+                    Timer {
+                        id: timerFullFlicker
+                        interval: 300
+                        onTriggered: {
+                            if (priceText) priceText.opacity = Qt.binding(function() { return rootItem.priceOpacity / 100.0; });
+                            if (priceTextCompact) priceTextCompact.opacity = Qt.binding(function() { return rootItem.priceOpacity / 100.0; });
+                        }
                     }
                 }
-                Item { Layout.fillWidth: true }
             }
-            // Shown when the symbol has no extended-hours quote (indices, for
-            // example) and its exchange is not trading, so the card still says why
-            // the price is not moving.
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 2
-                visible: rootItem.showExtendedHours
-                         && rootItem.isMarketClosedFor(rootItem.singleTicker)
-                text: i18n("Market closed")
-                color: rootItem.secondaryTextColor
-                font.pixelSize: 11
-            }
+
             // One line for the whole position: all the lots of this ticker added up (shares,
             // average cost, value, total gain, gain over the shown period).
             PositionLine {
                 Layout.fillWidth: true
-                Layout.topMargin: 4
+                Layout.topMargin: 3
                 // The width comes only from the space in the card, never from the line itself,
                 // so choosing the parts by width cannot loop.
                 Layout.minimumWidth: 0

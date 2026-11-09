@@ -743,7 +743,7 @@ msgstr "Se încarcă…"
 msgid "Session"
 msgstr "Sesiune"
 
-#: contents/ui/main.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/main.qml contents/ui/MultiStockView.qml
 msgid "Market closed"
 msgstr "Piața este închisă"
 
@@ -783,12 +783,12 @@ msgctxt "@info:portfolio"
 msgid "%1 · no rate for %2"
 msgstr "%1 · curs lipsă pentru %2"
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
 msgstr "Pre"
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "After"
 msgstr "După"
@@ -815,6 +815,44 @@ msgstr "%1 la %2"
 #: contents/ui/PositionLine.qml
 msgid "Value"
 msgstr "Valoare"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Pre-market"
+msgstr "Pre-market"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Open"
+msgstr "Deschisă"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
+msgid "Closed"
+msgstr "Închisă"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "Pre-market"
+msgstr "Pre-market"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "After-hours"
+msgstr "După închidere"
+
+#: contents/ui/SingleStockView.qml
+msgid "No pre-market"
+msgstr "Fără pre-market"
+
+#: contents/ui/SingleStockView.qml
+msgid "No after-hours"
+msgstr "Fără after-hours"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:compact quote"
+msgid "Regular"
+msgstr "Regular"
 
 #~ msgid "Open"
 #~ msgstr "Deschidere"
