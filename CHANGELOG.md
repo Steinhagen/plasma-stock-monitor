@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on a dedicated **Chart** settings page instead of being split between General and
   Appearance.
 
+### Fixed
+
+- Create the optional custom panel popup only when the no-background option is used,
+  so the default configuration does not instantiate it at startup.
+- Fix a QML `priceText` reference error when refreshing the panel widget with the
+  middle mouse button.
+
 ## [1.1] - 2026-11-10
 
 ### Added

@@ -1877,11 +1877,20 @@ PlasmoidItem {
     function togglePanelPopup() {
         if (root.panelPopupBackground) {
             root.expanded = !root.expanded;
-        } else if (panelPopup.visible) {
-            panelPopup.visible = false;
-        } else if (!root.panelPopupRecentlyClosed) {
-            panelPopup.visible = true;
+            return;
         }
+
+        if (!panelPopupWindowLoader.item)
+            panelPopupWindowLoader.active = true;
+
+        var popup = panelPopupWindowLoader.item;
+        if (!popup)
+            return;
+
+        if (popup.visible)
+            popup.visible = false;
+        else if (!root.panelPopupRecentlyClosed)
+            popup.visible = true;
     }
 
     // The dialog hides itself when it loses focus. That is what a click on the panel
@@ -1896,10 +1905,13 @@ PlasmoidItem {
     onPanelPopupBackgroundChanged: {
         // Close the mode that is no longer selected, so changing the option takes effect
         // immediately instead of leaving the old popup on screen.
-        if (root.panelPopupBackground)
-            panelPopup.visible = false;
-        else
+        if (root.panelPopupBackground) {
+            if (panelPopupWindowLoader.item)
+                panelPopupWindowLoader.item.visible = false;
+            panelPopupWindowLoader.active = false;
+        } else {
             root.expanded = false;
+        }
     }
 
     // --- PANEL VIEW (Compact Representation) ---
@@ -1956,7 +1968,7 @@ PlasmoidItem {
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton) {
                 // Visual feedback: brief flicker
-                if (priceText) priceText.opacity = 0.3;
+                if (panelPrice) panelPrice.opacity = 0.3;
                 root.refreshData();
                 timerFlicker.restart();
             } else {
@@ -1967,7 +1979,7 @@ PlasmoidItem {
         Timer {
             id: timerFlicker
             interval: 300
-            onTriggered: if (priceText) priceText.opacity = 1.0;
+            onTriggered: if (panelPrice) panelPrice.opacity = 1.0;
         }
 
         // While an extended-hours session is running, the ticker has a pre-market /
@@ -2219,8 +2231,6 @@ PlasmoidItem {
 
     // --- FULL VIEW (desktop widget and the panel expanded popup) ---
 
-    fullRepresentation: fullViewComponent
-
     Component {
         id: fullViewComponent
 
@@ -2328,50 +2338,67 @@ PlasmoidItem {
         }
     }
 
+    // Assign after the component has been declared, so Plasma never sees a null full
+    // representation during initialisation on older Plasma versions.
+    fullRepresentation: fullViewComponent
+
     // Plasma always draws the frame of the popup it creates for an expanded panel applet.
     // When the user disables that background, show the same full view in our own popup
     // with no background instead, so only the two widget cards remain visible.
-    PlasmaCore.Dialog {
-        id: panelPopup
-        objectName: "panelPopup"
+    //
+    // The dialog is created on demand: with the default setting the applet never
+    // instantiates it, which also keeps older Plasma versions safe at startup.
+    Loader {
+        id: panelPopupWindowLoader
+        active: false
+        sourceComponent: panelPopupComponent
+    }
 
-        type: PlasmaCore.Dialog.AppletPopup
-        location: Plasmoid.location
-        visible: false
-        visualParent: root.compactRepresentationItem
-        appletInterface: root
-        backgroundHints: PlasmaCore.Dialog.NoBackground
-        hideOnWindowDeactivate: true
+    Component {
+        id: panelPopupComponent
 
-        onVisibleChanged: {
-            if (visible) {
-                Qt.callLater(function() { panelPopupFocus.forceActiveFocus(); });
-            } else {
-                root.panelPopupRecentlyClosed = true;
-                panelPopupCloseGuard.restart();
+        PlasmaCore.Dialog {
+            id: panelPopup
+            objectName: "panelPopup"
+
+            type: PlasmaCore.Dialog.AppletPopup
+            location: Plasmoid.location
+            visible: false
+            visualParent: root.compactRepresentationItem
+            appletInterface: root
+            backgroundHints: PlasmaCore.Dialog.NoBackground
+            hideOnWindowDeactivate: true
+
+            onVisibleChanged: {
+                if (visible) {
+                    Qt.callLater(function() { panelPopupFocus.forceActiveFocus(); });
+                } else {
+                    root.panelPopupRecentlyClosed = true;
+                    panelPopupCloseGuard.restart();
+                }
             }
-        }
 
-        mainItem: FocusScope {
-            id: panelPopupFocus
-            focus: true
+            mainItem: FocusScope {
+                id: panelPopupFocus
+                focus: true
 
-            Keys.onEscapePressed: panelPopup.visible = false
+                Keys.onEscapePressed: panelPopup.visible = false
 
-            // Mirror the full view's size hints so the dialog sizes itself exactly like
-            // Plasma's standard expanded representation does.
-            Layout.minimumWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
-            Layout.minimumHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
-            Layout.preferredWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
-            Layout.preferredHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
+                // Mirror the full view's size hints so the dialog sizes itself exactly like
+                // Plasma's standard expanded representation does.
+                Layout.minimumWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
+                Layout.minimumHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
+                Layout.preferredWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
+                Layout.preferredHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
 
-            Loader {
-                id: panelPopupLoader
-                anchors.fill: parent
-                // Do not instantiate a second copy of the full view unless the custom
-                // panel popup is actually in use.
-                active: root.customPanelCard
-                sourceComponent: fullViewComponent
+                Loader {
+                    id: panelPopupLoader
+                    anchors.fill: parent
+                    // Do not instantiate a second copy of the full view unless the custom
+                    // panel popup is actually in use.
+                    active: root.customPanelCard
+                    sourceComponent: fullViewComponent
+                }
             }
         }
     }
