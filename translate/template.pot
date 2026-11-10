@@ -856,6 +856,14 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/SingleStockView.qml
+msgid "Yesterday's session"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Session of %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
 msgid "Market data"
 msgstr ""
 

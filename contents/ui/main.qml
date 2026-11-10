@@ -112,6 +112,14 @@ PlasmoidItem {
     // yesterday's close, used as the reference line of the reference-line chart.
     property var chartCandles: []
     property double chartReferencePrice: 0
+    // Start of the session a 1D chart is showing, and whether it is today's session (the
+    // running pre-market or the regular one). When it is not, the chart still shows a
+    // previous session and the view labels it so it is not mistaken for today's.
+    property double chartSessionStart: 0
+    property bool chartSessionCurrent: true
+    // True when the 1D chart plots the running pre-market; the canvas hatches it like the
+    // pre-market zone of a full-day chart.
+    property bool chartPreSession: false
     // Evaluated here rather than in the threaded Canvas paint, so the legend text is
     // translated on the main thread.
     readonly property string chartReferenceLabel: i18nc("@item:chart previous close", "Previous close")
@@ -625,6 +633,7 @@ PlasmoidItem {
                                      ? sessions : null;
                 root.chartCandles = root.chartArray(row.chartCandles);
                 root.chartReferencePrice = row.chartRef;
+                root.chartPreSession = row.chartPre === true;
             }
         }
 
@@ -997,6 +1006,7 @@ PlasmoidItem {
                     "chartSessions": ({}),
                     "chartCandles": "[]",
                     "chartRef": 0.0,
+                    "chartPre": false,
                     "prevClose": 0.0,
                     "currentRaw": 0.0,
                     "currencySym": "",
@@ -1064,6 +1074,34 @@ PlasmoidItem {
             }
         }
         return null;
+    }
+    // The session a 1D chart plots. Normally the latest completed regular session, but
+    // while the current pre-market is running (or before the first regular candle of the
+    // day arrives) its points are plotted instead, so the chart follows today's quote the
+    // same way a regular session does on exchanges without extended hours. Falls back to
+    // the regular session until the pre-market has a close, so the chart is never empty.
+    function chartDayFor(meta, timestamps, quotes) {
+        var day = root.displayedDay(meta, timestamps);
+        var periods = meta ? meta.currentTradingPeriod : null;
+        if (!periods || !timestamps || !quotes) return day;
+        // The current regular session is already on screen; keep the full-day chart.
+        if (day && day.regular && periods.regular && day.regular.start === periods.regular.start)
+            return day;
+        var pre = periods.pre;
+        if (!pre || !(pre.start < pre.end)) return day;
+        for (var i = 0; i < timestamps.length; i++) {
+            if (timestamps[i] >= pre.start && timestamps[i] < pre.end
+                    && quotes[i] !== null && quotes[i] !== undefined)
+                return { pre: null, regular: pre, post: null };
+        }
+        return day;
+    }
+    // True when `day` is the running pre-market, i.e. the session chartDayFor substituted
+    // for the regular one.
+    function isPreSessionDay(meta, day) {
+        var periods = meta ? meta.currentTradingPeriod : null;
+        return !!(day && day.regular && periods && periods.pre
+                  && day.regular.start === periods.pre.start);
     }
     // Pre-market and after-hours closes of `day`, or null when neither has any point.
     function extendedSessionSeries(quotes, timestamps, day) {
@@ -1269,7 +1307,19 @@ PlasmoidItem {
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var day = (chartRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
+            // The 1D chart plots the running pre-market, or the last completed regular
+            // session when there is nothing current to show (see chartDayFor).
+            var chartDay = chartRange === "1D" ? root.chartDayFor(meta, timestamps, quotes) : null;
+            var preChart = chartRange === "1D" && root.isPreSessionDay(meta, chartDay);
+            var day = (chartRange === "1D" && root.showExtendedHours) ? chartDay : null;
+            root.chartSessionStart = (chartDay && chartDay.regular) ? chartDay.regular.start : 0;
+            // The chart is "current" when it shows today's pre-market or regular session;
+            // otherwise it still shows a previous session and the view labels it.
+            root.chartSessionCurrent = !(root.chartSessionStart > 0)
+                || !(meta.currentTradingPeriod)
+                || (meta.currentTradingPeriod.regular && root.chartSessionStart === meta.currentTradingPeriod.regular.start)
+                || (meta.currentTradingPeriod.pre && root.chartSessionStart === meta.currentTradingPeriod.pre.start);
+            root.chartPreSession = preChart;
             var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange, quote, day);
             if (chartRange === "1D")
                 root.seedFirstSessionPoint(chart, (day && day.regular) ? day.regular.start : startTime, meta);
@@ -1281,8 +1331,12 @@ PlasmoidItem {
             // The candlestick chart can be drawn from the same response; the reference
             // chart marks yesterday's close, so it reads the same way as the daily change.
             root.chartCandles = root.buildCandles(chart, chartRange);
-            root.chartReferencePrice = root.dailyPreviousClose(meta,
-                cleanData.length > 0 ? cleanData[0] : 0);
+            // The pre-market is measured against the last regular close (the official
+            // close, as shown in the regular quote); the regular chart uses the close
+            // before the session it shows.
+            var reference = preChart ? (meta.regularMarketPrice || 0) : 0;
+            root.chartReferencePrice = reference > 0 ? reference
+                : root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
 
             if (chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
@@ -1333,7 +1387,9 @@ PlasmoidItem {
             var curSym = getCurrencySymbol(meta.currency);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
-            var listDay = (listRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
+            var chartDay = listRange === "1D" ? root.chartDayFor(meta, timestamps, quotes) : null;
+            var preChart = listRange === "1D" && root.isPreSessionDay(meta, chartDay);
+            var listDay = (listRange === "1D" && root.showExtendedHours) ? chartDay : null;
             var cleanChart = root.cleanChartData(quotes, timestamps, startTime, listRange, quote, listDay);
             if (listRange === "1D")
                 root.seedFirstSessionPoint(cleanChart, (listDay && listDay.regular) ? listDay.regular.start : startTime, meta);
@@ -1356,7 +1412,9 @@ PlasmoidItem {
             var chartSessions = (listDay && cleanData.length >= 2)
                                 ? root.extendedSessionSeries(quotes, timestamps, listDay) : null;
             var chartCandles = root.buildCandles(cleanChart, listRange);
-            var chartRef = root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
+            var chartRef = preChart ? (meta.regularMarketPrice || 0) : 0;
+            if (!(chartRef > 0))
+                chartRef = root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
 
             var itemData = {
                 "ticker": symbol,
@@ -1370,6 +1428,7 @@ PlasmoidItem {
                 "chartSessions": chartSessions,
                 "chartCandles": JSON.stringify(chartCandles),
                 "chartRef": chartRef,
+                "chartPre": preChart,
                 "prevClose": prev,
                 "currentRaw": current,
                 "currencySym": curSym,

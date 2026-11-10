@@ -54,6 +54,22 @@ Rectangle {
                      rootItem.refreshIntervalMinutes, quoteTime);
     }
 
+    // The 1D chart shows a previous trading session when there is nothing current yet
+    // (weekend, holiday, or before the pre-market's first quote). Label it so the older
+    // session is not read as today's; the previous close in the legend belongs to it too.
+    readonly property string chartSessionNote: {
+        if (rootItem.effectiveChartRange !== "1D") return "";
+        if (rootItem.chartSessionCurrent || !(rootItem.chartSessionStart > 0)) return "";
+        var session = new Date(rootItem.chartSessionStart * 1000);
+        var now = new Date();
+        var yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        if (session.getFullYear() === yesterday.getFullYear()
+                && session.getMonth() === yesterday.getMonth()
+                && session.getDate() === yesterday.getDate())
+            return i18n("Yesterday's session");
+        return i18n("Session of %1", session.toLocaleDateString(Qt.locale(), "d MMM"));
+    }
+
     // Minimum width of the card. It deliberately comes from the chart controls and a fixed
     // floor, not from contentColumn.implicitWidth: prices, percentages, company names and
     // positions change with the selected ticker and range, and using them made the minimum
@@ -353,11 +369,16 @@ Rectangle {
                 id: chartHeaderRow
                 // Bind to the settings, not to the children's visible: a child reads as
                 // invisible while this row is hidden, which would keep the row hidden for good.
-                visible: singleStockRoot.rootItem.showChartRangeButtons || singleStockRoot.rootItem.showChartStyleButtons
+                visible: singleStockRoot.rootItem.showChartRangeButtons
+                         || singleStockRoot.rootItem.showChartStyleButtons
+                         || singleStockRoot.chartSessionNote !== ""
                 Layout.fillWidth: true
                 Layout.topMargin: 6
                 Layout.bottomMargin: 2
-                Layout.preferredHeight: Math.max(singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0, singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0)
+                Layout.preferredHeight: Math.max(
+                    singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0,
+                    singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0,
+                    singleStockRoot.chartSessionNote !== "" ? 14 : 0)
                 spacing: 6
                 // A Row, not a Flow: the buttons stay on one row and its implicitWidth (the
                 // one-row width) feeds the card's minimum width.
@@ -405,9 +426,23 @@ Rectangle {
                     }
                 }
 
-                // Pushes the chart type selector to the right edge.
+                // Pushes the chart type selector to the right edge. The session note is
+                // anchored inside this gap, so it never changes the card's minimum width.
                 Item {
+                    id: chartHeaderGap
                     Layout.fillWidth: true
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: singleStockRoot.chartSessionNote
+                        visible: text !== ""
+                        color: rootItem.secondaryTextColor
+                        opacity: 0.8
+                        font.pixelSize: 9
+                        elide: Text.ElideRight
+                    }
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
                 // setting as the Appearance page.
@@ -481,6 +516,7 @@ Rectangle {
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartReferencePriceChanged() { singleCanvas.requestPaint(); }
                         function onChartSessionsChanged() { singleCanvas.requestPaint(); }
+                        function onChartPreSessionChanged() { singleCanvas.requestPaint(); }
                         function onShowChartHoverChanged() {
                             if (!rootItem.showChartHover) singleStockRoot.chartHoverActive = false;
                             singleCanvas.requestPaint();
@@ -1039,6 +1075,10 @@ Rectangle {
         ctx.fillStyle = below;
         ctx.fill();
         ctx.restore();
+
+        // A pre-market-only chart is entirely extended-hours data; hatch it like the
+        // pre-market zone of a full-day chart.
+        if (rootItem.chartPreSession) drawHatch(ctx, 0, plotRight, plotH);
 
         if (s) {
             var xOpen = xAt(s.regStart);

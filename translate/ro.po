@@ -690,7 +690,7 @@ msgstr "ÎNCHIS"
 #: contents/ui/main.qml
 msgctxt "@item:chart previous close"
 msgid "Previous close"
-msgstr "Închidere ieri"
+msgstr "Închidere anterioară"
 
 #: contents/ui/main.qml
 msgctxt "@item:chart range"
@@ -859,6 +859,14 @@ msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes
 msgstr[0] "Se actualizează în fiecare minut. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
 msgstr[1] "Se actualizează la fiecare %1 minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
 msgstr[2] "Se actualizează la fiecare %1 de minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+
+#: contents/ui/SingleStockView.qml
+msgid "Yesterday's session"
+msgstr "Sesiunea de ieri"
+
+#: contents/ui/SingleStockView.qml
+msgid "Session of %1"
+msgstr "Sesiunea din %1"
 
 #: contents/ui/SingleStockView.qml
 msgid "Market data"

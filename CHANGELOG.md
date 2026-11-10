@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A tooltip on the market status in the chart header, showing how often the widget
   refreshes and the timestamp of the latest Yahoo Finance quote.
+- The 1D chart plots the current pre-market once Yahoo has a quote for it, instead of
+  keeping yesterday's chart until the regular open.
+- When there is no current data to plot (weekend, holiday, or before the pre-market's
+  first quote), the 1D chart keeps the last completed session and labels it, so it is
+  not mistaken for today's data.
 
 ### Fixed
 
