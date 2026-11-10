@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remember the ticker selected in the multi-stock list across restarts, instead of
   falling back to the first ticker.
+- Remove the empty strip below the portfolio total when update timestamps are hidden.
 - Fix a QML `priceText` reference error when refreshing the panel widget with the
   middle mouse button.
 

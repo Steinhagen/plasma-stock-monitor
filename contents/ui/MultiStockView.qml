@@ -25,6 +25,12 @@ Rectangle {
     property var totals: null
     property string totalsSym: ""
     property string totalsLabel: ""
+    // The timestamp line sits in the list's bottom margin; when it is hidden, do not
+    // leave that empty strip below the portfolio total.
+    readonly property bool showUpdateTimestamps: rootItem !== null && rootItem !== undefined
+                                                 && rootItem.lastUpdated !== ""
+                                                 && rootItem.isMultiMode
+                                                 && !rootItem.hideTimestamps
 
     function recomputeTotals() {
         multiStockRoot.totals = null;
@@ -104,7 +110,7 @@ Rectangle {
         anchors.fill: parent
         anchors.leftMargin: 16
         anchors.rightMargin: 16
-        anchors.bottomMargin: 16
+        anchors.bottomMargin: multiStockRoot.showUpdateTimestamps ? 16 : 4
         anchors.topMargin: 0
 
         clip: true
@@ -384,6 +390,6 @@ Rectangle {
               ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
         color: rootItem.secondaryTextColor
         font.pixelSize: 10
-        visible: rootItem.lastUpdated !== "" && rootItem.isMultiMode && !rootItem.hideTimestamps
+        visible: multiStockRoot.showUpdateTimestamps
     }
 }
