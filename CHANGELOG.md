@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All chart options (style, range, in-chart buttons, hover and axes) now live together
   on a dedicated **Chart** settings page instead of being split between General and
   Appearance.
+- The Romanian translation now uses consistent session terminology: **Înaintea
+  deschiderii** for pre-market and **După închidere** for after-hours, with matching
+  compact labels and panel tags.
 
 ### Fixed
 

@@ -111,7 +111,7 @@ msgstr "Fișierul selectat nu conține JSON valid."
 
 #: contents/ui/configBackup.qml
 msgid "The selected file is not a Plasma Stock Monitor backup."
-msgstr "Fișierul selectat nu este o copie de siguranță Plasma Stock Monitor."
+msgstr "Fișierul selectat nu este o copie de siguranță a aplicației Monitor de acțiuni Plasma."
 
 #: contents/ui/configBackup.qml
 msgid "This backup was created by a newer version of the widget."
@@ -313,7 +313,7 @@ msgstr "Max"
 
 #: contents/ui/configChart.qml
 msgid "Hover:"
-msgstr "La hover:"
+msgstr "La trecerea cu mouse-ul:"
 
 #: contents/ui/configChart.qml
 msgid "Show values when hovering over the chart"
@@ -349,7 +349,7 @@ msgstr "Două liste:"
 
 #: contents/ui/configGeneral.qml
 msgid "single-stock on left side and multi-stock on right side"
-msgstr "o singură acțiune în stânga și lista cu mai multe în dreapta"
+msgstr "o singură acțiune în stânga și lista cu mai multe acțiuni în dreapta"
 
 #: contents/ui/configGeneral.qml
 msgid "Single Ticker:"
@@ -441,15 +441,15 @@ msgstr "Program extins:"
 
 #: contents/ui/configGeneral.qml
 msgid "Show pre-market and after-hours values and market-closed status"
-msgstr "Afișează valorile dinainte de deschidere și de după închidere, plus starea pieței"
+msgstr "Afișează valorile înaintea deschiderii și după închidere, plus starea pieței"
 
 #: contents/ui/configGeneral.qml
 msgid "When Closed:"
-msgstr "Când piața e închisă:"
+msgstr "Când piața este închisă:"
 
 #: contents/ui/configGeneral.qml
 msgid "Keep showing the last pre-market/after-hours quote"
-msgstr "Continuă să afișezi ultima cotație dinainte de deschidere/de după închidere"
+msgstr "Continuă să afișezi ultima cotație înaintea deschiderii / după închidere"
 
 #: contents/ui/configPanel.qml
 msgid "Price and percentage:"
@@ -545,7 +545,7 @@ msgstr "de ex., E*TRADE - 8122"
 
 #: contents/ui/configPortfolio.qml
 msgid "Actions:"
-msgstr "Acțiuni:"
+msgstr "Operațiuni:"
 
 #: contents/ui/configPortfolio.qml
 msgid "Save Lot"
@@ -670,11 +670,11 @@ msgstr "MSL"
 
 #: contents/ui/configSearch.qml
 msgid "Add to Multi Stock List"
-msgstr "Adaugă la lista de acțiuni"
+msgstr "Adaugă la lista cu mai multe acțiuni"
 
 #: contents/ui/configSearch.qml
 msgid "Added %1 to Multi Stock List."
-msgstr "Am adăugat %1 la lista de acțiuni."
+msgstr "Am adăugat %1 la lista cu mai multe acțiuni."
 
 #: contents/ui/main.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
 msgid "Loading..."
@@ -683,17 +683,17 @@ msgstr "Se încarcă..."
 #: contents/ui/main.qml
 msgctxt "@item:panel stock market session tag"
 msgid "PRE"
-msgstr "PRE"
+msgstr "ÎNAINTE"
 
 #: contents/ui/main.qml
 msgctxt "@item:panel stock market session tag"
 msgid "AH"
-msgstr "AH"
+msgstr "DUP"
 
 #: contents/ui/main.qml
 msgctxt "@item:panel stock market session tag"
 msgid "CLOSED"
-msgstr "ÎNCHIS"
+msgstr "ÎNCHISĂ"
 
 #: contents/ui/main.qml
 msgctxt "@item:chart previous close"
@@ -707,7 +707,7 @@ msgstr "Tot"
 
 #: contents/ui/main.qml
 msgid "Pre-Market"
-msgstr "Dinainte de deschidere"
+msgstr "Înaintea deschiderii"
 
 #: contents/ui/main.qml
 msgid "After-Hours"
@@ -797,16 +797,16 @@ msgstr "%1 · curs lipsă pentru %2"
 
 #: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
 msgid "No pre-market quote"
-msgstr "Fără cotație pre-market"
+msgstr "Fără cotație înaintea deschiderii"
 
 #: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
 msgid "No after-hours quote"
-msgstr "Fără cotație after-hours"
+msgstr "Fără cotație după închidere"
 
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
-msgstr "Pre"
+msgstr "Înainte"
 
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
@@ -844,7 +844,7 @@ msgstr "Închisă"
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
 msgid "Pre-market"
-msgstr "Pre-market"
+msgstr "Înaintea deschiderii"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
@@ -854,7 +854,7 @@ msgstr "Deschisă"
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Pre-market"
-msgstr "Pre-market"
+msgstr "Înaintea deschiderii"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
@@ -883,7 +883,7 @@ msgstr "Date de piață"
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
-msgstr "Regular"
+msgstr "Normal"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:chart style"
