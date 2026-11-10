@@ -10,8 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - An option in **Appearance → Panel popup** to show the expanded panel widget without
-  Plasma's popup background, leaving only the widget's cards visible. The option only
-  applies when the widget is expanded from a panel, not on the desktop.
+  Plasma's popup background, leaving only the widget's cards visible. The custom popup
+  is created only when this option is used and can be resized like the standard Plasma
+  popup. The option only applies when the widget is expanded from a panel, not on the
+  desktop.
 
 ### Changed
 
@@ -26,9 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Create the optional custom panel popup only when the no-background option is used,
-  so the default configuration does not instantiate it at startup.
-- Allow resizing the expanded panel widget when the Plasma popup background is disabled.
 - Remember the ticker selected in the multi-stock list across restarts, instead of
   falling back to the first ticker.
 - Fix a QML `priceText` reference error when refreshing the panel widget with the
