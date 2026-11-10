@@ -29,6 +29,8 @@ PlasmoidItem {
     property bool sortAlphabetically: Plasmoid.configuration.sortAlphabetically
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
     property bool showNameAndTicker: Plasmoid.configuration.showNameAndTicker
+    // Polling interval, shown by the market-status tooltip so the refresh rate is visible.
+    readonly property int refreshIntervalMinutes: Plasmoid.configuration.refreshInterval
 
     // Yahoo returns some non-US short names from a fixed-width vendor field: the company
     // name is padded with spaces and followed by a share-class letter, e.g.
@@ -95,6 +97,9 @@ PlasmoidItem {
     property string singleCompanyName: root.loadingText
     property string currentPrice: "---"
     property double currentRawPrice: 0
+    // Timestamp of the quote (seconds since epoch), shown by the market-status tooltip so
+    // it is clear how fresh the Yahoo Finance data is.
+    property double quoteTimestamp: 0
     property string priceChange: "+0.00"
     property string percentChange: "+0.00%"
     property var chartDataPoints: []
@@ -1260,6 +1265,7 @@ PlasmoidItem {
             root.currencySym = getCurrencySymbol(meta.currency);
             root.quoteCurrency = meta.currency || "";
             root.currentRawPrice = meta.regularMarketPrice;
+            root.quoteTimestamp = meta.regularMarketTime || 0;
             root.currentPrice = root.currencySym + formatNumber(meta.regularMarketPrice, false);
 
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;

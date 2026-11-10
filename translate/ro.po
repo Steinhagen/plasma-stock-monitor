@@ -102,6 +102,10 @@ msgid "Candles + volume"
 msgstr "Candele + volum"
 
 #: contents/ui/configAppearance.qml
+msgid "Show chart style buttons"
+msgstr "Afișează butoanele de stil al graficului"
+
+#: contents/ui/configAppearance.qml
 msgid "Hover:"
 msgstr "La hover:"
 
@@ -693,16 +697,6 @@ msgctxt "@item:chart range"
 msgid "All"
 msgstr "Tot"
 
-#: contents/ui/SingleStockView.qml
-msgctxt "@item:chart style"
-msgid "Line"
-msgstr "Linie"
-
-#: contents/ui/SingleStockView.qml
-msgctxt "@item:chart style"
-msgid "Candles"
-msgstr "Candele"
-
 #: contents/ui/main.qml
 msgid "Pre-Market"
 msgstr "Dinainte de deschidere"
@@ -860,13 +854,30 @@ msgid "No after-hours"
 msgstr "Fără after-hours"
 
 #: contents/ui/SingleStockView.qml
+msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
+msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed."
+msgstr[0] "Se actualizează în fiecare minut. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+msgstr[1] "Se actualizează la fiecare %1 minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+msgstr[2] "Se actualizează la fiecare %1 de minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+
+#: contents/ui/SingleStockView.qml
+msgid "Market data"
+msgstr "Date de piață"
+
+#: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
 msgstr "Regular"
 
-#: contents/ui/configAppearance.qml
-msgid "Show chart style buttons"
-msgstr "Afișează butoanele de stil al graficului"
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Line"
+msgstr "Linie"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:chart style"
+msgid "Candles"
+msgstr "Candele"
 
 #~ msgid "Open"
 #~ msgstr "Deschidere"

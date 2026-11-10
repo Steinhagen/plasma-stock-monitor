@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.core as PlasmaCore
 
 Rectangle {
     id: singleStockRoot
@@ -39,6 +40,18 @@ Rectangle {
         if (marketSession === "open") return "";
         if (marketSession === "pre") return i18n("No pre-market");
         return i18n("No after-hours");
+    }
+
+    // Tooltip of the market status in the header. Yahoo Finance does not expose the feed
+    // delay per exchange through the chart API, so the quote timestamp is shown instead of
+    // a hard-coded "15 minutes" that would be wrong for exchanges with real-time data.
+    readonly property string marketDataNote: {
+        if (!(rootItem.quoteTimestamp > 0)) return "";
+        var quoteTime = new Date(rootItem.quoteTimestamp * 1000)
+            .toLocaleTimeString(Qt.locale(), "HH:mm");
+        return i18np("Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed.",
+                     "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed.",
+                     rootItem.refreshIntervalMinutes, quoteTime);
     }
 
     // Minimum width of the card. It deliberately comes from the chart controls and a fixed
@@ -140,25 +153,39 @@ Rectangle {
                     }
                 }
 
-                RowLayout {
+                // The status (open/closed) doubles as the data-freshness affordance: its
+                // tooltip says how often the widget polls and when Yahoo last quoted this
+                // instrument, so delayed exchange data is visible without extra chrome.
+                PlasmaCore.ToolTipArea {
+                    id: marketStatusTip
                     Layout.alignment: Qt.AlignRight | Qt.AlignTop
                     Layout.leftMargin: 8
-                    spacing: 4
+                    implicitWidth: marketStatusRow.implicitWidth
+                    implicitHeight: marketStatusRow.implicitHeight
                     visible: singleStockRoot.marketSessionText !== ""
+                    active: singleStockRoot.marketDataNote !== ""
+                    mainText: i18n("Market data")
+                    subText: singleStockRoot.marketDataNote
 
-                    Rectangle {
-                        width: 5
-                        height: 5
-                        radius: 2.5
-                        color: singleStockRoot.marketSessionColor
-                        Layout.alignment: Qt.AlignVCenter
-                    }
+                    RowLayout {
+                        id: marketStatusRow
+                        anchors.fill: parent
+                        spacing: 4
 
-                    Text {
-                        text: singleStockRoot.marketSessionText
-                        color: rootItem.secondaryTextColor
-                        font.pixelSize: 9
-                        Layout.alignment: Qt.AlignVCenter
+                        Rectangle {
+                            width: 5
+                            height: 5
+                            radius: 2.5
+                            color: singleStockRoot.marketSessionColor
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        Text {
+                            text: singleStockRoot.marketSessionText
+                            color: rootItem.secondaryTextColor
+                            font.pixelSize: 9
+                            Layout.alignment: Qt.AlignVCenter
+                        }
                     }
                 }
             }
