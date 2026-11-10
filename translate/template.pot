@@ -812,6 +812,18 @@ msgstr ""
 msgid "No after-hours quote"
 msgstr ""
 
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Open on Yahoo Finance"
+msgstr ""
+
+#: contents/ui/MultiStockView.qml
+msgid "Set as panel stock"
+msgstr ""
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Refresh"
+msgstr ""
+
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
@@ -672,7 +673,7 @@ Rectangle {
                     z: 100
                     hoverEnabled: true
                     cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor
-                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
                     onPositionChanged: (mouse) => {
                         singleStockRoot.chartHoverActive = true;
@@ -686,9 +687,25 @@ Rectangle {
                             if (priceTextCompact) priceTextCompact.opacity = 0.3;
                             rootItem.refreshData();
                             timerFullFlicker.restart();
-                        } else {
-                            console.log("Opening URL: " + rootItem.singleTicker);
+                        } else if (mouse.button === Qt.RightButton) {
+                            chartMenu.popup();
+                        }
+                    }
+                    onDoubleClicked: (mouse) => {
+                        if (mouse.button === Qt.LeftButton)
                             Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker);
+                    }
+
+                    Menu {
+                        id: chartMenu
+
+                        MenuItem {
+                            text: i18n("Open on Yahoo Finance")
+                            onTriggered: Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker)
+                        }
+                        MenuItem {
+                            text: i18n("Refresh")
+                            onTriggered: rootItem.refreshData()
                         }
                     }
 

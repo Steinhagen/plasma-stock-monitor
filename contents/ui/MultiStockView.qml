@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
@@ -184,12 +185,34 @@ Rectangle {
                         rootItem.refreshData();
                         timerListFlicker.restart();
                     } else if (mouse.button === Qt.LeftButton) {
-                        console.log("Opening URL: " + model.ticker);
-                        Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker);
-                    } else if (mouse.button === Qt.RightButton) {
                         rootItem.selectTicker(model.ticker);
+                    } else if (mouse.button === Qt.RightButton) {
+                        rowMenu.popup();
                     }
                 }
+                onDoubleClicked: (mouse) => {
+                    if (mouse.button === Qt.LeftButton)
+                        Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker);
+                }
+
+                Menu {
+                    id: rowMenu
+
+                    MenuItem {
+                        text: i18n("Open on Yahoo Finance")
+                        onTriggered: Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker)
+                    }
+                    MenuItem {
+                        text: i18n("Set as panel stock")
+                        onTriggered: rootItem.selectTicker(model.ticker)
+                    }
+                    MenuSeparator {}
+                    MenuItem {
+                        text: i18n("Refresh")
+                        onTriggered: rootItem.refreshData()
+                    }
+                }
+
                 Timer {
                     id: timerListFlicker
                     interval: 300

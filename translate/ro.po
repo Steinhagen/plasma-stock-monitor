@@ -815,6 +815,18 @@ msgstr "Fără cotație înaintea deschiderii"
 msgid "No after-hours quote"
 msgstr "Fără cotație după închidere"
 
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Open on Yahoo Finance"
+msgstr "Deschide pe Yahoo Finance"
+
+#: contents/ui/MultiStockView.qml
+msgid "Set as panel stock"
+msgstr "Setează ca simbol în panou"
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Refresh"
+msgstr "Reîmprospătează"
+
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"

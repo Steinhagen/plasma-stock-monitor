@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Standardized mouse actions: left click selects a watchlist row, double click opens
+  Yahoo Finance, right click opens a context menu, and middle click refreshes.
+
 ## [1.2] - 2026-11-10
 
 ### Added
