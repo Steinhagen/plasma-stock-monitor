@@ -14,17 +14,17 @@ ConfigModel {
     }
     ConfigCategory {
         name: i18n("Panel view")
-        icon: "view-list-details"
+        icon: "panel-fit-width"
         source: "configPanel.qml"
     }
     ConfigCategory {
         name: i18n("Chart")
-        icon: "office-chart-area"
+        icon: "office-chart-line"
         source: "configChart.qml"
     }
     ConfigCategory {
         name: i18n("Portfolio Tracking")
-        icon: "office-chart-line"
+        icon: "view-financial-account-investment"
         source: "configPortfolio.qml"
     }
     ConfigCategory {
@@ -34,7 +34,7 @@ ConfigModel {
     }
     ConfigCategory {
         name: i18n("Import / Export")
-        icon: "document-save-as"
+        icon: "document-swap"
         source: "configBackup.qml"
     }
 }
