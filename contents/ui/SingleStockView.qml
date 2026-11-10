@@ -1265,6 +1265,22 @@ Rectangle {
         var plotRight = showPriceAxis ? drawRightAxis(ctx, w, minVal, maxVal, getY, true) : w;
         if (plotRight < 24) plotRight = w;
 
+        // Pre-market and after-hours candles are hatched like the line chart's zones.
+        var nPre = 0, nPost = 0;
+        for (var zi = 0; zi < candles.length; zi++) {
+            if (candles[zi].zone === "pre") nPre++;
+            else if (candles[zi].zone === "post") nPost++;
+        }
+        var nReg = candles.length - nPre - nPost;
+        var xPreEnd = (nPre / candles.length) * plotRight;
+        var xPostStart = ((nPre + nReg) / candles.length) * plotRight;
+        if (rootItem.chartPreSession) {
+            drawHatch(ctx, 0, plotRight, volumeBottom);
+        } else {
+            if (nPre > 0) drawHatch(ctx, 0, xPreEnd, volumeBottom);
+            if (nPost > 0) drawHatch(ctx, xPostStart, plotRight, volumeBottom);
+        }
+
         var candleW = Math.max(2, Math.min(6, (plotRight / candles.length) * 0.62));
         for (var c = 0; c < candles.length; c++) {
             var candle = candles[c];
@@ -1288,6 +1304,33 @@ Rectangle {
             ctx.globalAlpha = 0.9;
             ctx.fillStyle = color;
             ctx.fillRect(x - candleW / 2, top, candleW, bodyH);
+            ctx.restore();
+        }
+
+        // Session boundaries and tags, matching the line chart.
+        if (!rootItem.chartPreSession && (nPre > 0 || nPost > 0)) {
+            var sec = rootItem.secondaryTextColor;
+            ctx.save();
+            ctx.strokeStyle = Qt.rgba(sec.r, sec.g, sec.b, 0.5);
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 3]);
+            ctx.beginPath();
+            if (nPre > 0) { ctx.moveTo(Math.round(xPreEnd) + 0.5, 0); ctx.lineTo(Math.round(xPreEnd) + 0.5, plotBottom); }
+            if (nPost > 0) { ctx.moveTo(Math.round(xPostStart) + 0.5, 0); ctx.lineTo(Math.round(xPostStart) + 0.5, plotBottom); }
+            ctx.stroke();
+            ctx.restore();
+            ctx.save();
+            ctx.font = "8px sans-serif";
+            ctx.fillStyle = Qt.rgba(sec.r, sec.g, sec.b, 0.8);
+            ctx.textBaseline = "middle";
+            if (nPre > 0) {
+                ctx.textAlign = "left";
+                ctx.fillText(rootItem.tagPreMarket, 4, 22);
+            }
+            if (nPost > 0) {
+                ctx.textAlign = "right";
+                ctx.fillText(rootItem.tagAfterHours, plotRight - 4, 22);
+            }
             ctx.restore();
         }
 
@@ -1330,7 +1373,9 @@ Rectangle {
             var hoverX = ((index + 0.5) * plotRight) / candles.length;
             var hoverY = getY(hoverCandle.close);
             var candleAccent = hoverCandle.close >= hoverCandle.open ? rootItem.positiveColor : rootItem.negativeColor;
-            var hoverTime = hoverCandle.time ? hoverTimeLabel(hoverCandle.time) : "";
+            var hoverZone = hoverCandle.zone === "pre" ? " " + rootItem.tagPreMarket
+                          : (hoverCandle.zone === "post" ? " " + rootItem.tagAfterHours : "");
+            var hoverTime = hoverCandle.time ? hoverTimeLabel(hoverCandle.time) + hoverZone : "";
             var hoverOHL = "O " + rootItem.formatNumber(hoverCandle.open, false)
                          + "  H " + rootItem.formatNumber(hoverCandle.high, false)
                          + "  L " + rootItem.formatNumber(hoverCandle.low, false);

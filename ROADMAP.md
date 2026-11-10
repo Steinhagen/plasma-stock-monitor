@@ -5,7 +5,6 @@ Issues planned for the next releases.
 ## Chart
 
 - [ ] Add an extended-hours toggle for the chart in settings.
-- [ ] Draw pre-market and after-hours candles in candlestick mode.
 
 ## Search
 
@@ -21,6 +20,7 @@ Issues planned for the next releases.
       **Appearance**.
 - [ ] Rework the color settings so it is clear how a theme looks and which
       custom colors are allowed.
+- [ ] Add settings option to remap the mouse button actions.
 
 ## Portfolio
 

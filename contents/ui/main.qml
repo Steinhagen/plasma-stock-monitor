@@ -1236,10 +1236,10 @@ PlasmoidItem {
     // Aggregate the aligned OHLCV series into `target` candles. Aggregating by count
     // rather than by clock time keeps the same candle width across ranges and collapses
     // weekends/holidays the way a trading chart does.
-    function buildCandles(chart, range) {
+    function buildCandles(chart, range, asked) {
         var n = chart && chart.values ? chart.values.length : 0;
         if (n < 2) return [];
-        var target = Math.min(n, candleTarget(range));
+        var target = Math.min(n, asked > 0 ? Math.round(asked) : candleTarget(range));
         var candles = [];
         for (var i = 0; i < target; i++) {
             var start = Math.floor(i * n / target);
@@ -1271,6 +1271,48 @@ PlasmoidItem {
             });
         }
         return candles;
+    }
+
+    // Candles for one extended session (pre or post) of the displayed day, so the
+    // candlestick chart can draw them around the regular session like the line chart.
+    // The target count follows the session length, keeping the zone widths proportional
+    // to time even though the candles are laid out by index.
+    function sessionCandles(quote, timestamps, period, day, zone) {
+        if (!period || !quote || !timestamps) return [];
+        var opens = [], highs = [], lows = [], closes = [], volumes = [], times = [];
+        for (var i = 0; i < timestamps.length; i++) {
+            var t = timestamps[i];
+            if (t < period.start || t >= period.end) continue;
+            var c = quote.close ? quote.close[i] : null;
+            if (c === null || c === undefined) continue;
+            closes.push(c);
+            opens.push(quote.open && quote.open[i] !== null && quote.open[i] !== undefined ? quote.open[i] : c);
+            highs.push(quote.high && quote.high[i] !== null && quote.high[i] !== undefined ? quote.high[i] : c);
+            lows.push(quote.low && quote.low[i] !== null && quote.low[i] !== undefined ? quote.low[i] : c);
+            volumes.push(quote.volume && quote.volume[i] !== null && quote.volume[i] !== undefined ? quote.volume[i] : 0);
+            times.push(t);
+        }
+        if (closes.length < 2) return [];
+        var target = candleTarget("1D");
+        if (day && day.regular && day.regular.end > day.regular.start)
+            target = Math.max(4, Math.round(target * (period.end - period.start)
+                                               / (day.regular.end - day.regular.start)));
+        var candles = buildCandles({ values: closes, times: times, opens: opens,
+                                     highs: highs, lows: lows, volumes: volumes }, "1D", target);
+        for (var c2 = 0; c2 < candles.length; c2++) candles[c2].zone = zone;
+        return candles;
+    }
+
+    // The candle series for a 1D chart: the regular session plus the pre-market and
+    // after-hours sessions around it, each candle tagged with its zone.
+    function chartCandlesFor(chart, range, quote, timestamps, day) {
+        var regular = buildCandles(chart, range);
+        for (var i = 0; i < regular.length; i++) regular[i].zone = "regular";
+        if (range !== "1D" || !day || !quote || !timestamps) return regular;
+        var pre = day.pre ? sessionCandles(quote, timestamps, day.pre, day, "pre") : [];
+        var post = day.post ? sessionCandles(quote, timestamps, day.post, day, "post") : [];
+        if (pre.length === 0 && post.length === 0) return regular;
+        return pre.concat(regular, post);
     }
 
     function processPanelData(json, symbol, range) {
@@ -1342,7 +1384,7 @@ PlasmoidItem {
 
             // The candlestick chart can be drawn from the same response; the reference
             // chart marks yesterday's close, so it reads the same way as the daily change.
-            root.chartCandles = root.buildCandles(chart, chartRange);
+            root.chartCandles = root.chartCandlesFor(chart, chartRange, quote, timestamps, day);
             // The pre-market is measured against the last regular close (the official
             // close, as shown in the regular quote); the regular chart uses the close
             // before the session it shows.
@@ -1444,7 +1486,7 @@ PlasmoidItem {
             // show its graph immediately instead of waiting for another request.
             var chartSessions = (listDay && cleanData.length >= 2)
                                 ? root.extendedSessionSeries(quotes, timestamps, listDay) : null;
-            var chartCandles = root.buildCandles(cleanChart, listRange);
+            var chartCandles = root.chartCandlesFor(cleanChart, listRange, quote, timestamps, listDay);
             var chartRef = preChart ? (meta.regularMarketPrice || 0) : 0;
             if (!(chartRef > 0))
                 chartRef = root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
