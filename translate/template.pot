@@ -31,6 +31,10 @@ msgid "Panel view"
 msgstr ""
 
 #: contents/config/config.qml
+msgid "Chart"
+msgstr ""
+
+#: contents/config/config.qml
 msgid "Portfolio Tracking"
 msgstr ""
 
@@ -84,50 +88,6 @@ msgstr ""
 
 #: contents/ui/configAppearance.qml
 msgid "Stock Price Text"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Chart"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Chart style:"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Reference line (open)"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Candles + volume"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Show chart style buttons"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Hover:"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Show values when hovering over the chart"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Price scale:"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Show price values on the right of the chart"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Time scale:"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Show dates and times under the chart"
 msgstr ""
 
 #: contents/ui/configBackup.qml
@@ -280,6 +240,90 @@ msgstr ""
 msgid "Import Settings"
 msgstr ""
 
+#: contents/ui/configChart.qml
+msgid "Chart style:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Reference line (open)"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Candles + volume"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show chart style buttons"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Range Selection:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show the range buttons in the chart"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Data Range:"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1D"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "5D"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1M"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "6M"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "YTD"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1Y"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "5Y"
+msgstr ""
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "Max"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Hover:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show values when hovering over the chart"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Price scale:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show price values on the right of the chart"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Time scale:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show dates and times under the chart"
+msgstr ""
+
 #: contents/ui/configGeneral.qml
 msgid "Display Mode:"
 msgstr ""
@@ -330,54 +374,6 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Swap company name and ticker symbol"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Range Selection:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Show the range buttons in the chart"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "List Range:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Data Range:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1D"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "5D"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1M"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "6M"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "YTD"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1Y"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "5Y"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "Max"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -784,6 +780,14 @@ msgctxt "@info:portfolio"
 msgid "%1 · no rate for %2"
 msgstr ""
 
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "No pre-market quote"
+msgstr ""
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "No after-hours quote"
+msgstr ""
+
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
@@ -818,17 +822,17 @@ msgstr ""
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
+msgid "Closed"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
 msgid "Pre-market"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
 msgid "Open"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgctxt "@item:market session status"
-msgid "Closed"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
@@ -839,14 +843,6 @@ msgstr ""
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "After-hours"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "No pre-market quote"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "No after-hours quote"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml

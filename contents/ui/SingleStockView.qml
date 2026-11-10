@@ -453,7 +453,7 @@ Rectangle {
                     }
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
-                // setting as the Appearance page.
+                // setting as the Chart page.
                 Row {
                     id: chartStyleButtons
                     objectName: "chartStyleButtons"
@@ -596,7 +596,7 @@ Rectangle {
     }
 
     // ── Chart drawing ────────────────────────────────────────────
-    // Settings → Appearance → Chart selects between:
+    // Settings → Chart selects between:
     //   0 = reference line split at yesterday's close
     //   1 = candlesticks with volume
     // Both use the same right-hand price scale and the same time scale below.

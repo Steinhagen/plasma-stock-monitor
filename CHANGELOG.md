@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- All chart options (style, range, in-chart buttons, hover and axes) now live together
+  on a dedicated **Chart** settings page instead of being split between General and
+  Appearance.
+
 ## [1.1] - 2026-11-10
 
 ### Added

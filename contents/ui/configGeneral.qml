@@ -27,14 +27,6 @@ Item {
     property alias cfg_endHour: endHourSpin.value
     property alias cfg_endMinute: endMinuteSpin.value
 
-    property string cfg_chartRange
-    property alias cfg_showChartRangeButtons: chartRangeButtonsSwitch.checked
-
-    onCfg_chartRangeChanged: {
-        var idx = rangeCombo.indexOfValue(cfg_chartRange)
-        if (idx >= 0) rangeCombo.currentIndex = idx
-    }
-
     ScrollView {
         anchors.fill: parent
         anchors.margins: 20
@@ -95,41 +87,6 @@ Item {
                 text: nameAndTickerSwitch.checked
                       ? i18n("Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)")
                       : i18n("Swap company name and ticker symbol")
-            }
-
-            CheckBox {
-                id: chartRangeButtonsSwitch
-                Kirigami.FormData.label: i18n("Range Selection:")
-                text: i18n("Show the range buttons in the chart")
-            }
-
-            ComboBox {
-                id: rangeCombo
-                // The chart buttons use a range of their own. In single mode this preset
-                // is therefore redundant; in multi mode it still sets the list's range.
-                visible: !chartRangeButtonsSwitch.checked || modeSwitch.checked
-                Kirigami.FormData.label: chartRangeButtonsSwitch.checked && modeSwitch.checked
-                                         ? i18n("List Range:")
-                                         : i18n("Data Range:")
-                // `value` is what gets stored in the config, `text` is only the label, so
-                // translating the labels never changes the saved range.
-                model: [
-                    { value: "1D", text: i18n("1D") },
-                    { value: "5D", text: i18n("5D") },
-                    { value: "1M", text: i18n("1M") },
-                    { value: "6M", text: i18n("6M") },
-                    { value: "YTD", text: i18n("YTD") },
-                    { value: "1Y", text: i18n("1Y") },
-                    { value: "5Y", text: i18n("5Y") },
-                    { value: "Max", text: i18n("Max") }
-                ]
-                textRole: "text"
-                valueRole: "value"
-                onActivated: page.cfg_chartRange = currentValue
-                Component.onCompleted: {
-                    var idx = indexOfValue(page.cfg_chartRange)
-                    if (idx >= 0) currentIndex = idx
-                }
             }
 
             SpinBox {

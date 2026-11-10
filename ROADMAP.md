@@ -16,8 +16,7 @@ Issues planned for the next releases.
 
 - [ ] Move stock search out of its own **Find ticker symbol** page and next
       to the lists in **General**.
-- [ ] Put all chart options on one page: some are in **General**, some in
-      **Appearance**.
+- [x] Put all chart options on one page (now the **Chart** page).
 - [ ] Rework the color settings so it is clear how a theme looks and which
       custom colors are allowed.
 - [ ] Add settings option to remap the mouse button actions.

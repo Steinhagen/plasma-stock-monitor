@@ -539,7 +539,7 @@ PlasmoidItem {
     }
 
     // Chart type selected from the chart buttons. It writes the same setting as the
-    // Appearance page, so both stay in sync.
+    // Chart page, so both stay in sync.
     function setChartStyle(style) {
         if (style === root.chartStyle) return;
         try {

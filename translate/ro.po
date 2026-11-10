@@ -30,6 +30,10 @@ msgid "Panel view"
 msgstr "Vizualizare panou"
 
 #: contents/config/config.qml
+msgid "Chart"
+msgstr "Grafic"
+
+#: contents/config/config.qml
 msgid "Portfolio Tracking"
 msgstr "Urmărire portofoliu"
 
@@ -84,50 +88,6 @@ msgstr "Opacitate:"
 #: contents/ui/configAppearance.qml
 msgid "Stock Price Text"
 msgstr "Textul prețului acțiunii"
-
-#: contents/ui/configAppearance.qml
-msgid "Chart"
-msgstr "Grafic"
-
-#: contents/ui/configAppearance.qml
-msgid "Chart style:"
-msgstr "Stil grafic:"
-
-#: contents/ui/configAppearance.qml
-msgid "Reference line (open)"
-msgstr "Linie de referință (deschidere)"
-
-#: contents/ui/configAppearance.qml
-msgid "Candles + volume"
-msgstr "Candele + volum"
-
-#: contents/ui/configAppearance.qml
-msgid "Show chart style buttons"
-msgstr "Afișează butoanele de stil al graficului"
-
-#: contents/ui/configAppearance.qml
-msgid "Hover:"
-msgstr "La hover:"
-
-#: contents/ui/configAppearance.qml
-msgid "Show values when hovering over the chart"
-msgstr "Afișează valorile când treci cu mouse-ul peste grafic"
-
-#: contents/ui/configAppearance.qml
-msgid "Price scale:"
-msgstr "Scară de preț:"
-
-#: contents/ui/configAppearance.qml
-msgid "Show price values on the right of the chart"
-msgstr "Afișează valorile prețului în dreapta graficului"
-
-#: contents/ui/configAppearance.qml
-msgid "Time scale:"
-msgstr "Scară de timp:"
-
-#: contents/ui/configAppearance.qml
-msgid "Show dates and times under the chart"
-msgstr "Afișează datele și orele sub grafic"
 
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
@@ -279,6 +239,90 @@ msgstr "Toate fișierele (*)"
 msgid "Import Settings"
 msgstr "Importă setările"
 
+#: contents/ui/configChart.qml
+msgid "Chart style:"
+msgstr "Stil grafic:"
+
+#: contents/ui/configChart.qml
+msgid "Reference line (open)"
+msgstr "Linie de referință (deschidere)"
+
+#: contents/ui/configChart.qml
+msgid "Candles + volume"
+msgstr "Candele + volum"
+
+#: contents/ui/configChart.qml
+msgid "Show chart style buttons"
+msgstr "Afișează butoanele de stil al graficului"
+
+#: contents/ui/configChart.qml
+msgid "Range Selection:"
+msgstr "Selectare interval:"
+
+#: contents/ui/configChart.qml
+msgid "Show the range buttons in the chart"
+msgstr "Afișează butoanele de interval în grafic"
+
+#: contents/ui/configChart.qml
+msgid "Data Range:"
+msgstr "Interval de date:"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1D"
+msgstr "1 zi"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "5D"
+msgstr "5 zile"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1M"
+msgstr "1 lună"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "6M"
+msgstr "6 luni"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "YTD"
+msgstr "YTD"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "1Y"
+msgstr "1 an"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "5Y"
+msgstr "5 ani"
+
+#: contents/ui/configChart.qml contents/ui/main.qml
+msgid "Max"
+msgstr "Max"
+
+#: contents/ui/configChart.qml
+msgid "Hover:"
+msgstr "La hover:"
+
+#: contents/ui/configChart.qml
+msgid "Show values when hovering over the chart"
+msgstr "Afișează valorile când treci cu mouse-ul peste grafic"
+
+#: contents/ui/configChart.qml
+msgid "Price scale:"
+msgstr "Scară de preț:"
+
+#: contents/ui/configChart.qml
+msgid "Show price values on the right of the chart"
+msgstr "Afișează valorile prețului în dreapta graficului"
+
+#: contents/ui/configChart.qml
+msgid "Time scale:"
+msgstr "Scară de timp:"
+
+#: contents/ui/configChart.qml
+msgid "Show dates and times under the chart"
+msgstr "Afișează datele și orele sub grafic"
+
 #: contents/ui/configGeneral.qml
 msgid "Display Mode:"
 msgstr "Mod de afișare:"
@@ -330,54 +374,6 @@ msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
 #: contents/ui/configGeneral.qml
 msgid "Swap company name and ticker symbol"
 msgstr "Inversează numele companiei și simbolul bursier"
-
-#: contents/ui/configGeneral.qml
-msgid "Range Selection:"
-msgstr "Selectare interval:"
-
-#: contents/ui/configGeneral.qml
-msgid "Show the range buttons in the chart"
-msgstr "Afișează butoanele de interval în grafic"
-
-#: contents/ui/configGeneral.qml
-msgid "List Range:"
-msgstr "Interval listă:"
-
-#: contents/ui/configGeneral.qml
-msgid "Data Range:"
-msgstr "Interval de date:"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1D"
-msgstr "1 zi"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "5D"
-msgstr "5 zile"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1M"
-msgstr "1 lună"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "6M"
-msgstr "6 luni"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "YTD"
-msgstr "YTD"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "1Y"
-msgstr "1 an"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "5Y"
-msgstr "5 ani"
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "Max"
-msgstr "Max"
 
 #: contents/ui/configGeneral.qml
 msgid "Refresh Interval (minutes):"
@@ -787,6 +783,14 @@ msgctxt "@info:portfolio"
 msgid "%1 · no rate for %2"
 msgstr "%1 · curs lipsă pentru %2"
 
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "No pre-market quote"
+msgstr "Fără cotație pre-market"
+
+#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "No after-hours quote"
+msgstr "Fără cotație after-hours"
+
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
@@ -822,6 +826,11 @@ msgstr "Valoare"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
+msgid "Closed"
+msgstr "Închisă"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@item:market session status"
 msgid "Pre-market"
 msgstr "Pre-market"
 
@@ -829,11 +838,6 @@ msgstr "Pre-market"
 msgctxt "@item:market session status"
 msgid "Open"
 msgstr "Deschisă"
-
-#: contents/ui/SingleStockView.qml
-msgctxt "@item:market session status"
-msgid "Closed"
-msgstr "Închisă"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
@@ -844,14 +848,6 @@ msgstr "Pre-market"
 msgctxt "@item:compact quote"
 msgid "After-hours"
 msgstr "După închidere"
-
-#: contents/ui/SingleStockView.qml
-msgid "No pre-market quote"
-msgstr "Fără cotație pre-market"
-
-#: contents/ui/SingleStockView.qml
-msgid "No after-hours quote"
-msgstr "Fără cotație after-hours"
 
 #: contents/ui/SingleStockView.qml
 msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
@@ -886,6 +882,9 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "List Range:"
+#~ msgstr "Interval listă:"
 
 #~ msgid "No pre-market"
 #~ msgstr "Fără pre-market"

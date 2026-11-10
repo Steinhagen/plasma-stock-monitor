@@ -18,6 +18,11 @@ ConfigModel {
         source: "configPanel.qml"
     }
     ConfigCategory {
+        name: i18n("Chart")
+        icon: "office-chart-area"
+        source: "configChart.qml"
+    }
+    ConfigCategory {
         name: i18n("Portfolio Tracking")
         icon: "office-chart-line"
         source: "configPortfolio.qml"
