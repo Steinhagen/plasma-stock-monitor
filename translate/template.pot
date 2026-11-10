@@ -31,6 +31,10 @@ msgid "Panel view"
 msgstr ""
 
 #: contents/config/config.qml
+msgid "Mouse actions"
+msgstr ""
+
+#: contents/config/config.qml
 msgid "Chart"
 msgstr ""
 
@@ -402,6 +406,58 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Keep showing the last pre-market/after-hours quote"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Preset:"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Standard"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Minimal"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Custom"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "List row, left click:"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Select for panel and chart"
+msgstr ""
+
+#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Open on Yahoo Finance"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Middle click:"
+msgstr ""
+
+#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Refresh"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Do nothing"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Double click:"
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Middle click applies to the panel indicator, watchlist rows and the chart."
+msgstr ""
+
+#: contents/ui/configMouse.qml
+msgid "Right click always opens the context menu. Wheel behaviour is unchanged."
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -812,16 +868,8 @@ msgstr ""
 msgid "No after-hours quote"
 msgstr ""
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Open on Yahoo Finance"
-msgstr ""
-
 #: contents/ui/MultiStockView.qml
 msgid "Set as panel stock"
-msgstr ""
-
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Refresh"
 msgstr ""
 
 #: contents/ui/MultiStockView.qml

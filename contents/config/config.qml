@@ -18,6 +18,11 @@ ConfigModel {
         source: "configPanel.qml"
     }
     ConfigCategory {
+        name: i18n("Mouse actions")
+        icon: "input-mouse"
+        source: "configMouse.qml"
+    }
+    ConfigCategory {
         name: i18n("Chart")
         icon: "office-chart-line"
         source: "configChart.qml"

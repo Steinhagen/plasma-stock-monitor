@@ -33,6 +33,18 @@
             <label>Last ticker selected in the multi-stock list</label>
             <default></default>
         </entry>
+        <entry name="mouseRowLeftAction" type="String">
+            <label>Left click on a watchlist row: select or open the Yahoo Finance quote</label>
+            <default>select</default>
+        </entry>
+        <entry name="mouseMiddleAction" type="String">
+            <label>Middle click action: refresh, open the Yahoo Finance quote, or none</label>
+            <default>refresh</default>
+        </entry>
+        <entry name="mouseDoubleClickAction" type="String">
+            <label>Double click action: open the Yahoo Finance quote or none</label>
+            <default>open</default>
+        </entry>
         <entry name="sortAlphabetically" type="Bool">
             <label>Sort Multi-Stock List Alphabetically</label>
             <default>false</default>

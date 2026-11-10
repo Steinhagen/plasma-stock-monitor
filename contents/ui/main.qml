@@ -25,6 +25,10 @@ PlasmoidItem {
     // selection after Plasma or the host restarts.
     property string manualPanelTickerOverride: Plasmoid.configuration.selectedTicker
     property string multiTickers: Plasmoid.configuration.multiTickers
+    // Mouse actions: right click is always the context menu; these three are configurable.
+    property string mouseRowLeftAction: Plasmoid.configuration.mouseRowLeftAction || "select"
+    property string mouseMiddleAction: Plasmoid.configuration.mouseMiddleAction || "refresh"
+    property string mouseDoubleClickAction: Plasmoid.configuration.mouseDoubleClickAction || "open"
     property bool sortAlphabetically: Plasmoid.configuration.sortAlphabetically
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
     property bool showNameAndTicker: Plasmoid.configuration.showNameAndTicker
@@ -661,6 +665,36 @@ PlasmoidItem {
         } else if (needsChart) {
             root.fetchSingleStock(clean, root.effectiveChartRange);
         }
+    }
+
+    // --- MOUSE ACTIONS ---
+    // Open the Yahoo Finance quote page for a symbol. Used by the configurable mouse
+    // actions and by the context menus, so all paths behave the same.
+    function openYahooQuote(symbol) {
+        var clean = symbol ? String(symbol).trim() : "";
+        if (clean === "") return;
+        Qt.openUrlExternally("https://finance.yahoo.com/quote/" + clean);
+    }
+
+    // Left click on a watchlist row: select it (recommended) or open its quote page.
+    function performRowLeftClick(symbol) {
+        if (root.mouseRowLeftAction === "open") root.openYahooQuote(symbol);
+        else root.selectTicker(symbol);
+    }
+
+    // Middle click on a row, the chart or the panel indicator. Returns true when the
+    // action was a refresh, so the caller can show the existing opacity flicker.
+    function performMiddleClick(symbol) {
+        if (root.mouseMiddleAction === "refresh") {
+            root.refreshData();
+            return true;
+        }
+        if (root.mouseMiddleAction === "open") root.openYahooQuote(symbol);
+        return false;
+    }
+
+    function performDoubleClick(symbol) {
+        if (root.mouseDoubleClickAction === "open") root.openYahooQuote(symbol);
     }
 
     // --- NEW HELPER: GET API PARAMETERS BASED ON CONFIG ---
@@ -2008,10 +2042,11 @@ PlasmoidItem {
 
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton) {
-                // Visual feedback: brief flicker
-                if (panelPrice) panelPrice.opacity = 0.3;
-                root.refreshData();
-                timerFlicker.restart();
+                if (root.performMiddleClick(root.panelSymbol)) {
+                    // Visual feedback for a refresh; open/none need no flicker.
+                    if (panelPrice) panelPrice.opacity = 0.3;
+                    timerFlicker.restart();
+                }
             } else {
                 root.togglePanelPopup();
             }

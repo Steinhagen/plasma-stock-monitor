@@ -9,6 +9,19 @@ Rectangle {
     property var rootItem
     property var listModel
 
+    // A single pending "open" action for the whole list. Delaying it briefly lets a double
+    // click cancel the single-click action, and clicking another row cancels the old one.
+    property string pendingRowOpen: ""
+    Timer {
+        id: pendingRowOpenTimer
+        interval: 350
+        onTriggered: {
+            var ticker = multiStockRoot.pendingRowOpen;
+            multiStockRoot.pendingRowOpen = "";
+            if (ticker !== "") rootItem.openYahooQuote(ticker);
+        }
+    }
+
     // Smallest list column that keeps the price, the change badge and a few characters of the
     // name on each row; the name, the second line and the position line elide or shorten by design.
     readonly property real minimumContentWidth: 250
@@ -181,18 +194,38 @@ Rectangle {
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.MiddleButton) {
-                        rowRoot.opacity = 0.4;
-                        rootItem.refreshData();
-                        timerListFlicker.restart();
+                        multiStockRoot.pendingRowOpen = "";
+                        pendingRowOpenTimer.stop();
+                        if (rootItem.performMiddleClick(model.ticker)) {
+                            rowRoot.opacity = 0.4;
+                            timerListFlicker.restart();
+                        }
                     } else if (mouse.button === Qt.LeftButton) {
-                        rootItem.selectTicker(model.ticker);
+                        // Delay the optional "open" action briefly so a double click does
+                        // not open the quote page twice.
+                        if (rootItem.mouseRowLeftAction === "open") {
+                            multiStockRoot.pendingRowOpen = model.ticker;
+                            pendingRowOpenTimer.restart();
+                        } else {
+                            multiStockRoot.pendingRowOpen = "";
+                            pendingRowOpenTimer.stop();
+                            rootItem.performRowLeftClick(model.ticker);
+                        }
                     } else if (mouse.button === Qt.RightButton) {
+                        multiStockRoot.pendingRowOpen = "";
+                        pendingRowOpenTimer.stop();
                         rowMenu.popup();
                     }
                 }
                 onDoubleClicked: (mouse) => {
-                    if (mouse.button === Qt.LeftButton)
-                        Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker);
+                    if (mouse.button !== Qt.LeftButton) return;
+                    multiStockRoot.pendingRowOpen = "";
+                    pendingRowOpenTimer.stop();
+                    // A double click opens once, whichever of the two configured actions
+                    // is responsible for it.
+                    if (rootItem.mouseDoubleClickAction === "open"
+                        || rootItem.mouseRowLeftAction === "open")
+                        rootItem.openYahooQuote(model.ticker);
                 }
 
                 Menu {
@@ -200,7 +233,7 @@ Rectangle {
 
                     MenuItem {
                         text: i18n("Open on Yahoo Finance")
-                        onTriggered: Qt.openUrlExternally("https://finance.yahoo.com/quote/" + model.ticker)
+                        onTriggered: rootItem.openYahooQuote(model.ticker)
                     }
                     MenuItem {
                         text: i18n("Set as panel stock")

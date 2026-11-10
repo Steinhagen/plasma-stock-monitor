@@ -19,7 +19,8 @@ Issues planned for the next releases.
 - [x] Put all chart options on one page (now the **Chart** page).
 - [ ] Rework the color settings so it is clear how a theme looks and which
       custom colors are allowed.
-- [ ] Add settings option to remap the mouse button actions.
+- [x] Add a **Mouse actions** page with presets and configurable left/middle/double
+      click actions.
 
 ## Portfolio
 

@@ -30,6 +30,10 @@ msgid "Panel view"
 msgstr "Vizualizare panou"
 
 #: contents/config/config.qml
+msgid "Mouse actions"
+msgstr "Acțiuni mouse"
+
+#: contents/config/config.qml
 msgid "Chart"
 msgstr "Grafic"
 
@@ -402,6 +406,58 @@ msgstr "Când piața este închisă:"
 #: contents/ui/configGeneral.qml
 msgid "Keep showing the last pre-market/after-hours quote"
 msgstr "Continuă să afișezi ultima cotație înaintea deschiderii / după închidere"
+
+#: contents/ui/configMouse.qml
+msgid "Preset:"
+msgstr "Presetare:"
+
+#: contents/ui/configMouse.qml
+msgid "Standard"
+msgstr "Standard"
+
+#: contents/ui/configMouse.qml
+msgid "Minimal"
+msgstr "Minimal"
+
+#: contents/ui/configMouse.qml
+msgid "Custom"
+msgstr "Personalizat"
+
+#: contents/ui/configMouse.qml
+msgid "List row, left click:"
+msgstr "Rând din listă, click stânga:"
+
+#: contents/ui/configMouse.qml
+msgid "Select for panel and chart"
+msgstr "Selectează pentru panou și grafic"
+
+#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Open on Yahoo Finance"
+msgstr "Deschide pe Yahoo Finance"
+
+#: contents/ui/configMouse.qml
+msgid "Middle click:"
+msgstr "Click mijloc:"
+
+#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+msgid "Refresh"
+msgstr "Reîmprospătează"
+
+#: contents/ui/configMouse.qml
+msgid "Do nothing"
+msgstr "Nu face nimic"
+
+#: contents/ui/configMouse.qml
+msgid "Double click:"
+msgstr "Dublu click:"
+
+#: contents/ui/configMouse.qml
+msgid "Middle click applies to the panel indicator, watchlist rows and the chart."
+msgstr "Click-ul mijlociu se aplică indicatorului din panou, rândurilor din listă și graficului."
+
+#: contents/ui/configMouse.qml
+msgid "Right click always opens the context menu. Wheel behaviour is unchanged."
+msgstr "Click dreapta deschide întotdeauna meniul contextual. Comportamentul rotiței rămâne neschimbat."
 
 #: contents/ui/configPanel.qml
 msgid "Price and percentage:"
@@ -815,17 +871,9 @@ msgstr "Fără cotație înaintea deschiderii"
 msgid "No after-hours quote"
 msgstr "Fără cotație după închidere"
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Open on Yahoo Finance"
-msgstr "Deschide pe Yahoo Finance"
-
 #: contents/ui/MultiStockView.qml
 msgid "Set as panel stock"
 msgstr "Setează ca simbol în panou"
-
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Refresh"
-msgstr "Reîmprospătează"
 
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
@@ -935,6 +983,15 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Standard (recommended)"
+#~ msgstr "Standard (recomandat)"
+
+#~ msgid "Browser-like"
+#~ msgstr "Ca în browser"
+
+#~ msgid "Right click always opens the context menu. The scroll wheel continues to cycle through the watchlist."
+#~ msgstr "Click dreapta deschide întotdeauna meniul contextual. Rotița continuă să circule prin lista de simboluri."
 
 #~ msgid "Find ticker symbol"
 #~ msgstr "Caută simbol bursier"

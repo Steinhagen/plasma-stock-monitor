@@ -683,17 +683,18 @@ Rectangle {
 
                     onClicked: (mouse) => {
                         if (mouse.button === Qt.MiddleButton) {
-                            if (priceText) priceText.opacity = 0.3;
-                            if (priceTextCompact) priceTextCompact.opacity = 0.3;
-                            rootItem.refreshData();
-                            timerFullFlicker.restart();
+                            if (rootItem.performMiddleClick(rootItem.singleTicker)) {
+                                if (priceText) priceText.opacity = 0.3;
+                                if (priceTextCompact) priceTextCompact.opacity = 0.3;
+                                timerFullFlicker.restart();
+                            }
                         } else if (mouse.button === Qt.RightButton) {
                             chartMenu.popup();
                         }
                     }
                     onDoubleClicked: (mouse) => {
                         if (mouse.button === Qt.LeftButton)
-                            Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker);
+                            rootItem.performDoubleClick(rootItem.singleTicker);
                     }
 
                     Menu {
@@ -701,7 +702,7 @@ Rectangle {
 
                         MenuItem {
                             text: i18n("Open on Yahoo Finance")
-                            onTriggered: Qt.openUrlExternally("https://finance.yahoo.com/quote/" + rootItem.singleTicker)
+                            onTriggered: rootItem.openYahooQuote(rootItem.singleTicker)
                         }
                         MenuItem {
                             text: i18n("Refresh")

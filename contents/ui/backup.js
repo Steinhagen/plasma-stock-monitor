@@ -25,6 +25,9 @@ var SETTINGS_KEYS = [
     "selectedTheme",
     "twoColumnLeftWidth",
     "selectedTicker",
+    "mouseRowLeftAction",
+    "mouseMiddleAction",
+    "mouseDoubleClickAction",
     "sortAlphabetically",
     "swapNameAndTicker",
     "showNameAndTicker",
@@ -119,6 +122,12 @@ var COLOR_KEYS = {
 };
 
 var CHART_RANGES = ["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "Max"];
+
+var MOUSE_ACTIONS = {
+    mouseRowLeftAction: ["select", "open"],
+    mouseMiddleAction: ["refresh", "open", "none"],
+    mouseDoubleClickAction: ["open", "none"]
+};
 
 function has(object, key) {
     return Object.prototype.hasOwnProperty.call(object, key);
@@ -221,6 +230,12 @@ function validateValue(key, value) {
         // The appearance page accepts a free-text colour. Keep it as it is instead of
         // insisting on #rrggbb, so a backup can restore names like "red" too.
         if (typeof value !== "string") return failure("invalidValue", key);
+        return { ok: true, value: value };
+    }
+
+    if (has(MOUSE_ACTIONS, key)) {
+        if (typeof value !== "string" || MOUSE_ACTIONS[key].indexOf(value) < 0)
+            return failure("invalidValue", key);
         return { ok: true, value: value };
     }
 

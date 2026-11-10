@@ -61,6 +61,9 @@ Item {
     property bool cfg_hideDecimals
     property bool cfg_showChartAxis
     property bool cfg_showTimeAxis
+    property string cfg_mouseRowLeftAction
+    property string cfg_mouseMiddleAction
+    property string cfg_mouseDoubleClickAction
 
     // The configuration dialog listens for this signal to enable the Apply button when a
     // page changes more than one alias at once.
