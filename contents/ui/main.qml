@@ -793,15 +793,25 @@ PlasmoidItem {
                 period = status === "pre" ? session.pre : session.post;
                 kind = status;
                 label = status === "pre" ? i18n("Pre-Market") : i18n("After-Hours");
-            } else if (session.post && stamps[last] >= session.post.start && stamps[last] < session.post.end) {
-                // Closed: keep the last session's quote if the option asks for it.
-                period = session.post;
-                kind = "post";
-                label = i18n("After-Hours");
-            } else if (session.pre && stamps[last] >= session.pre.start && stamps[last] < session.pre.end) {
-                period = session.pre;
-                kind = "pre";
-                label = i18n("Pre-Market");
+            } else {
+                // Closed: keep the last session's quote if the option asks for it. The
+                // session comes from meta.tradingPeriods, not currentTradingPeriod: the
+                // latter already describes the next trading day before its pre-market
+                // starts, while the last candle still belongs to the previous day's
+                // after-hours. Looking only at today's periods dropped that quote and
+                // left "No after-hours" on screen after a restart.
+                var days = root.tradingDays(meta);
+                for (var d = days.length - 1; d >= 0 && !period; d--) {
+                    if (days[d].post && stamps[last] >= days[d].post.start && stamps[last] < days[d].post.end) {
+                        period = days[d].post;
+                        kind = "post";
+                        label = i18n("After-Hours");
+                    } else if (days[d].pre && stamps[last] >= days[d].pre.start && stamps[last] < days[d].pre.end) {
+                        period = days[d].pre;
+                        kind = "pre";
+                        label = i18n("Pre-Market");
+                    }
+                }
             }
             if (!period || stamps[last] < period.start || stamps[last] >= period.end) {
                 root.setExtendedData(symbol, null);
