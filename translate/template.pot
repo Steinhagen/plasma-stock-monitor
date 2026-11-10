@@ -90,6 +90,18 @@ msgstr ""
 msgid "Stock Price Text"
 msgstr ""
 
+#: contents/ui/configAppearance.qml
+msgid "Expanded View"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Background:"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Use the Plasma background"
+msgstr ""
+
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
 msgstr ""
@@ -486,14 +498,6 @@ msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid "Fit the widest value"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Popup background:"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Use the Plasma background around the panel view"
 msgstr ""
 
 #: contents/ui/configPortfolio.qml

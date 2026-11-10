@@ -14,6 +14,7 @@ Item {
     property alias cfg_tickerOpacity: tickerOpacitySlider.value
     property alias cfg_priceColor: priceColorButton.text
     property alias cfg_priceOpacity: priceOpacitySlider.value
+    property alias cfg_expandedViewBackground: popupBackgroundSwitch.checked
 
     ScrollView {
         anchors.fill: parent
@@ -121,6 +122,17 @@ Item {
                     text: priceOpacitySlider.value + "%"
                 }
 
+            }
+
+            Item {
+                Kirigami.FormData.isSection: true
+                Kirigami.FormData.label: i18n("Expanded View")
+            }
+
+            CheckBox {
+                id: popupBackgroundSwitch
+                Kirigami.FormData.label: i18n("Background:")
+                text: i18n("Use the Plasma background")
             }
 
         }

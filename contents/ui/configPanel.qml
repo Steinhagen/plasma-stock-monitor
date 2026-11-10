@@ -13,7 +13,6 @@ Item {
     property alias cfg_autoCycleInterval: autoCycleSpin.value
     property alias cfg_fixedPanelWidth: fixedWidthSwitch.checked
     property alias cfg_panelWidth: panelWidthSpin.value
-    property alias cfg_panelPopupBackground: popupBackgroundSwitch.checked
 
     ScrollView {
         anchors.fill: parent
@@ -78,12 +77,6 @@ Item {
                 textFromValue: (v) => v === 0 ? i18n("Fit the widest value") : String(v)
                 valueFromText: (t) => parseInt(t) || 0
                 editable: true
-            }
-
-            CheckBox {
-                id: popupBackgroundSwitch
-                Kirigami.FormData.label: i18n("Popup background:")
-                text: i18n("Use the Plasma background around the panel view")
             }
         }
     }

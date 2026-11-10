@@ -1810,13 +1810,13 @@ PlasmoidItem {
     // The expanded panel view normally lives in Plasma's popup, whose background is drawn
     // by the shell. Turning the option off uses a popup of our own with no background, so
     // only the widget cards remain visible.
-    readonly property bool panelPopupBackground: Plasmoid.configuration.panelPopupBackground
+    readonly property bool expandedViewBackground: Plasmoid.configuration.expandedViewBackground
     // Our own panel popup has no Plasma background behind the cards, so in Plasma-theme
     // mode the views must paint a card background themselves instead of staying transparent.
-    readonly property bool customPanelCard: !panelPopupBackground
+    readonly property bool customExpandedCard: !expandedViewBackground
                                             && (Plasmoid.formFactor === PlasmaCore.Types.Horizontal
                                                 || Plasmoid.formFactor === PlasmaCore.Types.Vertical)
-    readonly property color customPanelCardColor: root.isPlasmaTheme
+    readonly property color customExpandedCardColor: root.isPlasmaTheme
         ? Qt.rgba(Kirigami.Theme.backgroundColor.r,
                   Kirigami.Theme.backgroundColor.g,
                   Kirigami.Theme.backgroundColor.b,
@@ -1875,7 +1875,7 @@ PlasmoidItem {
     // Open the expanded panel view in Plasma's popup (with its background) or in our own
     // popup, which draws no background and therefore shows only the widget's cards.
     function togglePanelPopup() {
-        if (root.panelPopupBackground) {
+        if (root.expandedViewBackground) {
             root.expanded = !root.expanded;
             return;
         }
@@ -1902,10 +1902,10 @@ PlasmoidItem {
         onTriggered: root.panelPopupRecentlyClosed = false
     }
 
-    onPanelPopupBackgroundChanged: {
+    onExpandedViewBackgroundChanged: {
         // Close the mode that is no longer selected, so changing the option takes effect
         // immediately instead of leaving the old popup on screen.
-        if (root.panelPopupBackground) {
+        if (root.expandedViewBackground) {
             if (panelPopupWindowLoader.item)
                 panelPopupWindowLoader.item.visible = false;
             panelPopupWindowLoader.active = false;
@@ -2396,8 +2396,71 @@ PlasmoidItem {
                     anchors.fill: parent
                     // Do not instantiate a second copy of the full view unless the custom
                     // panel popup is actually in use.
-                    active: root.customPanelCard
+                    active: root.customExpandedCard
                     sourceComponent: fullViewComponent
+                }
+
+                // The no-background dialog has no theme frame, so Dialog's own resize
+                // margins are zero. These invisible handles start the same system resize
+                // that the standard Plasma popup uses.
+                MouseArea {
+                    anchors { top: parent.top; left: parent.left; right: parent.right }
+                    height: 6
+                    cursorShape: Qt.SizeVerCursor
+                    onPressed: panelPopup.startSystemResize(Qt.TopEdge)
+                }
+
+                MouseArea {
+                    anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                    height: 6
+                    cursorShape: Qt.SizeVerCursor
+                    onPressed: panelPopup.startSystemResize(Qt.BottomEdge)
+                }
+
+                MouseArea {
+                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                    width: 6
+                    cursorShape: Qt.SizeHorCursor
+                    onPressed: panelPopup.startSystemResize(Qt.LeftEdge)
+                }
+
+                MouseArea {
+                    anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                    width: 6
+                    cursorShape: Qt.SizeHorCursor
+                    onPressed: panelPopup.startSystemResize(Qt.RightEdge)
+                }
+
+                MouseArea {
+                    anchors { top: parent.top; left: parent.left }
+                    width: 8
+                    height: 8
+                    cursorShape: Qt.SizeFDiagCursor
+                    onPressed: panelPopup.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
+                }
+
+                MouseArea {
+                    anchors { top: parent.top; right: parent.right }
+                    width: 8
+                    height: 8
+                    cursorShape: Qt.SizeBDiagCursor
+                    onPressed: panelPopup.startSystemResize(Qt.TopEdge | Qt.RightEdge)
+                }
+
+                MouseArea {
+                    anchors { bottom: parent.bottom; left: parent.left }
+                    width: 8
+                    height: 8
+                    cursorShape: Qt.SizeBDiagCursor
+                    onPressed: panelPopup.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
+                }
+
+                MouseArea {
+                    anchors { bottom: parent.bottom; right: parent.right }
+                    width: 8
+                    height: 8
+                    cursorShape: Qt.SizeFDiagCursor
+                    onPressed: panelPopup.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
                 }
             }
         }

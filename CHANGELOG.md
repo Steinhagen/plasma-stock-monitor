@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- An option in **Panel view** to show the expanded panel widget without Plasma's popup
-  background, leaving only the widget's cards visible.
+- An option in **Appearance → Expanded View** to show the expanded panel widget without
+  Plasma's popup background, leaving only the widget's cards visible.
 
 ### Changed
 
@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Create the optional custom panel popup only when the no-background option is used,
   so the default configuration does not instantiate it at startup.
+- Allow resizing the expanded panel widget when the Plasma popup background is disabled.
 - Fix a QML `priceText` reference error when refreshing the panel widget with the
   middle mouse button.
 

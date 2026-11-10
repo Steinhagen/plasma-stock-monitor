@@ -13,8 +13,8 @@ Rectangle {
     readonly property real minimumContentWidth: 250
     readonly property real minimumContentHeight: 200
 
-    color: rootItem.customPanelCard ? rootItem.customPanelCardColor : rootItem.bgColor
-    radius: (rootItem.customPanelCard || !rootItem.isPlasmaTheme) ? 22 : 0
+    color: rootItem.customExpandedCard ? rootItem.customExpandedCardColor : rootItem.bgColor
+    radius: (rootItem.customExpandedCard || !rootItem.isPlasmaTheme) ? 22 : 0
     clip: true
 
     // --- Portfolio total ---

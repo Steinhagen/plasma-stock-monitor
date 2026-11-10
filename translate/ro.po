@@ -89,6 +89,18 @@ msgstr "Opacitate:"
 msgid "Stock Price Text"
 msgstr "Textul prețului acțiunii"
 
+#: contents/ui/configAppearance.qml
+msgid "Expanded View"
+msgstr "Vizualizare extinsă"
+
+#: contents/ui/configAppearance.qml
+msgid "Background:"
+msgstr "Fundal:"
+
+#: contents/ui/configAppearance.qml
+msgid "Use the Plasma background"
+msgstr "Folosește fundalul Plasma"
+
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
 msgstr "Fișierul selectat este gol."
@@ -487,14 +499,6 @@ msgstr "Lățime (pixeli):"
 msgid "Fit the widest value"
 msgstr "Cea mai lată valoare"
 
-#: contents/ui/configPanel.qml
-msgid "Popup background:"
-msgstr "Fundal popup:"
-
-#: contents/ui/configPanel.qml
-msgid "Use the Plasma background around the panel view"
-msgstr "Folosește fundalul Plasma în jurul vizualizării din panou"
-
 #: contents/ui/configPortfolio.qml
 msgid "Portfolio Mode:"
 msgstr "Mod portofoliu:"
@@ -890,6 +894,12 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Popup background:"
+#~ msgstr "Fundal popup:"
+
+#~ msgid "Use the Plasma background around the panel view"
+#~ msgstr "Folosește fundalul Plasma în jurul vizualizării din panou"
 
 #~ msgid "List Range:"
 #~ msgstr "Interval listă:"

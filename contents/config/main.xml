@@ -155,8 +155,8 @@
             <default>0</default>
             <min>0</min>
         </entry>
-        <entry name="panelPopupBackground" type="Bool">
-            <label>Draw the Plasma background around the expanded panel view</label>
+        <entry name="expandedViewBackground" type="Bool">
+            <label>Draw the Plasma background behind the expanded widget</label>
             <default>true</default>
         </entry>
         <entry name="formatPrices" type="Bool">
