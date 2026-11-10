@@ -15,9 +15,6 @@ PlasmoidItem {
     preferredRepresentation: (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical) ? root.compactRepresentation : root.fullRepresentation
 
     property string singleTicker: Plasmoid.configuration.ticker
-    // True while fetchMultiStocks assigns panelTicker/singleTicker: the list response
-    // already refreshes the selected chart, so the change handler must not fetch again.
-    property bool bulkListRefresh: false
     property bool isMultiMode: Plasmoid.configuration.isMultiMode
     property bool showTwoList: Plasmoid.configuration.showTwoList
     // Left column width in the side-by-side desktop view, in pixels. 0 means automatic
@@ -613,6 +610,7 @@ PlasmoidItem {
                 break;
             }
         }
+        var chartFromCache = false;
         if (row) {
             root.singleCompanyName = row.name;
             root.currentRawPrice = row.currentRaw;
@@ -634,14 +632,23 @@ PlasmoidItem {
                 root.chartCandles = root.chartArray(row.chartCandles);
                 root.chartReferencePrice = row.chartRef;
                 root.chartPreSession = row.chartPre === true;
+                root.chartSessionStart = row.chartSessionStart || 0;
+                root.chartSessionCurrent = row.chartSessionCurrent !== false;
+                root.quoteTimestamp = row.quoteTime || 0;
+                chartFromCache = root.chartDataPoints.length > 0;
             }
         }
 
+        // Switching to a row uses what was already fetched for it; the list refresh (and
+        // middle-click) keep that data current. Ask for a chart only when the row has no
+        // cached chart yet, or when the chart range differs from the list's (the cache
+        // holds the list range).
+        var needsChart = !chartFromCache || root.effectiveChartRange !== root.chartRange;
         if (root.singleTicker !== clean) {
-            root.singleTicker = clean; // onSingleTickerChanged fetches the chart
-        } else {
+            root.singleTicker = clean;
+            if (needsChart) root.fetchSingleStock(clean, root.effectiveChartRange);
+        } else if (needsChart) {
             root.fetchSingleStock(clean, root.effectiveChartRange);
-            if (root.showExtendedHours) root.fetchExtendedHours(clean);
         }
     }
 
@@ -983,10 +990,8 @@ PlasmoidItem {
         }
         
         var defaultPanelTicker = targetTickers.length > 0 ? targetTickers[0] : "";
-        root.bulkListRefresh = true;
         root.panelTicker = root.manualPanelTickerOverride !== "" && targetTickers.indexOf(root.manualPanelTickerOverride) !== -1 ? root.manualPanelTickerOverride : defaultPanelTicker;
         root.singleTicker = root.panelTicker;
-        root.bulkListRefresh = false;
 
         // Initialize placeholders to maintain display order before async completion
         if (stockModel.count !== targetTickers.length) {
@@ -1007,6 +1012,9 @@ PlasmoidItem {
                     "chartCandles": "[]",
                     "chartRef": 0.0,
                     "chartPre": false,
+                    "chartSessionStart": 0.0,
+                    "chartSessionCurrent": true,
+                    "quoteTime": 0.0,
                     "prevClose": 0.0,
                     "currentRaw": 0.0,
                     "currencySym": "",
@@ -1342,6 +1350,27 @@ PlasmoidItem {
             root.chartReferencePrice = reference > 0 ? reference
                 : root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
 
+            // Keep the row's cached chart in sync with every fresh chart, so choosing that
+            // row again does not briefly show the older snapshot from the list refresh.
+            if (root.isMultiMode && chartRange === root.chartRange) {
+                for (var ci = 0; ci < stockModel.count; ci++) {
+                    if (stockModel.get(ci).ticker === symbol) {
+                        stockModel.set(ci, {
+                            "chartPoints": JSON.stringify(cleanData),
+                            "chartTimes": JSON.stringify(chart.times),
+                            "chartSessions": root.chartSessions,
+                            "chartCandles": JSON.stringify(root.chartCandles),
+                            "chartRef": root.chartReferencePrice,
+                            "chartPre": root.chartPreSession,
+                            "chartSessionStart": root.chartSessionStart,
+                            "chartSessionCurrent": root.chartSessionCurrent,
+                            "quoteTime": root.quoteTimestamp
+                        });
+                        break;
+                    }
+                }
+            }
+
             if (chartRange === "1D") {
                 root.previousClose = meta.regularMarketPreviousClose || meta.previousClose || meta.chartPreviousClose;
             } else {
@@ -1419,6 +1448,13 @@ PlasmoidItem {
             var chartRef = preChart ? (meta.regularMarketPrice || 0) : 0;
             if (!(chartRef > 0))
                 chartRef = root.dailyPreviousClose(meta, cleanData.length > 0 ? cleanData[0] : 0);
+            // The session label shown above the chart travels with the cached chart, so a
+            // selection that reuses it does not keep the previous ticker's label.
+            var sessionStart = (chartDay && chartDay.regular) ? chartDay.regular.start : 0;
+            var sessionCurrent = !(sessionStart > 0)
+                || !(meta.currentTradingPeriod)
+                || (meta.currentTradingPeriod.regular && sessionStart === meta.currentTradingPeriod.regular.start)
+                || (meta.currentTradingPeriod.pre && sessionStart === meta.currentTradingPeriod.pre.start);
 
             var itemData = {
                 "ticker": symbol,
@@ -1433,6 +1469,9 @@ PlasmoidItem {
                 "chartCandles": JSON.stringify(chartCandles),
                 "chartRef": chartRef,
                 "chartPre": preChart,
+                "chartSessionStart": sessionStart,
+                "chartSessionCurrent": sessionCurrent,
+                "quoteTime": meta.regularMarketTime || 0,
                 "prevClose": prev,
                 "currentRaw": current,
                 "currencySym": curSym,
@@ -1487,15 +1526,10 @@ PlasmoidItem {
     }
 
     onSingleTickerChanged: {
-        if (root.isMultiMode) {
-            if (root.bulkListRefresh) return;
-            if (root.singleTicker.trim() !== "") {
-                root.fetchSingleStock(root.singleTicker, root.effectiveChartRange);
-                if (root.showExtendedHours) root.fetchExtendedHours(root.singleTicker);
-            }
-        } else {
-            root.refreshData();
-        }
+        // In multi mode selecting a row reuses its cached chart; the periodic list
+        // refresh keeps that cache current, so no request is needed here. Only the
+        // single view needs a refresh when its configured ticker changes.
+        if (!root.isMultiMode) root.refreshData();
     }
     onIsMultiModeChanged: {
         stockModel.clear();
