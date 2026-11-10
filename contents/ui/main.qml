@@ -1122,6 +1122,25 @@ PlasmoidItem {
         return { values: values, times: times, opens: outOpens, highs: outHighs, lows: outLows, volumes: outVolumes };
     }
 
+    // A session starts with a single tick before the next candle arrives. A one-point
+    // series cannot be drawn (the canvas needs two points), so the chart went blank
+    // between the first quote of the day and the second candle. Start the day's line at
+    // the previous close instead: the card then shows the move since yesterday from the
+    // first tick, and draws itself normally once the next candle arrives.
+    function seedFirstSessionPoint(chart, dayStart, meta) {
+        if (!chart || !chart.values || chart.values.length !== 1) return;
+        if (!chart.times || chart.times.length !== 1 || !(chart.times[0] > 0)) return;
+        var dayTime = (dayStart > 0 && dayStart < chart.times[0]) ? dayStart : chart.times[0];
+        var seed = root.dailyPreviousClose(meta, chart.values[0]);
+        if (!(seed > 0)) seed = chart.values[0];
+        chart.values.unshift(seed);
+        chart.times.unshift(dayTime);
+        chart.opens.unshift(seed);
+        chart.highs.unshift(seed);
+        chart.lows.unshift(seed);
+        chart.volumes.unshift(0);
+    }
+
     // Target number of candles for each range. The API intervals differ per range, so a
     // fixed count keeps the candle width (and the visual density) comparable everywhere.
     function candleTarget(range) {
@@ -1246,6 +1265,8 @@ PlasmoidItem {
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
             var day = (chartRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
             var chart = root.cleanChartData(quotes, timestamps, startTime, chartRange, quote, day);
+            if (chartRange === "1D")
+                root.seedFirstSessionPoint(chart, (day && day.regular) ? day.regular.start : startTime, meta);
             var cleanData = chart.values;
             root.chartSessions = (day && cleanData.length >= 2) ? root.extendedSessionSeries(quotes, timestamps, day) : null;
             root.chartDataPoints = cleanData;
@@ -1308,6 +1329,8 @@ PlasmoidItem {
             var startTime = (meta.currentTradingPeriod && meta.currentTradingPeriod.regular) ? meta.currentTradingPeriod.regular.start : 0;
             var listDay = (listRange === "1D" && root.showExtendedHours) ? root.displayedDay(meta, timestamps) : null;
             var cleanChart = root.cleanChartData(quotes, timestamps, startTime, listRange, quote, listDay);
+            if (listRange === "1D")
+                root.seedFirstSessionPoint(cleanChart, (listDay && listDay.regular) ? listDay.regular.start : startTime, meta);
             var cleanData = cleanChart.values;
             var prev;
             if (listRange === "1D") {
