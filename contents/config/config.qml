@@ -8,8 +8,8 @@ ConfigModel {
         source: "configGeneral.qml"
     }
     ConfigCategory {
-        name: i18n("Find ticker symbol")
-        icon: "search"
+        name: i18n("Symbols & lists")
+        icon: "view-list-text"
         source: "configSearch.qml"
     }
     ConfigCategory {

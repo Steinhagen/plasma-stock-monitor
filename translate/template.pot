@@ -23,7 +23,7 @@ msgid "General"
 msgstr ""
 
 #: contents/config/config.qml
-msgid "Find ticker symbol"
+msgid "Symbols & lists"
 msgstr ""
 
 #: contents/config/config.qml
@@ -341,58 +341,6 @@ msgid "Show dates and times under the chart"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Display Mode:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Show Multi-Stock List"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Two List:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "single-stock on left side and multi-stock on right side"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Single Ticker:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/configPortfolio.qml
-msgid "e.g., AAPL"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Ticker List:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Sorting:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Sort stocks alphabetically"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Names:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Swap company name and ticker symbol"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
 msgid "Refresh Interval (minutes):"
 msgstr ""
 
@@ -520,6 +468,10 @@ msgstr ""
 msgid "Ticker:"
 msgstr ""
 
+#: contents/ui/configPortfolio.qml contents/ui/configSearch.qml
+msgid "e.g., AAPL"
+msgstr ""
+
 #: contents/ui/configPortfolio.qml
 msgid "Shares:"
 msgstr ""
@@ -636,6 +588,62 @@ msgstr ""
 
 #: contents/ui/configSearch.qml
 msgid "Search failed (HTTP %1)."
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Lists"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Display Mode:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Show Multi-Stock List"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Two List:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "single-stock on left side and multi-stock on right side"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Single Ticker:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Ticker List:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Sorting:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Sort stocks alphabetically"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Names:"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Swap company name and ticker symbol"
+msgstr ""
+
+#: contents/ui/configSearch.qml
+msgid "Find symbols"
 msgstr ""
 
 #: contents/ui/configSearch.qml

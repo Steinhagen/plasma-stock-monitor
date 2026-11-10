@@ -22,8 +22,8 @@ msgid "General"
 msgstr "General"
 
 #: contents/config/config.qml
-msgid "Find ticker symbol"
-msgstr "Caută simbol bursier"
+msgid "Symbols & lists"
+msgstr "Simboluri și liste"
 
 #: contents/config/config.qml
 msgid "Panel view"
@@ -340,58 +340,6 @@ msgid "Show dates and times under the chart"
 msgstr "Afișează datele și orele sub grafic"
 
 #: contents/ui/configGeneral.qml
-msgid "Display Mode:"
-msgstr "Mod de afișare:"
-
-#: contents/ui/configGeneral.qml
-msgid "Show Multi-Stock List"
-msgstr "Afișează lista cu mai multe acțiuni"
-
-#: contents/ui/configGeneral.qml
-msgid "Two List:"
-msgstr "Două liste:"
-
-#: contents/ui/configGeneral.qml
-msgid "single-stock on left side and multi-stock on right side"
-msgstr "o singură acțiune în stânga și lista cu mai multe acțiuni în dreapta"
-
-#: contents/ui/configGeneral.qml
-msgid "Single Ticker:"
-msgstr "Simbol bursier:"
-
-#: contents/ui/configGeneral.qml contents/ui/configPortfolio.qml
-msgid "e.g., AAPL"
-msgstr "de ex., AAPL"
-
-#: contents/ui/configGeneral.qml
-msgid "Ticker List:"
-msgstr "Listă de simboluri:"
-
-#: contents/ui/configGeneral.qml
-msgid "Sorting:"
-msgstr "Sortare:"
-
-#: contents/ui/configGeneral.qml
-msgid "Sort stocks alphabetically"
-msgstr "Sortează acțiunile alfabetic"
-
-#: contents/ui/configGeneral.qml
-msgid "Names:"
-msgstr "Nume:"
-
-#: contents/ui/configGeneral.qml
-msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
-msgstr "Afișează numele companiei împreună cu simbolul, de ex. Apple Inc. (AAPL)"
-
-#: contents/ui/configGeneral.qml
-msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
-msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
-
-#: contents/ui/configGeneral.qml
-msgid "Swap company name and ticker symbol"
-msgstr "Inversează numele companiei și simbolul bursier"
-
-#: contents/ui/configGeneral.qml
 msgid "Refresh Interval (minutes):"
 msgstr "Interval de reîmprospătare (minute):"
 
@@ -519,6 +467,10 @@ msgstr "Moneda portofoliului:"
 msgid "Ticker:"
 msgstr "Simbol:"
 
+#: contents/ui/configPortfolio.qml contents/ui/configSearch.qml
+msgid "e.g., AAPL"
+msgstr "de ex., AAPL"
+
 #: contents/ui/configPortfolio.qml
 msgid "Shares:"
 msgstr "Număr de acțiuni:"
@@ -637,6 +589,62 @@ msgstr "Eroare la interpretarea rezultatelor căutării."
 #: contents/ui/configSearch.qml
 msgid "Search failed (HTTP %1)."
 msgstr "Căutarea a eșuat (HTTP %1)."
+
+#: contents/ui/configSearch.qml
+msgid "Lists"
+msgstr "Liste"
+
+#: contents/ui/configSearch.qml
+msgid "Display Mode:"
+msgstr "Mod de afișare:"
+
+#: contents/ui/configSearch.qml
+msgid "Show Multi-Stock List"
+msgstr "Afișează lista cu mai multe acțiuni"
+
+#: contents/ui/configSearch.qml
+msgid "Two List:"
+msgstr "Două liste:"
+
+#: contents/ui/configSearch.qml
+msgid "single-stock on left side and multi-stock on right side"
+msgstr "o singură acțiune în stânga și lista cu mai multe acțiuni în dreapta"
+
+#: contents/ui/configSearch.qml
+msgid "Single Ticker:"
+msgstr "Simbol bursier:"
+
+#: contents/ui/configSearch.qml
+msgid "Ticker List:"
+msgstr "Listă de simboluri:"
+
+#: contents/ui/configSearch.qml
+msgid "Sorting:"
+msgstr "Sortare:"
+
+#: contents/ui/configSearch.qml
+msgid "Sort stocks alphabetically"
+msgstr "Sortează acțiunile alfabetic"
+
+#: contents/ui/configSearch.qml
+msgid "Names:"
+msgstr "Nume:"
+
+#: contents/ui/configSearch.qml
+msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
+msgstr "Afișează numele companiei împreună cu simbolul, de ex. Apple Inc. (AAPL)"
+
+#: contents/ui/configSearch.qml
+msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
+msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
+
+#: contents/ui/configSearch.qml
+msgid "Swap company name and ticker symbol"
+msgstr "Inversează numele companiei și simbolul bursier"
+
+#: contents/ui/configSearch.qml
+msgid "Find symbols"
+msgstr "Caută simboluri"
 
 #: contents/ui/configSearch.qml
 msgid "Search:"
@@ -915,6 +923,9 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Find ticker symbol"
+#~ msgstr "Caută simbol bursier"
 
 #~ msgid "Expanded View"
 #~ msgstr "Vizualizare extinsă"

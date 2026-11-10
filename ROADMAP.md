@@ -14,8 +14,8 @@ Issues planned for the next releases.
 
 ## Settings
 
-- [ ] Move stock search out of its own **Find ticker symbol** page and next
-      to the lists in **General**.
+- [x] Keep stock search and the list settings together on the **Symbols & lists**
+      page.
 - [x] Put all chart options on one page (now the **Chart** page).
 - [ ] Rework the color settings so it is clear how a theme looks and which
       custom colors are allowed.

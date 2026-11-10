@@ -6,14 +6,7 @@ import org.kde.kirigami as Kirigami
 Item {
     id: page
 
-    property alias cfg_ticker: tickerField.text
     property alias cfg_refreshInterval: intervalSpin.value
-    property alias cfg_isMultiMode: modeSwitch.checked
-    property alias cfg_showTwoList: showTwoListSwitch.checked
-    property alias cfg_multiTickers: multiListField.text
-    property alias cfg_sortAlphabetically: sortSwitch.checked
-    property alias cfg_swapNameAndTicker: swapNameSwitch.checked
-    property alias cfg_showNameAndTicker: nameAndTickerSwitch.checked
     
     property alias cfg_limitHours: limitHoursSwitch.checked
     property alias cfg_skipWeekendRefresh: skipWeekendRefreshSwitch.checked
@@ -35,59 +28,6 @@ Item {
 
         Kirigami.FormLayout {
             width: parent.availableWidth
-
-            CheckBox {
-                id: modeSwitch
-                Kirigami.FormData.label: i18n("Display Mode:")
-                text: i18n("Show Multi-Stock List")
-            }
-            CheckBox {
-                visible: modeSwitch.checked
-                id: showTwoListSwitch
-                Kirigami.FormData.label: i18n("Two List:")
-                text: i18n("single-stock on left side and multi-stock on right side")
-            }
-            TextField {
-                id: tickerField
-                visible: !modeSwitch.checked
-                Kirigami.FormData.label: i18n("Single Ticker:")
-                placeholderText: i18n("e.g., AAPL")
-            }
-
-            ScrollView {
-                visible: modeSwitch.checked
-                Kirigami.FormData.label: i18n("Ticker List:")
-                Layout.fillWidth: true
-                Layout.minimumHeight: 60
-                Layout.maximumHeight: 500
-                
-                TextArea {
-                    id: multiListField
-                    // Ticker symbols are the same in every language, so the example is not translated.
-                    placeholderText: "AAPL, TSLA"
-                    wrapMode: TextEdit.Wrap
-                }
-            }
-
-            CheckBox {
-                id: sortSwitch
-                visible: modeSwitch.checked
-                Kirigami.FormData.label: i18n("Sorting:")
-                text: i18n("Sort stocks alphabetically")
-            }
-
-            CheckBox {
-                id: nameAndTickerSwitch
-                Kirigami.FormData.label: i18n("Names:")
-                text: i18n("Show company name and ticker together, e.g. Apple Inc. (AAPL)")
-            }
-
-            CheckBox {
-                id: swapNameSwitch
-                text: nameAndTickerSwitch.checked
-                      ? i18n("Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)")
-                      : i18n("Swap company name and ticker symbol")
-            }
 
             SpinBox {
                 id: intervalSpin
