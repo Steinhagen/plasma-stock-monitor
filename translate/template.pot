@@ -894,6 +894,10 @@ msgid "may be delayed"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
+msgid "The market is open; waiting for its first regular quote."
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
 msgstr ""

@@ -723,13 +723,18 @@ PlasmoidItem {
 
     function setMarketSession(symbol, meta) {
         var periods = meta.currentTradingPeriod || ({});
+        var previous = root.marketSessions[symbol] || ({});
         var copy = Object.assign({}, root.marketSessions);
         copy[symbol] = {
             "pre": periods.pre || null,
             "regular": periods.regular || null,
             "post": periods.post || null,
             "hasPrePost": meta.hasPrePostMarketData !== 0 && meta.hasPrePostMarketData !== false,
-            "crypto": meta.instrumentType === "CRYPTOCURRENCY"
+            "crypto": meta.instrumentType === "CRYPTOCURRENCY",
+            // Time of the latest regular quote, used to tell a fresh open quote from
+            // the previous close that Yahoo still returns during the first seconds.
+            // Extended-hours responses can repeat an older time; never go backwards.
+            "quoteTime": Math.max(meta.regularMarketTime || 0, previous.quoteTime || 0)
         };
         root.marketSessions = copy;
     }
@@ -765,6 +770,19 @@ PlasmoidItem {
         return !s.hasPrePost && (status === "pre" || status === "post");
     }
 
+    // True while the regular session has started but its first quote has not arrived.
+    // Yahoo keeps returning the previous close, with its old timestamp, until the first
+    // trade of the new session reaches the feed.
+    function awaitingFirstRegularQuote(symbol) {
+        var s = root.marketSessions[symbol];
+        if (!s || !s.regular) return false;
+        // Read the clock so the waiting state re-evaluates at the session boundary.
+        if (root.marketClock < 0) return false;
+        var now = Math.floor(Date.now() / 1000);
+        if (now < s.regular.start || now >= s.regular.end) return false;
+        return !(s.quoteTime > 0) || s.quoteTime < s.regular.start;
+    }
+
     // The extended quote to show for a symbol: the live one while its session runs,
     // or — when the option is enabled — the last one after the market closes. The
     // session checks keep a Friday after-hours quote from being shown as current
@@ -772,6 +790,18 @@ PlasmoidItem {
     function extendedQuote(symbol) {
         if (!root.showExtendedHours) return undefined;
         var status = root.marketStatusFor(symbol);
+        var s = root.marketSessions[symbol];
+        if (status === "open" && root.awaitingFirstRegularQuote(symbol)) {
+            // The market is open, but Yahoo has not published the first regular trade yet.
+            // Keep showing the last pre-market quote instead of the previous close.
+            if (!s || !s.regular) return undefined;
+            var last = root.lastExtendedData[symbol];
+            var preStart = s.pre && s.pre.start < s.regular.start
+                           ? s.pre.start : (s.regular.start - 12 * 3600);
+            if (last && last.kind === "pre" && last.time >= preStart && last.time < s.regular.start)
+                return last;
+            return undefined;
+        }
         if (status === "closed") {
             if (!root.keepExtendedAfterClose) return undefined;
             // The last extended quote of the most recent session, kept so it can
@@ -779,7 +809,6 @@ PlasmoidItem {
             return root.lastExtendedData[symbol];
         }
         var e = root.extendedData[symbol];
-        var s = root.marketSessions[symbol];
         if (!e || !s || !e.time) return undefined;
         var period = status === "pre" ? s.pre : (status === "post" ? s.post : null);
         if (!period) return undefined;

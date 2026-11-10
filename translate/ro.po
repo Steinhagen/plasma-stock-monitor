@@ -898,6 +898,10 @@ msgid "may be delayed"
 msgstr "posibil întârziată"
 
 #: contents/ui/SingleStockView.qml
+msgid "The market is open; waiting for its first regular quote."
+msgstr "Piața este deschisă; se așteaptă prima cotație din sesiunea regulată."
+
+#: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
 msgstr "Normal"

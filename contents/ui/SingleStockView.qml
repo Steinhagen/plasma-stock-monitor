@@ -56,9 +56,14 @@ Rectangle {
     // wrong for exchanges with real-time data.
     readonly property bool marketDataAvailable: rootItem.lastUpdated !== ""
                                                  || rootItem.quoteTimestamp > 0
+    readonly property bool waitingForFirstQuote: rootItem.awaitingFirstRegularQuote(rootItem.singleTicker)
     readonly property string marketDataQuoteTime: {
-        if (!(rootItem.quoteTimestamp > 0)) return "";
-        return new Date(rootItem.quoteTimestamp * 1000)
+        // During the opening seconds the regular quote is still the previous close;
+        // show the pre-market quote time that is actually on screen instead.
+        var timestamp = singleStockRoot.extendedQuote && singleStockRoot.extendedQuote.time
+                        ? singleStockRoot.extendedQuote.time : rootItem.quoteTimestamp;
+        if (!(timestamp > 0)) return "";
+        return new Date(timestamp * 1000)
             .toLocaleTimeString(Qt.locale(), "HH:mm");
     }
     readonly property string marketDataUpdatedLine: {
@@ -296,6 +301,15 @@ Rectangle {
                                 }
                             }
                         }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: singleStockRoot.waitingForFirstQuote
+                            text: i18n("The market is open; waiting for its first regular quote.")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 10
+                            wrapMode: Text.WordWrap
+                        }
                     }
 
                     RowLayout {
@@ -349,7 +363,7 @@ Rectangle {
 
                     Text {
                         id: priceText
-                        text: rootItem.currentPrice
+                        text: singleStockRoot.waitingForFirstQuote ? "—" : rootItem.currentPrice
                         color: rootItem.priceColor
                         opacity: rootItem.priceOpacity / 100.0
                         font.pixelSize: 25
@@ -360,8 +374,9 @@ Rectangle {
                     }
 
                     Text {
-                        text: rootItem.priceChange !== ""
-                              ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : ""
+                        text: singleStockRoot.waitingForFirstQuote ? ""
+                              : (rootItem.priceChange !== ""
+                                 ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : "")
                         color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
                         font.pixelSize: 10
                         font.bold: true
@@ -445,7 +460,7 @@ Rectangle {
 
                 Text {
                     id: priceTextCompact
-                    text: rootItem.currentPrice
+                    text: singleStockRoot.waitingForFirstQuote ? "—" : rootItem.currentPrice
                     color: rootItem.priceColor
                     opacity: rootItem.priceOpacity / 100.0
                     font.pixelSize: 25
@@ -456,8 +471,9 @@ Rectangle {
                 }
 
                 Text {
-                    text: rootItem.priceChange !== ""
-                          ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : ""
+                    text: singleStockRoot.waitingForFirstQuote ? ""
+                          : (rootItem.priceChange !== ""
+                             ? rootItem.priceChange + " (" + rootItem.percentChange + ")" : "")
                     color: rootItem.isPositive ? rootItem.positiveColor : rootItem.negativeColor
                     font.pixelSize: 10
                     font.bold: true

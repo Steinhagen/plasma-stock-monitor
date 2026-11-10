@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remember the ticker selected in the multi-stock list across restarts, instead of
   falling back to the first ticker.
 - Remove the empty strip below the portfolio total when update timestamps are hidden.
+- At the regular market open, keep showing the last pre-market quote until the first
+  regular quote arrives, instead of presenting the previous close as current data.
 - Fix a QML `priceText` reference error when refreshing the panel widget with the
   middle mouse button.
 
