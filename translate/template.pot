@@ -858,10 +858,16 @@ msgid "After-hours"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
-msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
-msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed."
-msgstr[0] ""
-msgstr[1] ""
+msgid "Updated %1 · Next %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Updated %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Refresh %1 min"
+msgstr ""
 
 #: contents/ui/SingleStockView.qml
 msgid "Yesterday's session"
@@ -873,6 +879,14 @@ msgstr ""
 
 #: contents/ui/SingleStockView.qml
 msgid "Market data"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Yahoo quote %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "may be delayed"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml

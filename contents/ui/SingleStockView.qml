@@ -51,16 +51,30 @@ Rectangle {
     }
 
     // Tooltip of the market status in the header. Yahoo Finance does not expose the feed
-    // delay per exchange through the chart API, so the quote timestamp is shown instead of
-    // a hard-coded "15 minutes" that would be wrong for exchanges with real-time data.
-    readonly property string marketDataNote: {
+    // delay per exchange through the chart API, so the quote timestamp is shown next to
+    // the widget's own refresh time instead of a hard-coded "15 minutes" that would be
+    // wrong for exchanges with real-time data.
+    readonly property bool marketDataAvailable: rootItem.lastUpdated !== ""
+                                                 || rootItem.quoteTimestamp > 0
+    readonly property string marketDataQuoteTime: {
         if (!(rootItem.quoteTimestamp > 0)) return "";
-        var quoteTime = new Date(rootItem.quoteTimestamp * 1000)
+        return new Date(rootItem.quoteTimestamp * 1000)
             .toLocaleTimeString(Qt.locale(), "HH:mm");
-        return i18np("Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed.",
-                     "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed.",
-                     rootItem.refreshIntervalMinutes, quoteTime);
     }
+    readonly property string marketDataUpdatedLine: {
+        if (rootItem.lastUpdated === "") return "";
+        return rootItem.nextUpdate !== ""
+            ? i18n("Updated %1 · Next %2", rootItem.lastUpdated, rootItem.nextUpdate)
+            : i18n("Updated %1", rootItem.lastUpdated);
+    }
+    readonly property string marketDataRefreshLabel: i18n("Refresh %1 min", rootItem.refreshIntervalMinutes)
+    // Amber is too bright on a light tooltip and too dim on a dark one; pick a shade
+    // that stays readable on the Plasma tooltip background.
+    readonly property color marketDataWarnColor: Kirigami.Theme.backgroundColor.hslLightness > 0.5
+                                                 ? "#8a5a00" : "#e0b25a"
+    readonly property color marketDataWarnBackground: Qt.rgba(marketDataWarnColor.r,
+                                                               marketDataWarnColor.g,
+                                                               marketDataWarnColor.b, 0.10)
 
     // The 1D chart shows a previous trading session when there is nothing current yet
     // (weekend, holiday, or before the pre-market's first quote). Label it so the older
@@ -187,9 +201,102 @@ Rectangle {
                     implicitWidth: marketStatusRow.implicitWidth
                     implicitHeight: marketStatusRow.implicitHeight
                     visible: singleStockRoot.marketSessionText !== ""
-                    active: singleStockRoot.marketDataNote !== ""
+                    active: singleStockRoot.marketDataAvailable
                     mainText: i18n("Market data")
-                    subText: singleStockRoot.marketDataNote
+                    mainItem: ColumnLayout {
+                        implicitWidth: 340
+                        spacing: 5
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Rectangle {
+                                width: 6
+                                height: 6
+                                radius: 3
+                                color: singleStockRoot.marketSessionColor
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Text {
+                                text: i18n("Market data")
+                                color: Kirigami.Theme.textColor
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Rectangle {
+                                Layout.alignment: Qt.AlignVCenter
+                                implicitWidth: marketTipRefreshLabel.implicitWidth + 12
+                                implicitHeight: marketTipRefreshLabel.implicitHeight + 4
+                                radius: height / 2
+                                color: Qt.rgba(Kirigami.Theme.textColor.r,
+                                               Kirigami.Theme.textColor.g,
+                                               Kirigami.Theme.textColor.b, 0.06)
+                                border.width: 1
+                                border.color: Qt.rgba(Kirigami.Theme.textColor.r,
+                                                      Kirigami.Theme.textColor.g,
+                                                      Kirigami.Theme.textColor.b, 0.12)
+
+                                Text {
+                                    id: marketTipRefreshLabel
+                                    anchors.centerIn: parent
+                                    text: singleStockRoot.marketDataRefreshLabel
+                                    color: Kirigami.Theme.disabledTextColor
+                                    font.pixelSize: 9
+                                }
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: text !== ""
+                            text: singleStockRoot.marketDataUpdatedLine
+                            color: Kirigami.Theme.textColor
+                            font.pixelSize: 11
+                            wrapMode: Text.WordWrap
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            visible: singleStockRoot.marketDataQuoteTime !== ""
+
+                            Text {
+                                text: i18n("Yahoo quote %1", singleStockRoot.marketDataQuoteTime)
+                                color: Kirigami.Theme.disabledTextColor
+                                font.pixelSize: 10
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Rectangle {
+                                Layout.alignment: Qt.AlignVCenter
+                                implicitWidth: marketTipDelayLabel.implicitWidth + 12
+                                implicitHeight: marketTipDelayLabel.implicitHeight + 4
+                                radius: height / 2
+                                color: singleStockRoot.marketDataWarnBackground
+                                border.width: 1
+                                border.color: Qt.rgba(singleStockRoot.marketDataWarnColor.r,
+                                                      singleStockRoot.marketDataWarnColor.g,
+                                                      singleStockRoot.marketDataWarnColor.b, 0.28)
+
+                                Text {
+                                    id: marketTipDelayLabel
+                                    anchors.centerIn: parent
+                                    text: i18n("may be delayed")
+                                    color: singleStockRoot.marketDataWarnColor
+                                    font.pixelSize: 9
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+                        }
+                    }
 
                     RowLayout {
                         id: marketStatusRow

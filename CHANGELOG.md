@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Romanian translation now uses consistent session terminology: **Înaintea
   deschiderii** for pre-market and **După închidere** for after-hours, with matching
   compact labels and panel tags.
+- The market-data tooltip now separates the widget's last update from the next refresh,
+  shows the Yahoo quote time, and marks delayed quotes with a compact badge.
 
 ### Fixed
 

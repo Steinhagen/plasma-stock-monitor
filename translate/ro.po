@@ -862,11 +862,16 @@ msgid "After-hours"
 msgstr "După închidere"
 
 #: contents/ui/SingleStockView.qml
-msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
-msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed."
-msgstr[0] "Se actualizează în fiecare minut. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
-msgstr[1] "Se actualizează la fiecare %1 minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
-msgstr[2] "Se actualizează la fiecare %1 de minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+msgid "Updated %1 · Next %2"
+msgstr "Actualizat %1 · Următoarea %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "Updated %1"
+msgstr "Actualizat %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "Refresh %1 min"
+msgstr "Reîmprospătare %1 min"
 
 #: contents/ui/SingleStockView.qml
 msgid "Yesterday's session"
@@ -879,6 +884,14 @@ msgstr "Sesiunea din %1"
 #: contents/ui/SingleStockView.qml
 msgid "Market data"
 msgstr "Date de piață"
+
+#: contents/ui/SingleStockView.qml
+msgid "Yahoo quote %1"
+msgstr "Cotație Yahoo %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "may be delayed"
+msgstr "posibil întârziată"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
@@ -894,6 +907,12 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
+#~ msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed."
+#~ msgstr[0] "Se actualizează în fiecare minut. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+#~ msgstr[1] "Se actualizează la fiecare %1 minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
+#~ msgstr[2] "Se actualizează la fiecare %1 de minute. Ultima cotație Yahoo Finance: %2. Cotațiile pot fi întârziate."
 
 #~ msgid "Popup background:"
 #~ msgstr "Fundal popup:"
