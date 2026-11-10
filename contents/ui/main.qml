@@ -2298,6 +2298,11 @@ PlasmoidItem {
             Layout.minimumHeight: twoColumns
                 ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
                 : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
+            // Stable defaults for Plasma when there is no saved geometry yet (a new
+            // activity or an empty virtual desktop). Without these, the preferred size
+            // falls back to the minimum and the widget opens at its smallest size.
+            Layout.preferredWidth: twoColumns ? 960 : 600
+            Layout.preferredHeight: 520
 
             RowLayout {
                 id: fullRow
@@ -2429,8 +2434,10 @@ PlasmoidItem {
                 // Plasma's standard expanded representation does.
                 Layout.minimumWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
                 Layout.minimumHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
-                Layout.preferredWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
-                Layout.preferredHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
+                Layout.preferredWidth: panelPopupLoader.item ? Math.max(panelPopupLoader.item.Layout.preferredWidth,
+                                                                         panelPopupLoader.item.Layout.minimumWidth) : 0
+                Layout.preferredHeight: panelPopupLoader.item ? Math.max(panelPopupLoader.item.Layout.preferredHeight,
+                                                                          panelPopupLoader.item.Layout.minimumHeight) : 0
 
                 Loader {
                     id: panelPopupLoader

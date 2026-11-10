@@ -105,7 +105,10 @@ Rectangle {
     readonly property real chartControlsWidth: (rootItem.showChartRangeButtons || rootItem.showChartStyleButtons)
                                                 ? chartHeaderRow.implicitWidth : 0
     readonly property real minimumContentWidth: Math.max(300, Math.ceil(chartControlsWidth) + 32)
-    readonly property real minimumContentHeight: Math.max(240, Math.ceil(contentColumn.implicitHeight) + 26)
+    // Fixed floor, not content-derived: the extended-hours quote row appears and
+    // disappears with the session. A moving minimum made Plasma resize the widget
+    // when the row changed or when the widget was opened on an empty virtual desktop.
+    readonly property real minimumContentHeight: 360
 
     color: rootItem.customExpandedCard ? rootItem.customExpandedCardColor : rootItem.bgColor
     radius: (rootItem.customExpandedCard || !rootItem.isPlasmaTheme) ? 22 : 0
