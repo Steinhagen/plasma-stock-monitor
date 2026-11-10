@@ -88,8 +88,8 @@ Rectangle {
     readonly property real minimumContentWidth: Math.max(300, Math.ceil(chartControlsWidth) + 32)
     readonly property real minimumContentHeight: Math.max(240, Math.ceil(contentColumn.implicitHeight) + 26)
 
-    color: rootItem.bgColor
-    radius: rootItem.isPlasmaTheme ? 0 : 22
+    color: rootItem.customPanelCard ? rootItem.customPanelCardColor : rootItem.bgColor
+    radius: (rootItem.customPanelCard || !rootItem.isPlasmaTheme) ? 22 : 0
     clip: true
 
     Text {

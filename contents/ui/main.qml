@@ -1807,6 +1807,21 @@ PlasmoidItem {
     readonly property bool panelAlternate: Plasmoid.configuration.alternatePricePercent
                                            && !root.hideChangePercentage
                                            && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    // The expanded panel view normally lives in Plasma's popup, whose background is drawn
+    // by the shell. Turning the option off uses a popup of our own with no background, so
+    // only the widget cards remain visible.
+    readonly property bool panelPopupBackground: Plasmoid.configuration.panelPopupBackground
+    // Our own panel popup has no Plasma background behind the cards, so in Plasma-theme
+    // mode the views must paint a card background themselves instead of staying transparent.
+    readonly property bool customPanelCard: !panelPopupBackground
+                                            && (Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                                                || Plasmoid.formFactor === PlasmaCore.Types.Vertical)
+    readonly property color customPanelCardColor: root.isPlasmaTheme
+        ? Qt.rgba(Kirigami.Theme.backgroundColor.r,
+                  Kirigami.Theme.backgroundColor.g,
+                  Kirigami.Theme.backgroundColor.b,
+                  root.bgOpacity / 100)
+        : root.bgColor
     property bool panelShowPercent: false
 
     Timer {
@@ -1855,6 +1870,36 @@ PlasmoidItem {
             // The panel takes the cached list row; only the chart is fetched.
             root.selectTicker(row.ticker);
         }
+    }
+
+    // Open the expanded panel view in Plasma's popup (with its background) or in our own
+    // popup, which draws no background and therefore shows only the widget's cards.
+    function togglePanelPopup() {
+        if (root.panelPopupBackground) {
+            root.expanded = !root.expanded;
+        } else if (panelPopup.visible) {
+            panelPopup.visible = false;
+        } else if (!root.panelPopupRecentlyClosed) {
+            panelPopup.visible = true;
+        }
+    }
+
+    // The dialog hides itself when it loses focus. That is what a click on the panel
+    // widget does, so ignore that same click briefly instead of reopening the popup.
+    property bool panelPopupRecentlyClosed: false
+    Timer {
+        id: panelPopupCloseGuard
+        interval: 250
+        onTriggered: root.panelPopupRecentlyClosed = false
+    }
+
+    onPanelPopupBackgroundChanged: {
+        // Close the mode that is no longer selected, so changing the option takes effect
+        // immediately instead of leaving the old popup on screen.
+        if (root.panelPopupBackground)
+            panelPopup.visible = false;
+        else
+            root.expanded = false;
     }
 
     // --- PANEL VIEW (Compact Representation) ---
@@ -1915,7 +1960,7 @@ PlasmoidItem {
                 root.refreshData();
                 timerFlicker.restart();
             } else {
-                root.expanded = !root.expanded;
+                root.togglePanelPopup();
             }
         }
 
@@ -2172,107 +2217,161 @@ PlasmoidItem {
         }
     }
 
-    // --- DESKTOP VIEW (Full Representation) ---
+    // --- FULL VIEW (desktop widget and the panel expanded popup) ---
 
-    fullRepresentation: Item {
-        id: fullRoot
+    fullRepresentation: fullViewComponent
 
-        // Desktop only: the panel uses compactRepresentation, whose size is unchanged.
-        // Two columns only in multi mode with the side-by-side list.
-        readonly property bool twoColumns: root.isMultiMode && root.showTwoList
-        // Width of the drag zone between the two columns, including its visual line.
-        readonly property int dividerWidth: root.isPlasmaTheme ? 8 : 10
-        // A stored width of 0 keeps the automatic layout: both columns share the card.
-        readonly property bool manualSplit: twoColumns && root.twoColumnLeftWidth > 0
-        // The stored width can be too large for the current widget width; clamp it so the
-        // list keeps its own minimum.
-        readonly property real maxLeftColumnWidth: Math.max(singleColumn.minimumContentWidth,
-            fullRow.width - dividerWidth - listColumn.minimumContentWidth)
-        readonly property real leftColumnWidth: Math.max(singleColumn.minimumContentWidth,
-            Math.min(root.twoColumnLeftWidth, maxLeftColumnWidth))
+    Component {
+        id: fullViewComponent
 
-        Layout.minimumWidth: twoColumns
-            ? singleColumn.minimumContentWidth + dividerWidth + listColumn.minimumContentWidth
-            : (root.isMultiMode ? listColumn.minimumContentWidth : singleColumn.minimumContentWidth)
-        Layout.minimumHeight: twoColumns
-            ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
-            : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
+        Item {
+            id: fullRoot
 
-        RowLayout {
-            id: fullRow
-            anchors.fill: parent
-            anchors.margins: 0
-            spacing: 0
+            // Desktop only: the panel uses compactRepresentation, whose size is unchanged.
+            // Two columns only in multi mode with the side-by-side list.
+            readonly property bool twoColumns: root.isMultiMode && root.showTwoList
+            // Width of the drag zone between the two columns, including its visual line.
+            readonly property int dividerWidth: root.isPlasmaTheme ? 8 : 10
+            // A stored width of 0 keeps the automatic layout: both columns share the card.
+            readonly property bool manualSplit: twoColumns && root.twoColumnLeftWidth > 0
+            // The stored width can be too large for the current widget width; clamp it so the
+            // list keeps its own minimum.
+            readonly property real maxLeftColumnWidth: Math.max(singleColumn.minimumContentWidth,
+                fullRow.width - dividerWidth - listColumn.minimumContentWidth)
+            readonly property real leftColumnWidth: Math.max(singleColumn.minimumContentWidth,
+                Math.min(root.twoColumnLeftWidth, maxLeftColumnWidth))
 
-            SingleStockView {
-                id: singleColumn
-                visible: !root.isMultiMode || root.showTwoList
-                Layout.fillWidth: !fullRoot.manualSplit
-                Layout.preferredWidth: fullRoot.manualSplit ? fullRoot.leftColumnWidth : 0
-                Layout.fillHeight: true
-                Layout.minimumWidth: singleColumn.minimumContentWidth
-                Layout.minimumHeight: singleColumn.minimumContentHeight
-                rootItem: root
-            }
+            Layout.minimumWidth: twoColumns
+                ? singleColumn.minimumContentWidth + dividerWidth + listColumn.minimumContentWidth
+                : (root.isMultiMode ? listColumn.minimumContentWidth : singleColumn.minimumContentWidth)
+            Layout.minimumHeight: twoColumns
+                ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
+                : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
 
-            Item {
-                id: divider
-                objectName: "columnDivider"
-                visible: fullRoot.twoColumns
-                Layout.preferredWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
-                Layout.minimumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
-                Layout.maximumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
-                Layout.fillHeight: true
-                z: 1
+            RowLayout {
+                id: fullRow
+                anchors.fill: parent
+                anchors.margins: 0
+                spacing: 0
 
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 2
-                    height: Math.min(parent.height, 40)
-                    radius: 1
-                    color: root.tickerColor
-                    // The divider is invisible until the pointer enters its (wider) hit area.
-                    opacity: dividerMouse.containsMouse || dividerMouse.pressed ? 0.9 : 0
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                SingleStockView {
+                    id: singleColumn
+                    visible: !root.isMultiMode || root.showTwoList
+                    Layout.fillWidth: !fullRoot.manualSplit
+                    Layout.preferredWidth: fullRoot.manualSplit ? fullRoot.leftColumnWidth : 0
+                    Layout.fillHeight: true
+                    Layout.minimumWidth: singleColumn.minimumContentWidth
+                    Layout.minimumHeight: singleColumn.minimumContentHeight
+                    rootItem: root
                 }
 
-                MouseArea {
-                    id: dividerMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.SplitHCursor
-                    preventStealing: true
+                Item {
+                    id: divider
+                    objectName: "columnDivider"
+                    visible: fullRoot.twoColumns
+                    Layout.preferredWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                    Layout.minimumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                    Layout.maximumWidth: fullRoot.twoColumns ? fullRoot.dividerWidth : 0
+                    Layout.fillHeight: true
+                    z: 1
 
-                    property real pressX: 0
-                    property real pressWidth: 0
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 2
+                        height: Math.min(parent.height, 40)
+                        radius: 1
+                        color: root.tickerColor
+                        // The divider is invisible until the pointer enters its (wider) hit area.
+                        opacity: dividerMouse.containsMouse || dividerMouse.pressed ? 0.9 : 0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
 
-                    onPressed: {
-                        pressX = mapToItem(fullRow, mouse.x, mouse.y).x;
-                        pressWidth = singleColumn.width;
+                    MouseArea {
+                        id: dividerMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.SplitHCursor
+                        preventStealing: true
+
+                        property real pressX: 0
+                        property real pressWidth: 0
+
+                        onPressed: {
+                            pressX = mapToItem(fullRow, mouse.x, mouse.y).x;
+                            pressWidth = singleColumn.width;
+                        }
+                        onPositionChanged: {
+                            if (!pressed) return;
+                            var dx = mapToItem(fullRow, mouse.x, mouse.y).x - pressX;
+                            var minLeft = singleColumn.minimumContentWidth;
+                            var maxLeft = Math.max(minLeft,
+                                fullRow.width - fullRoot.dividerWidth - listColumn.minimumContentWidth);
+                            root.setTwoColumnLeftWidth(Math.max(minLeft,
+                                Math.min(maxLeft, pressWidth + dx)));
+                        }
+                        onReleased: root.saveTwoColumnLeftWidth()
+                        onCanceled: root.saveTwoColumnLeftWidth()
                     }
-                    onPositionChanged: {
-                        if (!pressed) return;
-                        var dx = mapToItem(fullRow, mouse.x, mouse.y).x - pressX;
-                        var minLeft = singleColumn.minimumContentWidth;
-                        var maxLeft = Math.max(minLeft,
-                            fullRow.width - fullRoot.dividerWidth - listColumn.minimumContentWidth);
-                        root.setTwoColumnLeftWidth(Math.max(minLeft,
-                            Math.min(maxLeft, pressWidth + dx)));
-                    }
-                    onReleased: root.saveTwoColumnLeftWidth()
-                    onCanceled: root.saveTwoColumnLeftWidth()
+                }
+
+                MultiStockView {
+                    id: listColumn
+                    visible: root.isMultiMode
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumWidth: listColumn.minimumContentWidth
+                    Layout.minimumHeight: listColumn.minimumContentHeight
+                    rootItem: root
+                    listModel: stockModel
                 }
             }
+        }
+    }
 
-            MultiStockView {
-                id: listColumn
-                visible: root.isMultiMode
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumWidth: listColumn.minimumContentWidth
-                Layout.minimumHeight: listColumn.minimumContentHeight
-                rootItem: root
-                listModel: stockModel
+    // Plasma always draws the frame of the popup it creates for an expanded panel applet.
+    // When the user disables that background, show the same full view in our own popup
+    // with no background instead, so only the two widget cards remain visible.
+    PlasmaCore.Dialog {
+        id: panelPopup
+        objectName: "panelPopup"
+
+        type: PlasmaCore.Dialog.AppletPopup
+        location: Plasmoid.location
+        visible: false
+        visualParent: root.compactRepresentationItem
+        appletInterface: root
+        backgroundHints: PlasmaCore.Dialog.NoBackground
+        hideOnWindowDeactivate: true
+
+        onVisibleChanged: {
+            if (visible) {
+                Qt.callLater(function() { panelPopupFocus.forceActiveFocus(); });
+            } else {
+                root.panelPopupRecentlyClosed = true;
+                panelPopupCloseGuard.restart();
+            }
+        }
+
+        mainItem: FocusScope {
+            id: panelPopupFocus
+            focus: true
+
+            Keys.onEscapePressed: panelPopup.visible = false
+
+            // Mirror the full view's size hints so the dialog sizes itself exactly like
+            // Plasma's standard expanded representation does.
+            Layout.minimumWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
+            Layout.minimumHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
+            Layout.preferredWidth: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumWidth : 0
+            Layout.preferredHeight: panelPopupLoader.item ? panelPopupLoader.item.Layout.minimumHeight : 0
+
+            Loader {
+                id: panelPopupLoader
+                anchors.fill: parent
+                // Do not instantiate a second copy of the full view unless the custom
+                // panel popup is actually in use.
+                active: root.customPanelCard
+                sourceComponent: fullViewComponent
             }
         }
     }

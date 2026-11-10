@@ -53,6 +53,7 @@ Item {
     property int cfg_alternateInterval
     property bool cfg_fixedPanelWidth
     property int cfg_panelWidth
+    property bool cfg_panelPopupBackground
     property bool cfg_formatPrices
     property bool cfg_showExtendedHours
     property bool cfg_keepExtendedAfterClose

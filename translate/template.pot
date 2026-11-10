@@ -488,6 +488,14 @@ msgstr ""
 msgid "Fit the widest value"
 msgstr ""
 
+#: contents/ui/configPanel.qml
+msgid "Popup background:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Use the Plasma background around the panel view"
+msgstr ""
+
 #: contents/ui/configPortfolio.qml
 msgid "Portfolio Mode:"
 msgstr ""

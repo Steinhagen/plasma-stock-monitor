@@ -487,6 +487,14 @@ msgstr "Lățime (pixeli):"
 msgid "Fit the widest value"
 msgstr "Cea mai lată valoare"
 
+#: contents/ui/configPanel.qml
+msgid "Popup background:"
+msgstr "Fundal popup:"
+
+#: contents/ui/configPanel.qml
+msgid "Use the Plasma background around the panel view"
+msgstr "Folosește fundalul Plasma în jurul vizualizării din panou"
+
 #: contents/ui/configPortfolio.qml
 msgid "Portfolio Mode:"
 msgstr "Mod portofoliu:"

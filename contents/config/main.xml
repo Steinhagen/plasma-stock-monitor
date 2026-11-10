@@ -155,6 +155,10 @@
             <default>0</default>
             <min>0</min>
         </entry>
+        <entry name="panelPopupBackground" type="Bool">
+            <label>Draw the Plasma background around the expanded panel view</label>
+            <default>true</default>
+        </entry>
         <entry name="formatPrices" type="Bool">
             <label>Format stock price with commas</label>
             <default>true</default>

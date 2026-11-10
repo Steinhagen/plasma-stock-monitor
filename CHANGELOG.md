@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An option in **Panel view** to show the expanded panel widget without Plasma's popup
+  background, leaving only the widget's cards visible.
+
 ### Changed
 
 - All chart options (style, range, in-chart buttons, hover and axes) now live together
