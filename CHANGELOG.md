@@ -1,0 +1,51 @@
+# Changelog
+
+All notable changes to Plasma Stock Monitor are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased] (1.1)
+
+### Added
+
+- A tooltip on the market status in the chart header, showing how often the widget
+  refreshes and the timestamp of the latest Yahoo Finance quote.
+
+### Fixed
+
+- Keep the last pre-market/after-hours quote when the trading day rolls over, so the
+  "keep extended quote" option also works after a restart between sessions.
+- The 1D chart no longer goes blank when a session starts with a single tick: the line
+  now starts at the previous close until the next candle arrives.
+
+### Documentation
+
+- Added [`ROADMAP.md`](ROADMAP.md) with the issues planned for the next release.
+
+## [1.0] - 2026-11-10
+
+First public release.
+
+### Added
+
+- Single-stock and multi-stock views, including a side-by-side two-column layout with a
+  draggable splitter.
+- Reference-line and candlestick charts with volume, ranges from 1D to Max, optional
+  in-chart range and style buttons, hover details, price scale and time axis.
+- Pre-market and after-hours quotes, market open/closed status, and the last extended
+  quote kept after the close.
+- Portfolio tracking per purchase lot: shares, average cost, purchase date, notes,
+  optional per-lot currency, profit/loss and totals in the portfolio currency.
+- Panel view with price and change, optional alternating price/percentage, auto-cycling
+  through the watchlist and middle-click refresh.
+- Light, dark and Plasma themes, custom gain/loss and text colors, opacity, number
+  formatting and decimal precision.
+- Configurable refresh interval, active-hours-only updates, weekend skipping and a
+  next-update indicator.
+- Import and export of the watchlist, portfolio and settings as JSON.
+- Ki18n localization with a complete Romanian translation.
+- KDE Store release and automatic `.plasmoid` packaging for version tags.
+
+[Unreleased]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.0...HEAD
+[1.0]: https://github.com/Steinhagen/plasma-stock-monitor/releases/tag/v1.0
