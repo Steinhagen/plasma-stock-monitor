@@ -29,6 +29,10 @@
             <label>Comma separated list of tickers</label>
             <default>AAPL, TSLA</default>
         </entry>
+        <entry name="selectedTicker" type="String">
+            <label>Last ticker selected in the multi-stock list</label>
+            <default></default>
+        </entry>
         <entry name="sortAlphabetically" type="Bool">
             <label>Sort Multi-Stock List Alphabetically</label>
             <default>false</default>

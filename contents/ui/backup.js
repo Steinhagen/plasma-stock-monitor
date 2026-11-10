@@ -24,6 +24,7 @@ var DATA_KEYS = [
 var SETTINGS_KEYS = [
     "selectedTheme",
     "twoColumnLeftWidth",
+    "selectedTicker",
     "sortAlphabetically",
     "swapNameAndTicker",
     "showNameAndTicker",
@@ -231,7 +232,7 @@ function validateValue(key, value) {
         return { ok: true, value: value };
     }
 
-    if (key === "ticker") {
+    if (key === "ticker" || key === "selectedTicker") {
         if (typeof value !== "string") return failure("invalidValue", key);
         return { ok: true, value: value.trim().toUpperCase() };
     }

@@ -21,7 +21,9 @@ PlasmoidItem {
     // (both columns share the available width).
     property int twoColumnLeftWidth: Plasmoid.configuration.twoColumnLeftWidth
     property string panelTicker: ""
-    property string manualPanelTickerOverride: ""
+    // Remember the row selected in the multi-stock list, so it is still the default
+    // selection after Plasma or the host restarts.
+    property string manualPanelTickerOverride: Plasmoid.configuration.selectedTicker
     property string multiTickers: Plasmoid.configuration.multiTickers
     property bool sortAlphabetically: Plasmoid.configuration.sortAlphabetically
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
@@ -593,11 +595,20 @@ PlasmoidItem {
     // Select a watchlist row. The list already has the row's quote, so only the chart
     // needs a request; refreshing the whole list here made all rows update in chunks
     // before the selected ticker's chart arrived.
-    function selectTicker(ticker) {
+    function selectTicker(ticker, persist) {
         var clean = ticker ? String(ticker).trim() : "";
         if (clean === "") return;
         root.manualPanelTickerOverride = clean;
         root.panelTicker = clean;
+        // Auto-cycle changes the panel stock every few seconds; persisting those would
+        // rewrite the config constantly. Only explicit user selections are remembered.
+        if (persist !== false) {
+            try {
+                Plasmoid.configuration.selectedTicker = clean;
+            } catch (e) {
+                console.log("Error saving selected ticker: " + e);
+            }
+        }
         root.updatePanelFromRow(clean);
 
         // Use the row that is already in the list so the title, quote, portfolio and
@@ -1868,7 +1879,8 @@ PlasmoidItem {
             }
             var row = stockModel.get((current + 1) % stockModel.count);
             // The panel takes the cached list row; only the chart is fetched.
-            root.selectTicker(row.ticker);
+            // Auto-cycling is not a user selection, so do not persist it.
+            root.selectTicker(row.ticker, false);
         }
     }
 

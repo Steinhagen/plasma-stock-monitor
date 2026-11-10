@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Create the optional custom panel popup only when the no-background option is used,
   so the default configuration does not instantiate it at startup.
 - Allow resizing the expanded panel widget when the Plasma popup background is disabled.
+- Remember the ticker selected in the multi-stock list across restarts, instead of
+  falling back to the first ticker.
 - Fix a QML `priceText` reference error when refreshing the panel widget with the
   middle mouse button.
 
