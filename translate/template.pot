@@ -91,7 +91,7 @@ msgid "Stock Price Text"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
-msgid "Expanded View"
+msgid "Panel popup"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
@@ -100,6 +100,10 @@ msgstr ""
 
 #: contents/ui/configAppearance.qml
 msgid "Use the Plasma background"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop."
 msgstr ""
 
 #: contents/ui/configBackup.qml

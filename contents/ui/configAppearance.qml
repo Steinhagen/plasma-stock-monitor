@@ -126,13 +126,21 @@ Item {
 
             Item {
                 Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: i18n("Expanded View")
+                Kirigami.FormData.label: i18n("Panel popup")
             }
 
             CheckBox {
                 id: popupBackgroundSwitch
                 Kirigami.FormData.label: i18n("Background:")
                 text: i18n("Use the Plasma background")
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                color: Kirigami.Theme.disabledTextColor
             }
 
         }

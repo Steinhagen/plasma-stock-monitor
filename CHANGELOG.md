@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- An option in **Appearance → Expanded View** to show the expanded panel widget without
-  Plasma's popup background, leaving only the widget's cards visible.
+- An option in **Appearance → Panel popup** to show the expanded panel widget without
+  Plasma's popup background, leaving only the widget's cards visible. The option only
+  applies when the widget is expanded from a panel, not on the desktop.
 
 ### Changed
 

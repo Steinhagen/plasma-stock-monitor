@@ -90,8 +90,8 @@ msgid "Stock Price Text"
 msgstr "Textul prețului acțiunii"
 
 #: contents/ui/configAppearance.qml
-msgid "Expanded View"
-msgstr "Vizualizare extinsă"
+msgid "Panel popup"
+msgstr "Popup din panou"
 
 #: contents/ui/configAppearance.qml
 msgid "Background:"
@@ -100,6 +100,10 @@ msgstr "Fundal:"
 #: contents/ui/configAppearance.qml
 msgid "Use the Plasma background"
 msgstr "Folosește fundalul Plasma"
+
+#: contents/ui/configAppearance.qml
+msgid "Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop."
+msgstr "Se aplică doar când widgetul este extins dintr-un panou: bifat afișează fundalul Plasma, debifat doar cardurile. Pe desktop nu are efect."
 
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
@@ -907,6 +911,9 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Expanded View"
+#~ msgstr "Vizualizare extinsă"
 
 #~ msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
 #~ msgid_plural "Refreshes every %1 minutes. Latest Yahoo Finance quote: %2. Quotes may be delayed."
