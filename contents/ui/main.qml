@@ -1097,11 +1097,15 @@ PlasmoidItem {
         return day;
     }
     // True when `day` is the running pre-market, i.e. the session chartDayFor substituted
-    // for the regular one.
+    // for the regular one. The pre period must be non-empty: exchanges without extended
+    // hours (BVB, for example) report an empty pre period that starts at the regular open,
+    // and that must not turn the regular session into a pre-market one.
     function isPreSessionDay(meta, day) {
         var periods = meta ? meta.currentTradingPeriod : null;
-        return !!(day && day.regular && periods && periods.pre
-                  && day.regular.start === periods.pre.start);
+        var pre = periods ? periods.pre : null;
+        return !!(day && day.regular && pre && pre.start < pre.end
+                  && day.regular.start === pre.start
+                  && day.regular.end === pre.end);
     }
     // Pre-market and after-hours closes of `day`, or null when neither has any point.
     function extendedSessionSeries(quotes, timestamps, day) {
