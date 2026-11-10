@@ -156,6 +156,16 @@ Rectangle {
             // True while the market is closed, with or without a kept extended quote.
             property bool rowClosed: rootItem.showExtendedHours
                                      && rootItem.isMarketClosedFor(model.ticker)
+            // The market is in a pre-market/after-hours session but Yahoo has no quote for
+            // it yet (thin extended trading, or the feed has not published it). Say so
+            // instead of leaving the second line empty, which looked like a missing state.
+            property string rowNoQuote: {
+                if (rowRoot.rowExt || !rootItem.showExtendedHours) return "";
+                var status = rootItem.marketStatusFor(model.ticker);
+                if (status === "pre") return i18n("No pre-market quote");
+                if (status === "post") return i18n("No after-hours quote");
+                return "";
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -294,12 +304,17 @@ Rectangle {
 
                                 textFormat: ext ? Text.StyledText : Text.PlainText
                                 // Line 1 already carries the company name when name and ticker are shown together.
-                                text: ext ? extText(width)
-                                          : (rowRoot.rowClosed
-                                             ? i18n("Market closed") + (rootItem.showNameAndTicker ? ""
-                                                 : " · " + (rootItem.swapNameAndTicker ? model.ticker : model.name))
-                                             : (rootItem.showNameAndTicker ? ""
-                                                : (rootItem.swapNameAndTicker ? model.ticker : model.name)))
+                                function plainText() {
+                                    if (rootItem.showNameAndTicker) {
+                                        if (rowRoot.rowClosed) return i18n("Market closed");
+                                        return rowRoot.rowNoQuote;
+                                    }
+                                    var name = rootItem.swapNameAndTicker ? model.ticker : model.name;
+                                    if (rowRoot.rowClosed) return i18n("Market closed") + " · " + name;
+                                    if (rowRoot.rowNoQuote !== "") return rowRoot.rowNoQuote + " · " + name;
+                                    return name;
+                                }
+                                text: ext ? extText(width) : plainText()
                                 color: rootItem.secondaryTextColor
                                 font.pixelSize: 10
                                 elide: Text.ElideRight

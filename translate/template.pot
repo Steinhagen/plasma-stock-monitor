@@ -842,11 +842,11 @@ msgid "After-hours"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
-msgid "No pre-market"
+msgid "No pre-market quote"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
-msgid "No after-hours"
+msgid "No after-hours quote"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml

@@ -846,12 +846,12 @@ msgid "After-hours"
 msgstr "După închidere"
 
 #: contents/ui/SingleStockView.qml
-msgid "No pre-market"
-msgstr "Fără pre-market"
+msgid "No pre-market quote"
+msgstr "Fără cotație pre-market"
 
 #: contents/ui/SingleStockView.qml
-msgid "No after-hours"
-msgstr "Fără after-hours"
+msgid "No after-hours quote"
+msgstr "Fără cotație after-hours"
 
 #: contents/ui/SingleStockView.qml
 msgid "Refreshes every minute. Latest Yahoo Finance quote: %2. Quotes may be delayed."
@@ -886,6 +886,12 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "No pre-market"
+#~ msgstr "Fără pre-market"
+
+#~ msgid "No after-hours"
+#~ msgstr "Fără after-hours"
 
 #~ msgid "Open"
 #~ msgstr "Deschidere"

@@ -17,16 +17,22 @@ Rectangle {
     readonly property var extendedQuote: rootItem.extendedQuote(rootItem.singleTicker)
     readonly property bool hasExtendedQuote: extendedQuote !== undefined && extendedQuote !== null
     readonly property string marketSession: rootItem.marketStatusFor(rootItem.singleTicker)
+    // Instruments without extended-hours trading (indices, for example) still report the
+    // exchange's pre/post windows, but they are effectively closed during them. The list
+    // already uses isMarketClosedFor() for that; the header must agree with it.
+    readonly property bool marketClosed: rootItem.isMarketClosedFor(rootItem.singleTicker)
     readonly property string marketSessionText: {
         switch (marketSession) {
-            case "pre":    return i18nc("@item:market session status", "Pre-market");
+            case "pre":    return marketClosed
+                                  ? i18nc("@item:market session status", "Closed")
+                                  : i18nc("@item:market session status", "Pre-market");
             case "open":   return i18nc("@item:market session status", "Open");
             case "post":
             case "closed": return i18nc("@item:market session status", "Closed");
             default:       return "";
         }
     }
-    readonly property color marketSessionColor: marketSession === "pre"
+    readonly property color marketSessionColor: marketSession === "pre" && !marketClosed
         ? (rootItem.isLightTheme ? "#b47a12" : "#d9a441")
         : (marketSession === "open" ? rootItem.positiveColor : rootItem.secondaryTextColor)
     readonly property string extendedQuoteLabel: {
@@ -38,8 +44,10 @@ Rectangle {
     readonly property string noExtendedNote: {
         if (hasExtendedQuote || !rootItem.showExtendedHours || marketSession === "") return "";
         if (marketSession === "open") return "";
-        if (marketSession === "pre") return i18n("No pre-market");
-        return i18n("No after-hours");
+        // No extended quote can exist for these instruments, so the note would be noise.
+        if (!rootItem.hasPrePostDataFor(rootItem.singleTicker)) return "";
+        if (marketSession === "pre") return i18n("No pre-market quote");
+        return i18n("No after-hours quote");
     }
 
     // Tooltip of the market status in the header. Yahoo Finance does not expose the feed
