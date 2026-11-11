@@ -2220,7 +2220,10 @@ PlasmoidItem {
             spacing: 8
             
             ColumnLayout {
-                spacing: -2
+                // The status tag and the percentage badge share the right edge of the
+                // indicator. Negative spacing made the bottom of the tag/arrow overlap
+                // the top of the badge, so keep a small positive gap between the rows.
+                spacing: 3
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: root.isVerticalPanel
 

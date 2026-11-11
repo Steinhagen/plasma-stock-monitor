@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the system theme, while Light/Dark/System only affect the Application preset.
 - The Appearance page shows **System** for the Plasma preset instead of a stale
   Light/Dark value; the Application color choice is kept for switching back.
+- The panel indicator's market-status tag and percentage badge no longer overlap; the
+  two rows now keep a small positive gap.
 - The chart repaints immediately when the theme or its colors change, instead of
   keeping the old colors until the next quote update.
 - The smoothed price line no longer overshoots or makes loops at sharp dips or across
