@@ -24,6 +24,6 @@ Issues planned for the next releases.
 
 ## Portfolio
 
-- [ ] Separate the global portfolio settings from the ones that only apply
+- [x] Separate the global portfolio settings from the ones that only apply
       when adding a single stock.
-- [ ] Redesign the holdings list: a single flat list is very hard to read.
+- [x] Redesign the holdings list: a single flat list is very hard to read.

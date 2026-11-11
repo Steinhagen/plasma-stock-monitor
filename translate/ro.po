@@ -508,16 +508,154 @@ msgid "Fit the widest value"
 msgstr "Cea mai lată valoare"
 
 #: contents/ui/configPortfolio.qml
-msgid "Portfolio Mode:"
-msgstr "Mod portofoliu:"
+msgid "Enter a ticker and a number of shares greater than zero."
+msgstr "Introdu un simbol și un număr de acțiuni mai mare decât zero."
 
 #: contents/ui/configPortfolio.qml
-msgid "Show profit/loss calculations"
-msgstr "Afișează calculele de profit/pierdere"
+msgid "Some quotes are unavailable."
+msgstr "Unele cotații nu sunt disponibile."
 
 #: contents/ui/configPortfolio.qml
-msgid "Portfolio Currency:"
-msgstr "Moneda portofoliului:"
+msgid "Settings for the whole portfolio"
+msgstr "Setări pentru întregul portofoliu"
+
+#: contents/ui/configPortfolio.qml
+msgid "Applies to every symbol and lot; it does not depend on the selected lot."
+msgstr "Se aplică tuturor simbolurilor și loturilor; nu depinde de lotul selectat."
+
+#: contents/ui/configPortfolio.qml
+msgid "Show gain/loss in the widget"
+msgstr "Arată câștigul/pierderea în widget"
+
+#: contents/ui/configPortfolio.qml
+msgid "Shows the gain/loss summary on the widget's main panel. The lot table always shows values and gains."
+msgstr "Afișează rezumatul câștigului/pierderii în panoul principal al widgetului. Tabelul cu loturi arată întotdeauna valorile și câștigurile."
+
+#: contents/ui/configPortfolio.qml
+msgid "Base currency"
+msgstr "Moneda de bază"
+
+#: contents/ui/configPortfolio.qml
+msgid "About portfolio tracking"
+msgstr "Despre urmărirea portofoliului"
+
+#: contents/ui/configPortfolio.qml
+msgid "Invested"
+msgstr "Investit"
+
+#: contents/ui/configPortfolio.qml
+msgid "Current value"
+msgstr "Valoare curentă"
+
+#: contents/ui/configPortfolio.qml
+msgid "Total gain"
+msgstr "Câștig total"
+
+#: contents/ui/configPortfolio.qml contents/ui/main.qml
+msgid "Today"
+msgstr "Astăzi"
+
+#: contents/ui/configPortfolio.qml
+msgid "Lots"
+msgstr "Loturi"
+
+#: contents/ui/configPortfolio.qml contents/ui/PositionLine.qml
+msgid "%1 lot"
+msgid_plural "%1 lots"
+msgstr[0] "%1 lot"
+msgstr[1] "%1 loturi"
+msgstr[2] "%1 de loturi"
+
+#: contents/ui/configPortfolio.qml
+msgid "%1 share"
+msgid_plural "%1 shares"
+msgstr[0] "%1 acțiune"
+msgstr[1] "%1 acțiuni"
+msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/configPortfolio.qml
+msgid "Add Lot"
+msgstr "Adaugă lot"
+
+#: contents/ui/configPortfolio.qml
+msgid "Refresh quotes"
+msgstr "Reîmprospătează cotațiile"
+
+#: contents/ui/configPortfolio.qml
+msgid "Search symbol or details…"
+msgstr "Caută simbol sau detalii…"
+
+#: contents/ui/configPortfolio.qml
+msgid "Symbol"
+msgstr "Simbol"
+
+#: contents/ui/configPortfolio.qml
+msgid "Click to sort"
+msgstr "Click pentru sortare"
+
+#: contents/ui/configPortfolio.qml
+msgid "Shares"
+msgstr "Acțiuni"
+
+#: contents/ui/configPortfolio.qml
+msgid "Average cost"
+msgstr "Cost mediu"
+
+#: contents/ui/configPortfolio.qml
+msgid "Currency"
+msgstr "Monedă"
+
+#: contents/ui/configPortfolio.qml
+msgid "Date"
+msgstr "Data"
+
+#: contents/ui/configPortfolio.qml contents/ui/PositionLine.qml
+msgid "Value"
+msgstr "Valoare"
+
+#: contents/ui/configPortfolio.qml
+msgid "Gain"
+msgstr "Câștig"
+
+#: contents/ui/configPortfolio.qml
+msgid "Options"
+msgstr "Opțiuni"
+
+#: contents/ui/configPortfolio.qml
+msgid "Gain per share: %1"
+msgstr "Câștig pe acțiune: %1"
+
+#: contents/ui/configPortfolio.qml
+msgid "Quote unavailable."
+msgstr "Cotație indisponibilă."
+
+#: contents/ui/configPortfolio.qml
+msgid "Lot actions"
+msgstr "Acțiuni lot"
+
+#: contents/ui/configPortfolio.qml
+msgid "Edit"
+msgstr "Editează"
+
+#: contents/ui/configPortfolio.qml
+msgid "Remove"
+msgstr "Elimină"
+
+#: contents/ui/configPortfolio.qml
+msgid "No holdings added yet."
+msgstr "Nu ai adăugat încă nicio deținere."
+
+#: contents/ui/configPortfolio.qml
+msgid "No lots match the search."
+msgstr "Niciun lot nu corespunde căutării."
+
+#: contents/ui/configPortfolio.qml
+msgid "Use the Import / Export page to back up or restore the portfolio and watchlist."
+msgstr "Folosește pagina Import / Export pentru a salva sau restaura portofoliul și lista de urmărire."
+
+#: contents/ui/configPortfolio.qml
+msgid "Edit Lot"
+msgstr "Editează lotul"
 
 #: contents/ui/configPortfolio.qml
 msgid "Ticker:"
@@ -543,10 +681,6 @@ msgstr "Monedă:"
 msgid "Purchase Date:"
 msgstr "Data achiziției:"
 
-#: contents/ui/configPortfolio.qml contents/ui/main.qml
-msgid "Today"
-msgstr "Astăzi"
-
 #: contents/ui/configPortfolio.qml
 msgid "Details (optional):"
 msgstr "Detalii (opțional):"
@@ -556,20 +690,12 @@ msgid "e.g., E*TRADE - 8122"
 msgstr "de ex., E*TRADE - 8122"
 
 #: contents/ui/configPortfolio.qml
-msgid "Actions:"
-msgstr "Operațiuni:"
+msgid "Cancel"
+msgstr "Anulează"
 
 #: contents/ui/configPortfolio.qml
 msgid "Save Lot"
 msgstr "Salvează lotul"
-
-#: contents/ui/configPortfolio.qml
-msgid "Add Lot"
-msgstr "Adaugă lot"
-
-#: contents/ui/configPortfolio.qml
-msgid "Cancel"
-msgstr "Anulează"
 
 #: contents/ui/configPortfolio.qml
 msgid "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
@@ -592,35 +718,8 @@ msgid "Exchange rates: updated %1"
 msgstr "Cursuri de schimb: actualizate la %1"
 
 #: contents/ui/configPortfolio.qml
-msgid "Use the Import / Export page to back up or restore the portfolio and watchlist."
-msgstr "Folosește pagina Import / Export pentru a salva sau restaura portofoliul și lista de urmărire."
-
-#: contents/ui/configPortfolio.qml
-msgid "Your Lots"
-msgstr "Loturile tale"
-
-#: contents/ui/configPortfolio.qml
-msgid "No holdings added yet."
-msgstr "Nu ai adăugat încă nicio deținere."
-
-#: contents/ui/configPortfolio.qml
-msgid "%1 share"
-msgid_plural "%1 shares"
-msgstr[0] "%1 acțiune"
-msgstr[1] "%1 acțiuni"
-msgstr[2] "%1 de acțiuni"
-
-#: contents/ui/configPortfolio.qml
-msgid "%1: %2 @ %3 %4"
-msgstr "%1: %2 la %3 %4"
-
-#: contents/ui/configPortfolio.qml
-msgid "Edit"
-msgstr "Editează"
-
-#: contents/ui/configPortfolio.qml
-msgid "Remove"
-msgstr "Elimină"
+msgid "Close"
+msgstr "Închide"
 
 #: contents/ui/configSearch.qml
 msgid "Enter a search term."
@@ -890,23 +989,12 @@ msgid "Updated: %1 • Next: %2"
 msgstr "Actualizat: %1 • Următorul: %2"
 
 #: contents/ui/PositionLine.qml
-msgid "%1 lot"
-msgid_plural "%1 lots"
-msgstr[0] "%1 lot"
-msgstr[1] "%1 loturi"
-msgstr[2] "%1 de loturi"
-
-#: contents/ui/PositionLine.qml
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 
 #: contents/ui/PositionLine.qml
 msgid "%1 @ %2"
 msgstr "%1 la %2"
-
-#: contents/ui/PositionLine.qml
-msgid "Value"
-msgstr "Valoare"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
@@ -983,6 +1071,39 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "Actions"
+#~ msgstr "Operațiuni"
+
+#~ msgid "Show profit/loss calculations"
+#~ msgstr "Afișează calculele de profit/pierdere"
+
+#~ msgid "Details"
+#~ msgstr "Detalii"
+
+#~ msgid "Add first lot"
+#~ msgstr "Adaugă primul lot"
+
+#~ msgid "all lots"
+#~ msgstr "toate loturile"
+
+#~ msgid "Total cost"
+#~ msgstr "Cost total"
+
+#~ msgid "Portfolio Mode:"
+#~ msgstr "Mod portofoliu:"
+
+#~ msgid "Portfolio Currency:"
+#~ msgstr "Moneda portofoliului:"
+
+#~ msgid "Actions:"
+#~ msgstr "Operațiuni:"
+
+#~ msgid "Your Lots"
+#~ msgstr "Loturile tale"
+
+#~ msgid "%1: %2 @ %3 %4"
+#~ msgstr "%1: %2 la %3 %4"
 
 #~ msgid "Standard (recommended)"
 #~ msgstr "Standard (recomandat)"

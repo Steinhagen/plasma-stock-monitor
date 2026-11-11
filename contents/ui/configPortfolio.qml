@@ -17,6 +17,31 @@ Item {
     // bought at different prices on different dates). The widget shows each lot's own
     // profit/loss separately rather than blending them into one average.
     property var portfolioList: []
+    // Lots after applying the search field. `_index` points back into portfolioList so
+    // Edit/Remove still address the original lot.
+    property var filteredLots: []
+    property string lotSearch: ""
+    property string formError: ""
+    property var quoteData: ({})
+    property bool quotesLoading: false
+    property int quoteRequestsPending: 0
+    property int quoteRequestId: 0
+    property string quotesError: ""
+    property string lotSortKey: ""
+    property bool lotSortAscending: true
+
+    readonly property var totals: page.portfolioTotals()
+    readonly property bool compactLayout: page.width < 1000
+    readonly property real tableFixedWidth: 45 + 65 + 45 + 100 + 70 + 100 + 45
+    readonly property real tableSymbolWidth: Math.max(60, pageScroll.width
+        - tableFixedWidth - Kirigami.Units.smallSpacing * 9 - Kirigami.Units.gridUnit * 3)
+
+    readonly property int totalShares: {
+        var total = 0;
+        for (var i = 0; i < page.portfolioList.length; i++)
+            total += Number(page.portfolioList[i].shares) || 0;
+        return total;
+    }
 
     // The portfolio-currency picker is filled after the config value is known, so the
     // index changes that happen while it is being initialised must not write the config.
@@ -41,6 +66,7 @@ Item {
         page.refreshPortfolioList();
         portfolioCurrencyCombo.currentIndex = page.currencyIndex(page.cfg_portfolioCurrency);
         page.currencyPickerReady = true;
+        page.refreshQuotes();
     }
 
     // If the setting is changed from outside the picker (for example when the config
@@ -52,6 +78,13 @@ Item {
                 portfolioCurrencyCombo.currentIndex = idx;
         }
     }
+
+    onCfg_portfolioDataChanged: {
+        page.refreshPortfolioList();
+        page.refreshQuotes();
+    }
+
+    onQuoteDataChanged: page.updateFilteredLots()
 
     function safeParsePortfolio(data) {
         if (!data) return [];
@@ -88,6 +121,25 @@ Item {
 
     function refreshPortfolioList() {
         page.portfolioList = page.safeParsePortfolio(page.cfg_portfolioData);
+        page.updateFilteredLots();
+    }
+
+    function updateFilteredLots() {
+        var query = page.lotSearch.trim().toLowerCase();
+        var result = [];
+        for (var i = 0; i < page.portfolioList.length; i++) {
+            var lot = page.portfolioList[i];
+            if (query !== "") {
+                var haystack = (String(lot.ticker || "") + " " + String(lot.details || "")
+                                + " " + String(lot.currency || "")).toLowerCase();
+                if (haystack.indexOf(query) < 0) continue;
+            }
+            var copy = Object.assign({}, lot);
+            copy._index = i;
+            result.push(copy);
+        }
+        if (page.lotSortKey !== "") result.sort(page.compareLots);
+        page.filteredLots = result;
     }
 
     // Position in portfolioList of the lot currently loaded into the form for editing,
@@ -111,11 +163,22 @@ Item {
         portfolioDetailsField.text = "";
         page.purchaseDate = new Date();
         page.editingIndex = -1;
+        page.formError = "";
     }
 
-    // Adds a new lot, or, while a lot is being edited, saves the changes to that lot.
+    // Opens the empty add-lot dialog.
+    function openAddLot() {
+        page.clearForm();
+        page.formError = "";
+        lotDialog.open();
+    }
+
     function addLot() {
-        if (portfolioTickerField.text.trim() === "" || portfolioSharesSpin.value <= 0) return;
+        if (portfolioTickerField.text.trim() === "" || portfolioSharesSpin.value <= 0) {
+            page.formError = i18n("Enter a ticker and a number of shares greater than zero.");
+            return;
+        }
+        page.formError = "";
         var portfolio = page.safeParsePortfolio(page.cfg_portfolioData);
         var lot = {
             ticker: portfolioTickerField.text.trim().toUpperCase(),
@@ -135,6 +198,7 @@ Item {
         page.cfg_portfolioData = JSON.stringify(portfolio);
         page.refreshPortfolioList();
         page.clearForm();
+        lotDialog.close();
     }
 
     // Loads a lot (by its position in portfolioList) into the form so it can be changed.
@@ -148,6 +212,8 @@ Item {
         page.purchaseDate = lot.addedDate ? new Date(lot.addedDate) : new Date();
         portfolioDetailsField.text = lot.details || "";
         page.editingIndex = index;
+        page.formError = "";
+        lotDialog.open();
     }
 
     // Removes a single lot by its position in portfolioList (not by ticker, since a ticker
@@ -162,41 +228,911 @@ Item {
         else if (page.editingIndex > index) page.editingIndex--;
     }
 
+    // Quotes for the lots. The configuration page is not the applet's data model, so it
+    // fetches the current price for each unique ticker to show the value and the gain.
+    function refreshQuotes() {
+        var seen = {};
+        var tickers = [];
+        for (var i = 0; i < page.portfolioList.length; i++) {
+            var ticker = String(page.portfolioList[i].ticker || "").trim().toUpperCase();
+            if (ticker !== "" && !seen[ticker]) {
+                seen[ticker] = true;
+                tickers.push(ticker);
+            }
+        }
+
+        page.quoteRequestId++;
+        page.quotesError = "";
+        page.quoteRequestsPending = tickers.length;
+        page.quotesLoading = tickers.length > 0;
+        if (tickers.length === 0) return;
+
+        for (var j = 0; j < tickers.length; j++)
+            page.fetchQuote(tickers[j], page.quoteRequestId);
+    }
+
+    function fetchQuote(ticker, requestId) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            if (requestId !== page.quoteRequestId) return;
+
+            if (xhr.status === 200) {
+                try {
+                    var result = JSON.parse(xhr.responseText).chart.result[0];
+                    var meta = result.meta;
+                    var price = Number(meta.regularMarketPrice);
+                    if (!(price > 0)) throw new Error("no price");
+                    var copy = Object.assign({}, page.quoteData);
+                    copy[ticker] = {
+                        price: price,
+                        currency: meta.currency || "",
+                        previousClose: Number(meta.chartPreviousClose) || Number(meta.previousClose) || 0,
+                        time: Number(meta.regularMarketTime) || 0
+                    };
+                    page.quoteData = copy;
+                } catch (e) {
+                    page.quotesError = i18n("Some quotes are unavailable.");
+                }
+            } else {
+                page.quotesError = i18n("Some quotes are unavailable.");
+            }
+
+            page.quoteRequestsPending--;
+            if (page.quoteRequestsPending <= 0) page.quotesLoading = false;
+        };
+
+        try {
+            xhr.open("GET", "https://query1.finance.yahoo.com/v8/finance/chart/"
+                     + encodeURIComponent(ticker) + "?range=1d&interval=1d");
+            xhr.send();
+        } catch (e) {
+            page.quotesError = i18n("Some quotes are unavailable.");
+            page.quoteRequestsPending--;
+            if (page.quoteRequestsPending <= 0) page.quotesLoading = false;
+        }
+    }
+
+    function quoteFor(ticker) {
+        return page.quoteData[String(ticker || "").trim().toUpperCase()] || null;
+    }
+
+    function convertMoney(amount, from, to) {
+        if (typeof plasmoid === "undefined" || !plasmoid.configuration) return null;
+        try {
+            var cached = JSON.parse(plasmoid.configuration.exchangeRates || "{}");
+            return Currency.convert(amount, from, to, (cached && cached.rates) ? cached.rates : ({}));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Returns the current value and gain for one lot in that lot's own currency.
+    function lotMarketData(lot) {
+        var quote = page.quoteFor(lot.ticker);
+        if (!quote || !(quote.price > 0)) return null;
+
+        var lotCurrency = Currency.major(lot.currency) || "USD";
+        var quoteCurrency = Currency.major(quote.currency);
+        var price = quote.price * Currency.minorFactor(quote.currency);
+        if (quoteCurrency !== "" && quoteCurrency !== lotCurrency) {
+            price = page.convertMoney(price, quoteCurrency, lotCurrency);
+            if (price === null) return null;
+        }
+
+        var shares = Number(lot.shares) || 0;
+        var average = Number(lot.averageCost) || 0;
+        var cost = average * shares;
+        var value = price * shares;
+        var gain = (price - average) * shares;
+
+        var previousClose = Number(quote.previousClose) || 0;
+        var previousPrice = previousClose > 0 ? previousClose * Currency.minorFactor(quote.currency) : null;
+        if (previousPrice !== null && quoteCurrency !== "" && quoteCurrency !== lotCurrency)
+            previousPrice = page.convertMoney(previousPrice, quoteCurrency, lotCurrency);
+        var dayGain = (previousPrice !== null && previousPrice > 0)
+                      ? (price - previousPrice) * shares : null;
+        var dayPercent = (dayGain !== null && previousPrice > 0)
+                         ? (dayGain / (previousPrice * shares)) * 100 : 0;
+
+        return {
+            price: price,
+            value: value,
+            gain: gain,
+            percent: cost > 0 ? (gain / cost) * 100 : 0,
+            perShare: price - average,
+            dayGain: dayGain,
+            dayPercent: dayPercent,
+            currency: lotCurrency
+        };
+    }
+
+    function moneyText(currency, amount) {
+        return Currency.symbol(currency) + Number(amount).toFixed(2);
+    }
+
+    function lotValueText(lot) {
+        var market = page.lotMarketData(lot);
+        return market ? page.moneyText(market.currency, market.value) : "—";
+    }
+
+    function lotGainText(lot) {
+        var market = page.lotMarketData(lot);
+        if (!market) return "—";
+        return (market.gain >= 0 ? "+" : "-")
+               + page.moneyText(market.currency, Math.abs(market.gain));
+    }
+
+    function lotGainPercentText(lot) {
+        var market = page.lotMarketData(lot);
+        if (!market) return "";
+        return (market.percent >= 0 ? "+" : "") + Number(market.percent).toFixed(2) + "%";
+    }
+
+
+
+    function sortIndicator(key) {
+        return page.lotSortKey === key ? (page.lotSortAscending ? " ▲" : " ▼") : "";
+    }
+
+    function sortValue(lot, key) {
+        if (key === "symbol") return String(lot.ticker || "").toLowerCase();
+        if (key === "shares") return Number(lot.shares) || 0;
+        if (key === "averageCost") return Number(lot.averageCost) || 0;
+        if (key === "currency") return String(lot.currency || "USD");
+        if (key === "date") {
+            var time = Date.parse(String(lot.addedDate || ""));
+            return isNaN(time) ? null : time;
+        }
+        var market = page.lotMarketData(lot);
+        if (!market) return null;
+        return key === "value" ? market.value : market.gain;
+    }
+
+    function compareLots(a, b) {
+        var av = page.sortValue(a, page.lotSortKey);
+        var bv = page.sortValue(b, page.lotSortKey);
+        if (av === null && bv === null) return 0;
+        if (av === null) return 1;
+        if (bv === null) return -1;
+        var result = (typeof av === "string") ? av.localeCompare(bv) : av - bv;
+        return page.lotSortAscending ? result : -result;
+    }
+
+    function toggleSort(key) {
+        if (page.lotSortKey === key) page.lotSortAscending = !page.lotSortAscending;
+        else {
+            page.lotSortKey = key;
+            page.lotSortAscending = true;
+        }
+        page.updateFilteredLots();
+    }
+
+    // Totals for the summary line, in the configured portfolio currency.
+    function portfolioTotals() {
+        var target = Currency.major(page.cfg_portfolioCurrency) || "USD";
+        var result = {
+            currency: target,
+            cost: 0,
+            value: 0,
+            gain: 0,
+            gainPercent: 0,
+            day: 0,
+            dayPercent: 0
+        };
+        if (page.portfolioList.length === 0) return result;
+
+        var cost = 0, value = 0, day = 0;
+        var costKnown = true, valueKnown = true, dayKnown = true;
+        for (var i = 0; i < page.portfolioList.length; i++) {
+            var lot = page.portfolioList[i];
+            var lotCurrency = Currency.major(lot.currency) || "USD";
+            var shares = Number(lot.shares) || 0;
+            var average = Number(lot.averageCost) || 0;
+
+            var convertedCost = page.convertMoney(average * shares, lotCurrency, target);
+            if (convertedCost === null) costKnown = false;
+            else cost += convertedCost;
+
+            var market = page.lotMarketData(lot);
+            if (!market) {
+                valueKnown = false;
+                dayKnown = false;
+                continue;
+            }
+
+            var convertedValue = page.convertMoney(market.value, market.currency, target);
+            if (convertedValue === null) valueKnown = false;
+            else value += convertedValue;
+
+            if (market.dayGain === null) {
+                dayKnown = false;
+            } else {
+                var convertedDay = page.convertMoney(market.dayGain, market.currency, target);
+                if (convertedDay === null) dayKnown = false;
+                else day += convertedDay;
+            }
+        }
+
+        result.cost = costKnown ? cost : null;
+        result.value = valueKnown ? value : null;
+        result.gain = (costKnown && valueKnown) ? value - cost : null;
+        result.gainPercent = (result.gain !== null && cost > 0) ? ((value - cost) / cost) * 100 : 0;
+        result.day = dayKnown ? day : null;
+        result.dayPercent = (result.day !== null && valueKnown && (value - day) > 0)
+                            ? (day / (value - day)) * 100 : 0;
+        return result;
+    }
+
+    function summaryMoney(value) {
+        return value === null ? "—" : page.moneyText(page.totals.currency, value);
+    }
+
+    function summaryPercent(value) {
+        if (value === null) return "";
+        return (value >= 0 ? "+" : "") + Number(value).toFixed(2) + "%";
+    }
+    function lotSubline(lot) {
+        var parts = [];
+        if (lot.details) parts.push(String(lot.details));
+        var date = page.formatLotDate(lot.addedDate);
+        if (date !== "") parts.push(date);
+        return parts.join(" · ");
+    }
+
+    function formatLotDate(value) {
+        if (!value) return "";
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return "";
+        return Qt.formatDate(d, "dd MMM yyyy");
+    }
+
     ScrollView {
+        id: pageScroll
         anchors.fill: parent
         anchors.margins: 20
-        contentWidth: availableWidth
+        contentWidth: pageScroll.width
         clip: true
 
         ColumnLayout {
-            width: parent.availableWidth
+            width: pageScroll.width
+            spacing: Kirigami.Units.largeSpacing
+
+            // ------------------------------------------------------------------
+            // Portfolio-wide settings. Kept inline so changing the base currency
+            // or the profit/loss mode takes one click, with the scope spelled out.
+            // ------------------------------------------------------------------
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: scopeRow.implicitHeight + Kirigami.Units.largeSpacing * 2
+                color: Kirigami.Theme.alternateBackgroundColor
+                radius: Kirigami.Units.smallSpacing
+                border.width: 1
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                      Kirigami.Theme.textColor.b, 0.16)
+
+                GridLayout {
+                    id: scopeRow
+                    anchors.fill: parent
+                    anchors.margins: Kirigami.Units.largeSpacing
+                    columns: page.compactLayout ? 1 : 2
+                    columnSpacing: Kirigami.Units.largeSpacing
+                    rowSpacing: Kirigami.Units.smallSpacing
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: 2
+
+                        Label {
+                            text: i18n("Settings for the whole portfolio")
+                            font.bold: true
+                            font.pixelSize: Math.round(Kirigami.Theme.defaultFont.pixelSize * 1.1)
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: i18n("Applies to every symbol and lot; it does not depend on the selected lot.")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 10
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    RowLayout {
+                        spacing: Kirigami.Units.smallSpacing
+                        Layout.alignment: page.compactLayout
+                                          ? (Qt.AlignLeft | Qt.AlignVCenter)
+                                          : (Qt.AlignRight | Qt.AlignVCenter)
+
+                        CheckBox {
+                            id: portfolioModeSwitch
+                            text: i18n("Show gain/loss in the widget")
+                            Layout.alignment: Qt.AlignVCenter
+                            ToolTip.visible: hovered
+                            ToolTip.text: i18n("Shows the gain/loss summary on the widget's main panel. The lot table always shows values and gains.")
+                        }
+
+                        Label {
+                            text: i18n("Base currency")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 10
+                        }
+
+                        ComboBox {
+                            id: portfolioCurrencyCombo
+                            model: Currency.LABELS
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * (page.compactLayout ? 12 : 18)
+                            onCurrentIndexChanged: {
+                                if (page.currencyPickerReady && currentIndex >= 0)
+                                    page.cfg_portfolioCurrency = page.currencyCodeAt(currentIndex);
+                            }
+                        }
+
+                        ToolButton {
+                            icon.name: "help-about"
+                            Layout.alignment: Qt.AlignVCenter
+                            onClicked: helpDialog.open()
+                            ToolTip.visible: hovered
+                            ToolTip.text: i18n("About portfolio tracking")
+                        }
+                    }
+                }
+            }
+            // Overall portfolio summary: the same figures the widget leads with, in the
+            // configured base currency, including today's move.
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: totalsRow.implicitHeight + Kirigami.Units.largeSpacing * 2
+                color: Kirigami.Theme.alternateBackgroundColor
+                radius: Kirigami.Units.smallSpacing
+                border.width: 1
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                      Kirigami.Theme.textColor.b, 0.16)
+
+                GridLayout {
+                    id: totalsRow
+                    anchors.fill: parent
+                    anchors.margins: Kirigami.Units.largeSpacing
+                    columns: page.compactLayout ? 2 : 4
+                    columnSpacing: Kirigami.Units.largeSpacing
+                    rowSpacing: Kirigami.Units.smallSpacing
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Label {
+                            text: i18n("Invested")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 9
+                        }
+                        Label {
+                            text: page.summaryMoney(page.totals.cost)
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Label {
+                            text: i18n("Current value")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 9
+                        }
+                        Label {
+                            text: page.summaryMoney(page.totals.value)
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        Label {
+                            text: i18n("Total gain")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 9
+                        }
+                        Label {
+                            text: page.summaryMoney(page.totals.gain)
+                            color: page.totals.gain === null
+                                   ? Kirigami.Theme.disabledTextColor
+                                   : (page.totals.gain >= 0 ? Kirigami.Theme.positiveTextColor
+                                                            : Kirigami.Theme.negativeTextColor)
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                        Label {
+                            text: page.summaryPercent(page.totals.gainPercent)
+                            visible: page.totals.gain !== null
+                            color: page.totals.gain !== null && page.totals.gain >= 0
+                                   ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
+                            font.pixelSize: 9
+                            opacity: 0.8
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+                        Label {
+                            text: i18n("Today")
+                            color: Kirigami.Theme.disabledTextColor
+                            font.pixelSize: 9
+                        }
+                        Label {
+                            text: page.summaryMoney(page.totals.day)
+                            color: page.totals.day === null
+                                   ? Kirigami.Theme.disabledTextColor
+                                   : (page.totals.day >= 0 ? Kirigami.Theme.positiveTextColor
+                                                           : Kirigami.Theme.negativeTextColor)
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                        Label {
+                            text: page.summaryPercent(page.totals.dayPercent)
+                            visible: page.totals.day !== null
+                            color: page.totals.day !== null && page.totals.day >= 0
+                                   ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
+                            font.pixelSize: 9
+                            opacity: 0.8
+                        }
+                    }
+                }
+            }
+
+            // Lots: title, Add, refresh and search on one row. The search field takes
+            // the remaining width, so it cannot push the primary action out.
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.maximumWidth: pageScroll.width
+                spacing: Kirigami.Units.smallSpacing
+
+                ColumnLayout {
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 9
+                    Layout.minimumWidth: 0
+                    spacing: 1
+
+                    Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: i18n("Lots")
+                        font.bold: true
+                        font.pixelSize: Math.round(Kirigami.Theme.defaultFont.pixelSize * 1.1)
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: i18np("%1 lot", "%1 lots", page.portfolioList.length)
+                              + " · " + i18np("%1 share", "%1 shares", page.totalShares)
+                        color: Kirigami.Theme.disabledTextColor
+                        font.pixelSize: 10
+                    }
+                }
+
+                Button {
+                    text: i18n("Add Lot")
+                    icon.name: "list-add"
+                    highlighted: true
+                    onClicked: page.openAddLot()
+                }
+
+                ToolButton {
+                    icon.name: "view-refresh"
+                    enabled: !page.quotesLoading
+                    onClicked: page.refreshQuotes()
+                    ToolTip.visible: hovered
+                    ToolTip.text: i18n("Refresh quotes")
+                }
+
+                TextField {
+                    id: lotSearchField
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 80
+                    placeholderText: i18n("Search symbol or details…")
+                    onTextChanged: {
+                        page.lotSearch = text;
+                        page.updateFilteredLots();
+                    }
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: tableColumn.implicitHeight
+                color: Kirigami.Theme.alternateBackgroundColor
+                radius: Kirigami.Units.smallSpacing
+                border.width: 1
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                      Kirigami.Theme.textColor.b, 0.16)
+
+                ColumnLayout {
+                    id: tableColumn
+                    width: parent.width
+                    spacing: 0
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.rightMargin: Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Item {
+                            Layout.preferredWidth: page.tableSymbolWidth
+                            Layout.minimumWidth: page.tableSymbolWidth
+                            Layout.maximumWidth: page.tableSymbolWidth
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Symbol") + page.sortIndicator("symbol")
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("symbol")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 45
+                            Layout.minimumWidth: 45
+                            Layout.maximumWidth: 45
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Shares") + page.sortIndicator("shares")
+                                horizontalAlignment: Text.AlignRight
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("shares")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 65
+                            Layout.minimumWidth: 65
+                            Layout.maximumWidth: 65
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Average cost") + page.sortIndicator("averageCost")
+                                horizontalAlignment: Text.AlignRight
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("averageCost")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 45
+                            Layout.minimumWidth: 45
+                            Layout.maximumWidth: 45
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Currency") + page.sortIndicator("currency")
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("currency")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 100
+                            Layout.minimumWidth: 100
+                            Layout.maximumWidth: 100
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Date") + page.sortIndicator("date")
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("date")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 70
+                            Layout.minimumWidth: 70
+                            Layout.maximumWidth: 70
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Value") + page.sortIndicator("value")
+                                horizontalAlignment: Text.AlignRight
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("value")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 100
+                            Layout.minimumWidth: 100
+                            Layout.maximumWidth: 100
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Gain") + page.sortIndicator("gain")
+                                horizontalAlignment: Text.AlignRight
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.toggleSort("gain")
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: i18n("Click to sort")
+                            }
+                        }
+                        Item {
+                            Layout.preferredWidth: 45
+                            Layout.minimumWidth: 45
+                            Layout.maximumWidth: 45
+                            Layout.preferredHeight: 18
+                            Label {
+                                anchors.fill: parent
+                                text: i18n("Options")
+                                horizontalAlignment: Text.AlignHCenter
+                                font.pixelSize: 9
+                                font.bold: true
+                                opacity: 0.6
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                       Kirigami.Theme.textColor.b, 0.14)
+                    }
+
+                    Repeater {
+                        model: page.filteredLots
+
+                        delegate: ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            property var market: page.lotMarketData(modelData)
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.leftMargin: Kirigami.Units.smallSpacing
+                                Layout.rightMargin: Kirigami.Units.smallSpacing
+                                Layout.topMargin: Kirigami.Units.smallSpacing
+                                Layout.bottomMargin: Kirigami.Units.smallSpacing
+                                spacing: Kirigami.Units.smallSpacing
+
+                                ColumnLayout {
+                                    Layout.preferredWidth: page.tableSymbolWidth
+                                    Layout.minimumWidth: page.tableSymbolWidth
+                                    Layout.maximumWidth: page.tableSymbolWidth
+                                    spacing: 0
+
+                                    Label {
+                                        text: modelData.ticker || ""
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                    }
+                                    Label {
+                                        visible: text !== ""
+                                        text: modelData.details || ""
+                                        color: Kirigami.Theme.disabledTextColor
+                                        font.pixelSize: 9
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                Label {
+                                    text: String(Number(modelData.shares) || 0)
+                                    Layout.preferredWidth: 45
+                                    Layout.minimumWidth: 45
+                                    Layout.maximumWidth: 45
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideLeft
+                                }
+                                Label {
+                                    text: Number(modelData.averageCost || 0).toFixed(2)
+                                    Layout.preferredWidth: 65
+                                    Layout.minimumWidth: 65
+                                    Layout.maximumWidth: 65
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideLeft
+                                }
+                                Label {
+                                    text: modelData.currency || "USD"
+                                    Layout.preferredWidth: 45
+                                    Layout.minimumWidth: 45
+                                    Layout.maximumWidth: 45
+                                    elide: Text.ElideRight
+                                }
+                                Label {
+                                    text: page.formatLotDate(modelData.addedDate)
+                                    Layout.preferredWidth: 100
+                                    Layout.minimumWidth: 100
+                                    Layout.maximumWidth: 100
+                                    elide: Text.ElideRight
+                                }
+                                Label {
+                                    text: page.lotValueText(modelData)
+                                    Layout.preferredWidth: 70
+                                    Layout.minimumWidth: 70
+                                    Layout.maximumWidth: 70
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideLeft
+                                    color: market ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                                }
+                                ColumnLayout {
+                                    Layout.preferredWidth: 100
+                                    Layout.minimumWidth: 100
+                                    Layout.maximumWidth: 100
+                                    spacing: 0
+
+                                    HoverHandler { id: gainHover }
+                                    ToolTip.visible: gainHover.hovered
+                                    ToolTip.text: market
+                                                  ? i18n("Gain per share: %1",
+                                                         page.moneyText(market.currency, market.perShare))
+                                                  : i18n("Quote unavailable.")
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: page.lotGainText(modelData)
+                                        color: market
+                                               ? (market.gain >= 0 ? Kirigami.Theme.positiveTextColor
+                                                                   : Kirigami.Theme.negativeTextColor)
+                                               : Kirigami.Theme.disabledTextColor
+                                        horizontalAlignment: Text.AlignRight
+                                        font.bold: true
+                                        elide: Text.ElideLeft
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        visible: market !== null
+                                        text: page.lotGainPercentText(modelData)
+                                        color: market
+                                               ? (market.gain >= 0 ? Kirigami.Theme.positiveTextColor
+                                                                   : Kirigami.Theme.negativeTextColor)
+                                               : Kirigami.Theme.disabledTextColor
+                                        horizontalAlignment: Text.AlignRight
+                                        font.pixelSize: 9
+                                        opacity: 0.8
+                                        elide: Text.ElideLeft
+                                    }
+                                }
+                                ToolButton {
+                                    id: rowActionButton
+                                    text: "⋮"
+                                    Layout.preferredWidth: 45
+                                    Layout.minimumWidth: 45
+                                    Layout.maximumWidth: 45
+                                    onClicked: rowMenu.popup()
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: i18n("Lot actions")
+
+                                    Menu {
+                                        id: rowMenu
+                                        MenuItem {
+                                            text: i18n("Edit")
+                                            onTriggered: page.editLot(modelData._index)
+                                        }
+                                        MenuItem {
+                                            text: i18n("Remove")
+                                            onTriggered: page.removeLot(modelData._index)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                                color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                               Kirigami.Theme.textColor.b, 0.09)
+                            }
+                        }
+                    }
+                }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: page.portfolioList.length === 0
+                spacing: Kirigami.Units.smallSpacing
+
+                Label {
+                    text: i18n("No holdings added yet.")
+                    color: Kirigami.Theme.disabledTextColor
+                    Layout.alignment: Qt.AlignHCenter
+                }
+            }
+
+            Label {
+                Layout.fillWidth: true
+                visible: page.portfolioList.length > 0 && page.filteredLots.length === 0
+                text: i18n("No lots match the search.")
+                color: Kirigami.Theme.disabledTextColor
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("Use the Import / Export page to back up or restore the portfolio and watchlist.")
+                color: Kirigami.Theme.disabledTextColor
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Add / edit lot dialog. The table stays the primary surface.
+    // ----------------------------------------------------------------------
+    Dialog {
+        id: lotDialog
+        title: page.editingIndex >= 0 ? i18n("Edit Lot") : i18n("Add Lot")
+        modal: true
+        width: Math.max(360, Math.min(540, page.width - Kirigami.Units.largeSpacing * 2))
+        closePolicy: Popup.CloseOnEscape
+        onClosed: page.clearForm()
+
+        contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
 
             Kirigami.FormLayout {
                 Layout.fillWidth: true
 
-                CheckBox {
-                    id: portfolioModeSwitch
-                    Kirigami.FormData.label: i18n("Portfolio Mode:")
-                    text: i18n("Show profit/loss calculations")
-                }
-
-                ComboBox {
-                    id: portfolioCurrencyCombo
-                    Kirigami.FormData.label: i18n("Portfolio Currency:")
-                    model: Currency.LABELS
-                    onCurrentIndexChanged: {
-                        if (page.currencyPickerReady && currentIndex >= 0)
-                            page.cfg_portfolioCurrency = page.currencyCodeAt(currentIndex);
-                    }
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-                }
-
                 TextField {
                     id: portfolioTickerField
                     Kirigami.FormData.label: i18n("Ticker:")
                     placeholderText: i18n("e.g., AAPL")
-                    Layout.preferredWidth: 120
+                    Layout.fillWidth: true
                 }
 
                 SpinBox {
@@ -211,19 +1147,15 @@ Item {
                     id: portfolioCostField
                     Kirigami.FormData.label: i18n("Average Cost:")
                     placeholderText: "0.00"
-                    // Plain digits + a single "." or "," decimal separator. Deliberately not a
-                    // DoubleValidator: on locales where "," is the decimal separator (e.g. es_AR),
-                    // DoubleValidator treats "." as a thousands separator and rewrites the field
-                    // into locale-formatted scientific notation (e.g. "50.21" -> "5,02E+03") on
-                    // focus loss, which then gets mis-parsed. See page.parseLocaleNumber().
                     validator: RegularExpressionValidator { regularExpression: /^\d*[.,]?\d*$/ }
+                    Layout.fillWidth: true
                 }
 
                 ComboBox {
                     id: lotCurrencyCombo
                     Kirigami.FormData.label: i18n("Currency:")
                     model: Currency.LABELS
-                    currentIndex: 0 // USD, the default for a new lot
+                    currentIndex: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                 }
 
@@ -245,15 +1177,12 @@ Item {
                         padding: Kirigami.Units.largeSpacing
                         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-                        // Always open on the month of the currently selected date.
                         onAboutToShow: {
                             shownMonth = page.purchaseDate.getMonth();
                             shownYear = page.purchaseDate.getFullYear();
                             syncHeader();
                         }
 
-                        // Keeps the month list and year field in step with the shown month, since
-                        // interacting with them can detach their bindings.
                         function syncHeader() {
                             monthCombo.currentIndex = shownMonth;
                             yearSpin.value = shownYear;
@@ -281,8 +1210,6 @@ Item {
                                     icon.name: "go-previous"
                                     onClicked: datePopup.shiftMonth(-1)
                                 }
-                                // Jump straight to any month and year: pick the month from the list and
-                                // type (or step) the year instead of paging through every month.
                                 ComboBox {
                                     id: monthCombo
                                     Layout.fillWidth: true
@@ -296,7 +1223,6 @@ Item {
                                     to: 2100
                                     editable: true
                                     value: datePopup.shownYear
-                                    // Plain digits: the default text would add a locale thousands separator.
                                     textFromValue: (v) => String(v)
                                     valueFromText: (t) => parseInt(t) || datePopup.shownYear
                                     onValueModified: datePopup.shownYear = value
@@ -327,7 +1253,6 @@ Item {
                                 year: datePopup.shownYear
                                 locale: Qt.locale()
                                 Layout.alignment: Qt.AlignHCenter
-                                // A month never needs more than six week rows.
                                 Layout.preferredWidth: datePopup.cellSize * 7
                                 Layout.preferredHeight: datePopup.cellSize * 0.8 * 6
 
@@ -338,7 +1263,6 @@ Item {
                                     text: model.day
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
-                                    // Days of the previous/next month are dimmed.
                                     opacity: model.month === dateGrid.month ? 1.0 : 0.3
                                     font.bold: isSelected || model.today
                                     color: isSelected ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
@@ -368,126 +1292,100 @@ Item {
                     Kirigami.FormData.label: i18n("Details (optional):")
                     placeholderText: i18n("e.g., E*TRADE - 8122")
                     Layout.fillWidth: true
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 20
-                }
-
-                RowLayout {
-                    spacing: Kirigami.Units.smallSpacing
-                    Kirigami.FormData.label: i18n("Actions:")
-
-                    Button {
-                        text: page.editingIndex >= 0 ? i18n("Save Lot") : i18n("Add Lot")
-                        onClicked: page.addLot()
-                    }
-
-                    Button {
-                        text: i18n("Cancel")
-                        visible: page.editingIndex >= 0
-                        onClicked: page.clearForm()
-                    }
-
-                }
-
-                Label {
-                    text: i18n("Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one.")
-                    font.pixelSize: 10
-                    font.italic: true
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 300
-                }
-
-                Label {
-                    text: i18n("The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR).")
-                    font.pixelSize: 10
-                    font.italic: true
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 300
-                }
-
-                Label {
-                    text: {
-                        if (typeof plasmoid === "undefined" || !plasmoid.configuration)
-                            return i18n("Exchange rates are downloaded once a day.");
-                        var ts = Number(plasmoid.configuration.exchangeRatesUpdated);
-                        if (!(ts > 0))
-                            return i18n("Exchange rates: not downloaded yet.");
-                        return i18n("Exchange rates: updated %1",
-                                    Qt.formatDateTime(new Date(ts * 1000), "dd MMM yyyy HH:mm"));
-                    }
-                    font.pixelSize: 10
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 300
-                }
-
-                Label {
-                    text: i18n("Use the Import / Export page to back up or restore the portfolio and watchlist.")
-                    font.pixelSize: 10
-                    font.italic: true
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 300
                 }
             }
 
-            Kirigami.Separator { Layout.fillWidth: true }
-
             Label {
-                text: i18n("Your Lots")
-                font.bold: true
                 Layout.fillWidth: true
+                visible: page.formError !== ""
+                text: page.formError
+                color: Kirigami.Theme.negativeTextColor
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: i18n("Cancel")
+                    onClicked: {
+                        page.clearForm();
+                        lotDialog.close();
+                    }
+                }
+
+                Button {
+                    text: page.editingIndex >= 0 ? i18n("Save Lot") : i18n("Add Lot")
+                    highlighted: true
+                    onClicked: page.addLot()
+                }
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Help: the longer explanations live here instead of cluttering the page.
+    // ----------------------------------------------------------------------
+    Dialog {
+        id: helpDialog
+        title: i18n("About portfolio tracking")
+        modal: true
+        width: Math.max(360, Math.min(520, page.width - Kirigami.Units.largeSpacing * 2))
+
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                opacity: 0.75
             }
 
             Label {
-                visible: page.portfolioList.length === 0
-                text: i18n("No holdings added yet.")
-                opacity: 0.7
-                font.pixelSize: 11
+                Layout.fillWidth: true
+                text: i18n("The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR).")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                opacity: 0.75
             }
 
-            Repeater {
-                model: page.portfolioList
-                delegate: RowLayout {
-                    Layout.fillWidth: true
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            font.pixelSize: 11
-                            text: i18n("%1: %2 @ %3 %4",
-                                       modelData.ticker,
-                                       i18np("%1 share", "%1 shares", modelData.shares),
-                                       modelData.currency || "USD",
-                                       Number(modelData.averageCost).toFixed(2))
-                                  + (modelData.addedDate ? "   (" + Qt.formatDateTime(new Date(modelData.addedDate), "dd MMM yyyy") + ")" : "")
-                        }
-                        // Where the shares are held, if the lot has details.
-                        Label {
-                            Layout.fillWidth: true
-                            visible: !!modelData.details
-                            elide: Text.ElideRight
-                            font.pixelSize: 10
-                            opacity: 0.7
-                            text: modelData.details || ""
-                        }
-                    }
-                    Button {
-                        text: i18n("Edit")
-                        enabled: page.editingIndex !== index
-                        onClicked: page.editLot(index)
-                    }
-                    Button {
-                        text: i18n("Remove")
-                        onClicked: page.removeLot(index)
-                    }
+            Label {
+                Layout.fillWidth: true
+                text: {
+                    if (typeof plasmoid === "undefined" || !plasmoid.configuration)
+                        return i18n("Exchange rates are downloaded once a day.");
+                    var ts = Number(plasmoid.configuration.exchangeRatesUpdated);
+                    if (!(ts > 0))
+                        return i18n("Exchange rates: not downloaded yet.");
+                    return i18n("Exchange rates: updated %1",
+                                Qt.formatDateTime(new Date(ts * 1000), "dd MMM yyyy HH:mm"));
+                }
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                opacity: 0.75
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("Use the Import / Export page to back up or restore the portfolio and watchlist.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                opacity: 0.75
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Kirigami.Units.smallSpacing
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: i18n("Close")
+                    onClicked: helpDialog.close()
                 }
             }
         }

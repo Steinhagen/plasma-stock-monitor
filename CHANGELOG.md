@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reworked **Portfolio Tracking** into a responsive, table-first page: a clearly scoped
+  single-row whole-portfolio settings area, a summary with the invested amount, current
+  value, total gain and today's change, and an add/edit dialog. The duplicate Import
+  button and the extra empty-state Add Lot button are gone.
+- The lots table now shows each lot's current value and gain using live Yahoo quotes
+  and the cached exchange rates, with a manual quote refresh. It is searchable and
+  sortable, keeps lot details under the symbol, and keeps every column visible on
+  narrow windows without horizontal scrolling. The symbol column takes the remaining
+  width, the Date column is wide enough for full dates, every row has its own Options
+  column, and the single-row toolbar keeps Add Lot visible.
+- Clarified that **Show gain/loss in the widget** only controls the summary on the
+  widget's main panel; the portfolio table always shows values and gains.
 - Standardized mouse actions: left click selects a watchlist row, double click opens
   Yahoo Finance, right click opens a context menu, and middle click refreshes.
 - Added a **Mouse actions** settings page with Standard, Minimal and Custom
