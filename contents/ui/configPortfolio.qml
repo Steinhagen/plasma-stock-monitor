@@ -33,7 +33,7 @@ Item {
     readonly property var totals: page.portfolioTotals()
     readonly property bool compactLayout: page.width < 1000
     readonly property real tableFixedWidth: 45 + 65 + 45 + 100 + 70 + 100 + 45
-    readonly property real tableSymbolWidth: Math.max(60, pageScroll.width
+    readonly property real tableSymbolWidth: Math.max(80, pageScroll.width
         - tableFixedWidth - Kirigami.Units.smallSpacing * 9 - Kirigami.Units.gridUnit * 3)
 
     readonly property int totalShares: {
@@ -745,6 +745,8 @@ Item {
             }
             Rectangle {
                 Layout.fillWidth: true
+                Layout.maximumWidth: pageScroll.width
+                clip: true
                 implicitHeight: tableColumn.implicitHeight
                 color: Kirigami.Theme.alternateBackgroundColor
                 radius: Kirigami.Units.smallSpacing
@@ -954,19 +956,24 @@ Item {
                                     Layout.preferredWidth: page.tableSymbolWidth
                                     Layout.minimumWidth: page.tableSymbolWidth
                                     Layout.maximumWidth: page.tableSymbolWidth
+                                    clip: true
                                     spacing: 0
 
                                     Label {
+                                        Layout.fillWidth: true
                                         text: modelData.ticker || ""
                                         font.bold: true
                                         elide: Text.ElideRight
+                                        clip: true
                                     }
                                     Label {
+                                        Layout.fillWidth: true
                                         visible: text !== ""
                                         text: modelData.details || ""
                                         color: Kirigami.Theme.disabledTextColor
                                         font.pixelSize: 9
                                         elide: Text.ElideRight
+                                        clip: true
                                     }
                                 }
                                 Label {
