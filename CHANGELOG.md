@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Light/Dark value; the Application color choice is kept for switching back.
 - The panel indicator's market-status tag and percentage badge no longer overlap; the
   two rows now keep a small positive gap.
+- Moving the panel from horizontal to vertical and back no longer leaves the stock
+  indicator clipped or overlapping the neighbouring applet. The compact indicator no
+  longer forces its own size, the panel controls its cross-axis size, and its width
+  reserves at least the values currently shown.
 - The chart repaints immediately when the theme or its colors change, instead of
   keeping the old colors until the next quote update.
 - The smoothed price line no longer overshoots or makes loops at sharp dips or across

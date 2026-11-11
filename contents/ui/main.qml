@@ -2029,12 +2029,13 @@ PlasmoidItem {
     compactRepresentation: MouseArea {
         id: compactRoot
         implicitWidth: {
-            // An explicit width from the settings wins. Otherwise reserve room for the widest value.
+            // An explicit width from the settings wins. Otherwise reserve room for the
+            // current values, with the widest configured value as a floor in fixed mode.
             if (compactRoot.useFixedWidth && Plasmoid.configuration.panelWidth > 0)
                 return Plasmoid.configuration.panelWidth;
-            var content = compactRoot.useFixedWidth
-                          ? Math.max(compactRoot.widestContent, panelRow.implicitWidth)
-                          : panelRow.implicitWidth;
+            var content = Math.max(compactRoot.currentContent, panelRow.implicitWidth);
+            if (compactRoot.useFixedWidth)
+                content = Math.max(content, compactRoot.widestContent);
             return content + (Kirigami.Units.smallSpacing * 4);
         }
         // Never paint outside the rectangle the panel gives the applet. In a vertical
@@ -2042,12 +2043,16 @@ PlasmoidItem {
         // (or elide) rather than spill over the neighbouring applets.
         clip: true
         implicitHeight: panelRow.implicitHeight
-        width: implicitWidth
-        height: implicitHeight
-        
-        // Essential for Plasma to allocate space and prevent overlap
-        Layout.minimumWidth: implicitWidth
+
+        // Let the panel decide the cross-axis size: height in a horizontal panel, width
+        // in a vertical one. Requesting a minimum there made the applet keep its old
+        // horizontal width after an orientation change and overlap its neighbour.
+        Layout.fillWidth: root.isVerticalPanel
+        Layout.fillHeight: !root.isVerticalPanel
+        Layout.minimumWidth: root.isVerticalPanel ? 0 : implicitWidth
         Layout.preferredWidth: implicitWidth
+        Layout.minimumHeight: root.isVerticalPanel ? implicitHeight : 0
+        Layout.preferredHeight: implicitHeight
         
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
@@ -2116,6 +2121,9 @@ PlasmoidItem {
                                               && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
         property real widestContent: 0
         property real widestPrice: 0
+        // Width of the values currently shown. Used as a floor so a stale layout from
+        // before an orientation change cannot clip the ticker or the badge.
+        property real currentContent: 0
 
         // Invisible texts with exactly the fonts and rendering of the visible ones. Measuring with
         // these instead of with font metrics gives the real width, hinting included.
@@ -2172,9 +2180,27 @@ PlasmoidItem {
             var badgeW = showBadge ? widest(pcts, probeBadge) + (Kirigami.Units.smallSpacing * 2) : 0;
             var line2 = (root.panelAlternate && showBadge) ? Math.max(priceW, badgeW)
                                                           : priceW + (showBadge ? 6 + badgeW : 0);
+
+            // Width of the values on screen right now, so an orientation change cannot
+            // leave the indicator narrower than its own content.
+            var currentTicker = (root.isMultiMode ? root.panelTicker : root.singleTicker).toUpperCase();
+            var showCurrentTag = root.showExtendedHours
+                                 && (compactRoot.marketClosed || compactRoot.ext !== undefined);
+            var currentTagW = showCurrentTag ? tagW : 0;
+            var currentLine1 = widthOf(probeTicker, currentTicker) + 4 + arrowW
+                               + (currentTagW > 0 ? 4 + currentTagW : 0);
+            var currentPriceW = widthOf(probePrice, compactRoot.shownPrice);
+            var currentBadgeW = showBadge
+                                ? widthOf(probeBadge, compactRoot.shownPercent) + (Kirigami.Units.smallSpacing * 2)
+                                : 0;
+            var currentLine2 = (root.panelAlternate && showBadge)
+                               ? Math.max(currentPriceW, currentBadgeW)
+                               : currentPriceW + (showBadge ? 6 + currentBadgeW : 0);
+
             return { "content": Math.ceil(Math.max(line1, line2)),
                      "price": Math.ceil(priceW),
-                     "badge": Math.ceil(badgeW) };
+                     "badge": Math.ceil(badgeW),
+                     "current": Math.ceil(Math.max(currentLine1, currentLine2)) };
         }
 
         function remeasure() {
@@ -2182,6 +2208,7 @@ PlasmoidItem {
             compactRoot.widestContent = m.content;
             compactRoot.widestPrice = m.price;
             compactRoot.widestBadge = m.badge;
+            compactRoot.currentContent = m.current;
         }
 
         // Values arrive in bursts (one reply per ticker), so measure once they settle.
@@ -2204,19 +2231,18 @@ PlasmoidItem {
             function onShowExtendedHoursChanged() { remeasureTimer.restart(); }
             function onHideChangePercentageChanged() { remeasureTimer.restart(); }
             function onPanelAlternateChanged() { remeasureTimer.restart(); }
+            function onIsVerticalPanelChanged() { remeasureTimer.restart(); }
         }
 
         RowLayout {
             id: panelRow
-            // Fixed width: start at the left edge so the ticker stays where it is while the
-            // values change. In a vertical panel the row fills the panel thickness and the
-            // labels are centred/elided inside it. Otherwise centre the content, as before.
-            anchors.centerIn: (!compactRoot.useFixedWidth && !root.isVerticalPanel) ? parent : undefined
-            anchors.verticalCenter: (compactRoot.useFixedWidth || root.isVerticalPanel) ? parent.verticalCenter : undefined
-            anchors.left: (compactRoot.useFixedWidth || root.isVerticalPanel) ? parent.left : undefined
-            anchors.right: root.isVerticalPanel ? parent.right : undefined
+            // Fill the rectangle the panel gives the applet, with a small side margin in
+            // a horizontal panel. In a vertical panel the row fills the panel thickness
+            // and the labels are centred/elided inside it. Filling also keeps the content
+            // inside the applet instead of letting it spill over the neighbour.
+            anchors.fill: parent
             anchors.leftMargin: root.isVerticalPanel ? 0 : Kirigami.Units.smallSpacing * 2
-            anchors.rightMargin: 0
+            anchors.rightMargin: root.isVerticalPanel ? 0 : Kirigami.Units.smallSpacing * 2
             spacing: 8
             
             ColumnLayout {
