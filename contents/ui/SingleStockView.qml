@@ -987,24 +987,6 @@ Rectangle {
         ctx.stroke();
         ctx.restore();
     }
-    // Direction colour of an extended-hours zone ("pre" or "post"). While the extended
-    // quote of that zone is shown in the header, its own flag decides, so the line never
-    // contradicts the badge. Otherwise the zone's last close is compared with `base`
-    // (previous close before the open, regular close after it). Pre-market falls back to
-    // the line's normal colour when there is no base.
-    function sessionLineColor(zone, s, base, lastValue) {
-        var pos = rootItem.positiveColor;
-        var neg = rootItem.negativeColor;
-        if (singleStockRoot.hasExtendedQuote) {
-            var q = singleStockRoot.extendedQuote;
-            var inZone = zone === "pre"
-                ? (q.time >= s.preStart && q.time < s.regStart)
-                : (q.time >= s.regEnd && q.time < s.postEnd);
-            if (q.kind === zone && inZone) return q.isPos ? pos : neg;
-        }
-        if (base > 0) return lastValue >= base ? pos : neg;
-        return rootItem.isPositive ? pos : neg;
-    }
     // Date/time shown in the hover tooltip. Longer ranges use a coarser label because
     // one point covers a day/week/month rather than a minute.
     function hoverTimeLabel(timestamp) {
@@ -1301,15 +1283,10 @@ Rectangle {
         // Extended-hours parts of the line: same reference split, no fill. Each segment
         // starts or ends on the neighbouring regular point so the line stays continuous.
         var regularClose = rootItem.currentRawPrice > 0 ? rootItem.currentRawPrice : data[nReg - 1];
-        var preColor = pos, postColor = pos;
-        if (nPre > 0) {
-            preColor = sessionLineColor("pre", s, prevClose, s.preValues[nPre - 1]);
+        if (nPre > 0)
             strokeSplit(allData.slice(0, nPre + 1), xsAll.slice(0, nPre + 1), allTimes.slice(0, nPre + 1));
-        }
-        if (nPost > 0) {
-            postColor = sessionLineColor("post", s, regularClose, s.postValues[nPost - 1]);
+        if (nPost > 0)
             strokeSplit(allData.slice(nPre + nReg - 1), xsAll.slice(nPre + nReg - 1), allTimes.slice(nPre + nReg - 1));
-        }
         // End dot.
         var lastValue = allData[allData.length - 1];
         var dotColor = lastValue >= ref ? pos : neg;
@@ -1334,7 +1311,7 @@ Rectangle {
         // Hover crosshair: snap to the nearest close and show its time and value.
         if (singleStockRoot.chartHoverActive && times && times.length === data.length) {
             var hx = Math.max(0, Math.min(plotRight, singleStockRoot.chartHoverX));
-            var index, hoverX, hoverPrice, hoverTime, hoverBase = ref, hoverZoneColor = null;
+            var index, hoverX, hoverPrice, hoverTime, hoverBase = ref;
             if (s) {
                 index = 0;
                 for (var hi = 1; hi < xsAll.length; hi++) {
@@ -1346,11 +1323,9 @@ Rectangle {
                 if (index < nPre) {
                     hoverTime += " " + rootItem.tagPreMarket;
                     if (prevClose > 0) hoverBase = prevClose;
-                    hoverZoneColor = preColor;
                 } else if (index >= nPre + nReg) {
                     hoverTime += " " + rootItem.tagAfterHours;
                     hoverBase = regularClose;
-                    hoverZoneColor = postColor;
                 }
             } else {
                 index = Math.round((data.length - 1) * hx / plotRight);
@@ -1362,8 +1337,8 @@ Rectangle {
             var hoverY = getY(hoverPrice);
             var hoverChange = hoverPrice - hoverBase;
             var hoverPct = hoverBase > 0 ? (hoverChange / hoverBase) * 100 : 0;
-            var hoverAccent = hoverZoneColor ? hoverZoneColor
-                              : (hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor));
+            // The dot and the change text follow the sign of the change shown in the tooltip.
+            var hoverAccent = hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor);
             var hoverDetail = rootItem.formatNumber(hoverChange, true) + " (" + rootItem.formatNumber(hoverPct, true) + "%)";
             drawHover(ctx, plotRight, plotH, plotH, hoverX, hoverY, hoverAccent, hoverTime,
                       rootItem.currencySym + rootItem.formatNumber(hoverPrice, false),

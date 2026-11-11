@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - The smoothed price line no longer overshoots or makes loops at sharp dips or across
   large time gaps (monotone cubic interpolation, straight segments across gaps).
+- The chart hover dot and change text for pre-market and after-hours points are now red
+  for a negative change and green for a positive one, instead of taking the color of the
+  session's last value.
 
 ## [1.3] - 2026-11-11
 
