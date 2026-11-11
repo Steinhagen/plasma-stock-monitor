@@ -34,7 +34,7 @@ Item {
     readonly property var totals: page.portfolioTotals()
     readonly property bool compactLayout: page.width < 1000
     readonly property real tableFixedWidth: 45 + 65 + 45 + 100 + 70 + 100 + 45
-    readonly property real tableSymbolWidth: Math.max(80, pageScroll.width
+    readonly property real tableSymbolWidth: Math.max(80, pageScroll.availableWidth
         - tableFixedWidth - Kirigami.Units.smallSpacing * 9 - Kirigami.Units.gridUnit * 3)
 
     readonly property int totalShares: {
@@ -497,11 +497,15 @@ Item {
         id: pageScroll
         anchors.fill: parent
         anchors.margins: 20
-        contentWidth: pageScroll.width
+        // Follow the width left after the vertical scrollbar, so the page never grows
+        // past the viewport and a horizontal scrollbar never appears. Binding to the
+        // ScrollView's own width would leave the content wider by the scrollbar width
+        // as soon as the list is long enough to scroll.
+        contentWidth: pageScroll.availableWidth
         clip: true
 
         ColumnLayout {
-            width: pageScroll.width
+            width: pageScroll.availableWidth
             spacing: Kirigami.Units.largeSpacing
 
             // ------------------------------------------------------------------
@@ -697,7 +701,7 @@ Item {
             // the remaining width, so it cannot push the primary action out.
             RowLayout {
                 Layout.fillWidth: true
-                Layout.maximumWidth: pageScroll.width
+                Layout.maximumWidth: pageScroll.availableWidth
                 spacing: Kirigami.Units.smallSpacing
 
                 ColumnLayout {
@@ -751,7 +755,7 @@ Item {
             }
             Rectangle {
                 Layout.fillWidth: true
-                Layout.maximumWidth: pageScroll.width
+                Layout.maximumWidth: pageScroll.availableWidth
                 clip: true
                 implicitHeight: tableColumn.implicitHeight
                 color: Kirigami.Theme.alternateBackgroundColor
