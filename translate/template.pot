@@ -273,6 +273,18 @@ msgid "Candles + volume"
 msgstr ""
 
 #: contents/ui/configChart.qml
+msgid "Line style:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Smooth"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Straight"
+msgstr ""
+
+#: contents/ui/configChart.qml
 msgid "Show chart style buttons"
 msgstr ""
 

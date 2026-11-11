@@ -272,6 +272,18 @@ msgid "Candles + volume"
 msgstr "Candele + volum"
 
 #: contents/ui/configChart.qml
+msgid "Line style:"
+msgstr "Stil linie:"
+
+#: contents/ui/configChart.qml
+msgid "Smooth"
+msgstr "Netedă"
+
+#: contents/ui/configChart.qml
+msgid "Straight"
+msgstr "Dreaptă"
+
+#: contents/ui/configChart.qml
 msgid "Show chart style buttons"
 msgstr "Afișează butoanele de stil al graficului"
 

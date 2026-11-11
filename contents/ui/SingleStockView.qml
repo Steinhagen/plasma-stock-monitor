@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
+import "chartcurve.js" as ChartCurve
 
 Rectangle {
     id: singleStockRoot
@@ -648,6 +649,7 @@ Rectangle {
                         function onShowChartAxisChanged() { singleCanvas.requestPaint(); }
                         function onShowTimeAxisChanged() { singleCanvas.requestPaint(); }
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
+                        function onChartLineStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartReferencePriceChanged() { singleCanvas.requestPaint(); }
                         function onChartSessionsChanged() { singleCanvas.requestPaint(); }
@@ -803,36 +805,38 @@ Rectangle {
         return plotRight;
     }
 
-    // A smooth line through the closes. The original YQL series is noisy; a small
-    // Catmull-Rom-style smoothing keeps the shape without hiding the moves.
+    // The price line through the closes. "Straight" joins the points with plain segments.
+    // "Smooth" uses monotone cubic interpolation (no overshoot, no loops) and keeps
+    // segments across large time gaps straight; see chartcurve.js.
     // `xs` (optional) gives the pixel x of every point; without it the points are spread
-    // evenly over 0..right.
-    function traceSmooth(ctx, data, right, getY, xs) {
+    // evenly over 0..right. `times` (optional) are the timestamps, used to find gaps.
+    function traceSmooth(ctx, data, right, getY, xs, times) {
         var n = data.length;
         if (n < 2) return;
         var stepX = right / (n - 1);
         function px(i) { return xs ? xs[i] : i * stepX; }
         ctx.beginPath();
         ctx.moveTo(px(0), getY(data[0]));
-
+        if (rootItem.chartLineStyle === 1 || n < 3) {
+            for (var j = 1; j < n; j++) ctx.lineTo(px(j), getY(data[j]));
+            return;
+        }
+        var px_ = [], py_ = [];
+        for (var k = 0; k < n; k++) {
+            px_.push(px(k));
+            py_.push(getY(data[k]));
+        }
+        var gaps = ChartCurve.gapFlags(times && times.length === n ? times : null);
+        var m = ChartCurve.monotoneTangents(px_, py_, gaps);
         for (var i = 0; i < n - 1; i++) {
-            var x1 = px(i);
-            var y1 = getY(data[i]);
-            var x2 = px(i + 1);
-            var y2 = getY(data[i + 1]);
-            var x0 = i > 0 ? px(i - 1) : x1;
-            var y0 = i > 0 ? getY(data[i - 1]) : y1;
-            var x3 = i + 2 < n ? px(i + 2) : x2;
-            var y3 = i + 2 < n ? getY(data[i + 2]) : y2;
-            var tension = 0.85 / 6;
-            ctx.bezierCurveTo(
-                x1 + (x2 - x0) * tension, y1 + (y2 - y0) * tension,
-                x2 - (x3 - x1) * tension, y2 - (y3 - y1) * tension,
-                x2, y2
-            );
+            if (gaps[i] || !(px_[i + 1] > px_[i])) {
+                ctx.lineTo(px_[i + 1], py_[i + 1]);
+                continue;
+            }
+            var c = ChartCurve.segmentControls(px_, py_, m, i);
+            ctx.bezierCurveTo(c.c1x, c.c1y, c.c2x, c.c2y, px_[i + 1], py_[i + 1]);
         }
     }
-
     function drawEndDot(ctx, x, y, color) {
         ctx.save();
         ctx.fillStyle = Qt.rgba(color.r, color.g, color.b, 0.12);
@@ -1203,7 +1207,7 @@ Rectangle {
         above.addColorStop(0.0, Qt.rgba(pos.r, pos.g, pos.b, 0.30));
         above.addColorStop(0.55, Qt.rgba(pos.r, pos.g, pos.b, 0.10));
         above.addColorStop(1.0, Qt.rgba(pos.r, pos.g, pos.b, 0.012));
-        traceSmooth(ctx, data, plotRight, getY, xsReg);
+        traceSmooth(ctx, data, plotRight, getY, xsReg, times);
         ctx.lineTo(xLast, refY);
         ctx.lineTo(xFirst, refY);
         ctx.closePath();
@@ -1220,7 +1224,7 @@ Rectangle {
         below.addColorStop(0.0, Qt.rgba(neg.r, neg.g, neg.b, 0.012));
         below.addColorStop(0.5, Qt.rgba(neg.r, neg.g, neg.b, 0.11));
         below.addColorStop(1.0, Qt.rgba(neg.r, neg.g, neg.b, 0.30));
-        traceSmooth(ctx, data, plotRight, getY, xsReg);
+        traceSmooth(ctx, data, plotRight, getY, xsReg, times);
         ctx.lineTo(xLast, refY);
         ctx.lineTo(xFirst, refY);
         ctx.closePath();
@@ -1269,14 +1273,14 @@ Rectangle {
         ctx.restore();
 
         // Draw a polyline split at the reference: green above it, red below it.
-        function strokeSplit(values, xs) {
+        function strokeSplit(values, xs, ts) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(0, 0, plotRight, refY);
             ctx.clip();
             ctx.strokeStyle = pos;
             ctx.lineWidth = 2;
-            traceSmooth(ctx, values, plotRight, getY, xs);
+            traceSmooth(ctx, values, plotRight, getY, xs, ts);
             ctx.stroke();
             ctx.restore();
 
@@ -1286,13 +1290,13 @@ Rectangle {
             ctx.clip();
             ctx.strokeStyle = neg;
             ctx.lineWidth = 2;
-            traceSmooth(ctx, values, plotRight, getY, xs);
+            traceSmooth(ctx, values, plotRight, getY, xs, ts);
             ctx.stroke();
             ctx.restore();
         }
 
         // The line changes colour exactly at the reference.
-        strokeSplit(data, xsReg);
+        strokeSplit(data, xsReg, times);
 
         // Extended-hours parts of the line: same reference split, no fill. Each segment
         // starts or ends on the neighbouring regular point so the line stays continuous.
@@ -1300,11 +1304,11 @@ Rectangle {
         var preColor = pos, postColor = pos;
         if (nPre > 0) {
             preColor = sessionLineColor("pre", s, prevClose, s.preValues[nPre - 1]);
-            strokeSplit(allData.slice(0, nPre + 1), xsAll.slice(0, nPre + 1));
+            strokeSplit(allData.slice(0, nPre + 1), xsAll.slice(0, nPre + 1), allTimes.slice(0, nPre + 1));
         }
         if (nPost > 0) {
             postColor = sessionLineColor("post", s, regularClose, s.postValues[nPost - 1]);
-            strokeSplit(allData.slice(nPre + nReg - 1), xsAll.slice(nPre + nReg - 1));
+            strokeSplit(allData.slice(nPre + nReg - 1), xsAll.slice(nPre + nReg - 1), allTimes.slice(nPre + nReg - 1));
         }
         // End dot.
         var lastValue = allData[allData.length - 1];

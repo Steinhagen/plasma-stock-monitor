@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- A **Line style** setting (Chart page): Smooth (default) or Straight segments, like
+  Yahoo Finance.
+### Fixed
+- The smoothed price line no longer overshoots or makes loops at sharp dips or across
+  large time gaps (monotone cubic interpolation, straight segments across gaps).
 
 ## [1.3] - 2026-11-11
 

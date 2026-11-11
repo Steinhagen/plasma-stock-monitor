@@ -80,6 +80,11 @@
             <label>Chart style (0 = reference line, 1 = candles + volume)</label>
             <default>0</default>
         </entry>
+        <!-- 0 = smooth (monotone curve), 1 = straight segments. -->
+        <entry name="chartLineStyle" type="Int">
+            <label>Line style (0 = smooth, 1 = straight segments)</label>
+            <default>0</default>
+        </entry>
         <entry name="showChartStyleButtons" type="Bool">
             <label>Show the chart style buttons (line/candles) in the chart</label>
             <default>false</default>

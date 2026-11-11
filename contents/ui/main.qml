@@ -203,6 +203,8 @@ PlasmoidItem {
     property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
     // 0 = reference line split at the session open, 1 = candles + volume.
     property int chartStyle: Plasmoid.configuration.chartStyle === 1 ? 1 : 0
+    // 0 = smooth line, 1 = straight segments.
+    property int chartLineStyle: Plasmoid.configuration.chartLineStyle === 1 ? 1 : 0
     // Show the Line/Candles toggle in the chart.
     property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
     property bool showChartHover: Plasmoid.configuration.showChartHover

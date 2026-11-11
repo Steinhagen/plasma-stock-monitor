@@ -6,6 +6,7 @@ Item {
     id: page
 
     property alias cfg_chartStyle: chartStyleCombo.currentIndex
+    property alias cfg_chartLineStyle: lineStyleCombo.currentIndex
     property alias cfg_showChartStyleButtons: chartStyleButtonsSwitch.checked
     property alias cfg_showChartRangeButtons: chartRangeButtonsSwitch.checked
     property alias cfg_showChartHover: hoverSwitch.checked
@@ -34,6 +35,12 @@ Item {
                 model: [i18n("Reference line (open)"), i18n("Candles + volume")]
             }
 
+            ComboBox {
+                id: lineStyleCombo
+                Kirigami.FormData.label: i18n("Line style:")
+                // The style is stored by index, so the labels can be translated freely.
+                model: [i18n("Smooth"), i18n("Straight")]
+            }
             CheckBox {
                 id: chartStyleButtonsSwitch
                 text: i18n("Show chart style buttons")
