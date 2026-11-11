@@ -13,6 +13,9 @@ Item {
     // Currency the whole portfolio is summarised in. Each lot keeps its own currency; this
     // is the common currency used when positions in different currencies are added up.
     property string cfg_portfolioCurrency: "USD"
+    // Follows the widget's "Format stock price with commas" setting so amounts read the
+    // same here as they do in the widget. Defaults to on when no value is supplied.
+    property bool cfg_formatPrices: true
 
     // Every purchase is kept as its own lot (same ticker can appear more than once, e.g.
     // bought at different prices on different dates). The widget shows each lot's own
@@ -56,6 +59,10 @@ Item {
         return 0; // USD is first
     }
 
+    // The configuration window needs at least this width for the portfolio table and
+    // the toolbar to fit without clipping. The value includes the settings sidebar.
+    readonly property int minimumWindowWidth: 800
+
     // The code for a picker position. Deriving it from the index (rather than from
     // currentText) avoids the moment when the text still belongs to the old item.
     function currencyCodeAt(index) {
@@ -63,17 +70,39 @@ Item {
         return Currency.LIST[index].code;
     }
 
+    // ConfigView derives its minimum width from the Layout.minimumWidth of the item it
+    // loaded, and overwrites the window's minimumWidth. Raise that layout minimum too,
+    // and set the window minimum as a fallback for plain configuration windows. The
+    // page is often attached to the window after Component.onCompleted, hence the
+    // Window.onWindowChanged call below.
+    function applyMinimumWindowWidth() {
+        var win = Window.window;
+        if (!win || !win.contentItem) return;
+
+        // Walk up to the item ConfigView loaded (the direct child of its contentItem)
+        // and raise its attached Layout minimum.
+        var root = page;
+        while (root.parent && root.parent !== win.contentItem)
+            root = root.parent;
+        if (root.parent === win.contentItem && root.Layout
+                && root.Layout.minimumWidth < page.minimumWindowWidth)
+            root.Layout.minimumWidth = page.minimumWindowWidth;
+
+        if (win.minimumWidth < page.minimumWindowWidth)
+            win.minimumWidth = page.minimumWindowWidth;
+        if (win.width < page.minimumWindowWidth)
+            win.width = page.minimumWindowWidth;
+    }
+
     Component.onCompleted: {
         page.refreshPortfolioList();
         portfolioCurrencyCombo.currentIndex = page.currencyIndex(page.cfg_portfolioCurrency);
         page.currencyPickerReady = true;
         page.refreshQuotes();
-
-        // The portfolio table needs a usable minimum width. ConfigView may re-parent
-        // the page, so enforce the floor on the actual configuration window.
-        if (Window.window)
-            Window.window.minimumWidth = Math.max(Window.window.minimumWidth || 0, 800);
+        page.applyMinimumWindowWidth();
     }
+
+    Window.onWindowChanged: page.applyMinimumWindowWidth()
 
     // If the setting is changed from outside the picker (for example when the config
     // framework loads the value), keep the picker in step.
@@ -353,8 +382,25 @@ Item {
         };
     }
 
+    // Formats an amount with two decimals and, when the widget's "format prices with
+    // commas" setting is on, groups the thousands: 325183.75 -> "325,183.75".
+    function formatNumber(amount) {
+        var num = Number(amount);
+        if (isNaN(num)) return String(amount);
+        var formatted = Math.abs(num).toFixed(2);
+        if (page.cfg_formatPrices) {
+            var parts = formatted.split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            formatted = parts.join(".");
+        }
+        return (num < 0 ? "-" : "") + formatted;
+    }
+
     function moneyText(currency, amount) {
-        return Currency.symbol(currency) + Number(amount).toFixed(2);
+        var num = Number(amount);
+        if (isNaN(num)) return Currency.symbol(currency) + String(amount);
+        // Keep the sign in front of the currency symbol, like the widget's formatMoney.
+        return (num < 0 ? "-" : "") + Currency.symbol(currency) + page.formatNumber(Math.abs(num));
     }
 
     function lotValueText(lot) {
@@ -995,7 +1041,7 @@ Item {
                                     elide: Text.ElideLeft
                                 }
                                 Label {
-                                    text: Number(modelData.averageCost || 0).toFixed(2)
+                                    text: page.formatNumber(modelData.averageCost || 0)
                                     Layout.preferredWidth: 65
                                     Layout.minimumWidth: 65
                                     Layout.maximumWidth: 65
