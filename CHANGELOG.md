@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   narrow windows without horizontal scrolling. The symbol column takes the remaining
   width, the Date column is wide enough for full dates, every row has its own Options
   column, and the single-row toolbar keeps Add Lot visible. Long lot details are
-  elided under the symbol so they cannot spill into the next columns.
+  elided under the symbol so they cannot spill into the next columns. The configuration
+  window enforces a minimum width so the table keeps all its columns readable.
 - Clarified that **Show gain/loss in the widget** only controls the summary on the
   widget's main panel; the portfolio table always shows values and gains.
 - Standardized mouse actions: left click selects a watchlist row, double click opens

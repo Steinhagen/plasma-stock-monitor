@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import "currencies.js" as Currency
 
@@ -67,6 +68,11 @@ Item {
         portfolioCurrencyCombo.currentIndex = page.currencyIndex(page.cfg_portfolioCurrency);
         page.currencyPickerReady = true;
         page.refreshQuotes();
+
+        // The portfolio table needs a usable minimum width. ConfigView may re-parent
+        // the page, so enforce the floor on the actual configuration window.
+        if (Window.window)
+            Window.window.minimumWidth = Math.max(Window.window.minimumWidth || 0, 800);
     }
 
     // If the setting is changed from outside the picker (for example when the config
