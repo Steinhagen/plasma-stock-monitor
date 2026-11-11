@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3] - 2026-11-11
+
+### Added
+
+- A **Mouse actions** settings page with Standard, Minimal and Custom presets, plus
+  separate left-row, middle-click and double-click actions. Right click remains the
+  context menu.
+
 ### Changed
 
 - Reworked **Portfolio Tracking** into a responsive, table-first page: a clearly scoped
@@ -15,19 +23,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   button and the extra empty-state Add Lot button are gone.
 - The lots table now shows each lot's current value and gain using live Yahoo quotes
   and the cached exchange rates, with a manual quote refresh. It is searchable and
-  sortable, keeps lot details under the symbol, and keeps every column visible on
-  narrow windows without horizontal scrolling. The symbol column takes the remaining
-  width, the Date column is wide enough for full dates, every row has its own Options
-  column, and the single-row toolbar keeps Add Lot visible. Long lot details are
-  elided under the symbol so they cannot spill into the next columns. The configuration
-  window enforces a minimum width so the table keeps all its columns readable.
+  sortable, keeps lot details under the symbol, and gives every row its own Options
+  column.
 - Clarified that **Show gain/loss in the widget** only controls the summary on the
   widget's main panel; the portfolio table always shows values and gains.
 - Standardized mouse actions: left click selects a watchlist row, double click opens
   Yahoo Finance, right click opens a context menu, and middle click refreshes.
-- Added a **Mouse actions** settings page with Standard, Minimal and Custom
-  presets, plus separate left-row, middle-click and double-click actions. Right click
-  remains the context menu.
+
+### Fixed
+
+- The portfolio page no longer grows a horizontal scrollbar when the holdings list is
+  tall enough to scroll vertically.
+- Monetary values in the portfolio page are formatted with thousands separators, like
+  the widget (for example `RON 325,183.75`), including the portfolio summary, lot
+  values and gains, average cost and the gain-per-share tooltip.
+- The settings window enforces a minimum width, so the portfolio table, base-currency
+  picker and toolbar are no longer clipped on narrow windows.
+- Long lot details are elided under the symbol instead of spilling into the adjacent
+  columns.
 
 ## [1.2] - 2026-11-10
 
@@ -113,7 +126,8 @@ First public release.
 - Ki18n localization with a complete Romanian translation.
 - KDE Store release and automatic `.plasmoid` packaging for version tags.
 
-[Unreleased]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.2...HEAD
+[Unreleased]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.3...HEAD
+[1.3]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.2...v1.3
 [1.2]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.1...v1.2
 [1.1]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.0...v1.1
 [1.0]: https://github.com/Steinhagen/plasma-stock-monitor/releases/tag/v1.0
