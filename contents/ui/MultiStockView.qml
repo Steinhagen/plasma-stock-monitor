@@ -27,8 +27,10 @@ Rectangle {
     readonly property real minimumContentWidth: 250
     readonly property real minimumContentHeight: 200
 
-    color: rootItem.customExpandedCard ? rootItem.customExpandedCardColor : rootItem.bgColor
-    radius: (rootItem.customExpandedCard || !rootItem.isPlasmaTheme) ? 22 : 0
+    // The Application preset paints its own rounded card; with Plasma the system
+    // background shows through and this view stays transparent.
+    color: rootItem.bgColor
+    radius: rootItem.appDrawnSurface ? 22 : 0
     clip: true
 
     // --- Portfolio total ---

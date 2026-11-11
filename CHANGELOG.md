@@ -9,7 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - A **Line style** setting (Chart page): Smooth (default) or Straight segments, like
   Yahoo Finance.
+- Theme settings with **Application** and **Plasma** presets. Application draws the
+  widget's own cards; Plasma follows the system Plasma background, colors and popup.
+- A **Colors** setting for the Application preset: Light, Dark or System, where System
+  follows the Plasma color scheme.
+- Fresh placements now default to **Plasma** + **System**.
+
+### Changed
+- The preset decides who draws the background: **Application** paints the widget's
+  own cards, while **Plasma** keeps the system Plasma background and colors.
+- With the **Application** background the expanded panel opens in a transparent
+  popup so only the cards are visible; the compact panel indicator itself stays
+  transparent over the panel.
+- The compact panel indicator no longer paints a background in any theme. It stays
+  transparent and uses the panel's colors, so it looks the same whichever preset or
+  color mode is selected.
+- The **Plasma** background is chosen automatically for the desktop and the expanded
+  panel view. The separate **Background: Use the Plasma background** option is gone.
+- Existing Light, Dark and Plasma choices are migrated to the new preset and colors.
+  The removed Custom preset is mapped to Plasma or Application using its old desktop
+  source.
+
 ### Fixed
+- Plasma no longer draws a widget-made light/dark surface: the preset always follows
+  the system theme, while Light/Dark/System only affect the Application preset.
+- The Appearance page shows **System** for the Plasma preset instead of a stale
+  Light/Dark value; the Application color choice is kept for switching back.
+- The chart repaints immediately when the theme or its colors change, instead of
+  keeping the old colors until the next quote update.
 - The smoothed price line no longer overshoots or makes loops at sharp dips or across
   large time gaps (monotone cubic interpolation, straight segments across gaps).
 - The chart hover dot and change text for pre-market and after-hours points are now red

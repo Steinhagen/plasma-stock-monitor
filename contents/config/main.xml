@@ -5,9 +5,28 @@
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
     <group name="General">
+        <!-- Theme preset: 0 = Application, 1 = Plasma.
+             -1 means "not migrated yet"; the applet writes a real value on first run. -->
+        <entry name="themePreset" type="Int">
+            <label>Theme preset (0 = Application, 1 = Plasma)</label>
+            <default>-1</default>
+        </entry>
+        <!-- Theme colors: 0 = Light, 1 = Dark, 2 = System (used by Application).
+             -1 means "not migrated yet". -->
+        <entry name="themeColors" type="Int">
+            <label>Theme colors (0 = Light, 1 = Dark, 2 = System)</label>
+            <default>-1</default>
+        </entry>
+        <!-- Legacy: the removed Custom preset used this to pick the desktop background.
+             Only read once to map an old Custom choice to Plasma/Application. -->
+        <entry name="desktopThemeSource" type="Int">
+            <label>Legacy custom desktop background (0 = Application, 1 = Plasma)</label>
+            <default>-1</default>
+        </entry>
+        <!-- Legacy entries, only read by the one-time migration above. -->
         <entry name="selectedTheme" type="Int">
-            <label>Theme</label>
-            <default>1</default>
+            <label>Legacy theme (0 = Light, 1 = Dark, 2 = Plasma)</label>
+            <default>-1</default>
         </entry>
         <entry name="ticker" type="String">
             <label>Single Stock Ticker</label>
@@ -175,10 +194,6 @@
             <label>Fixed panel width in pixels (0 = fit the widest value)</label>
             <default>0</default>
             <min>0</min>
-        </entry>
-        <entry name="expandedViewBackground" type="Bool">
-            <label>Draw the Plasma background behind the expanded widget</label>
-            <default>true</default>
         </entry>
         <entry name="formatPrices" type="Bool">
             <label>Format stock price with commas</label>

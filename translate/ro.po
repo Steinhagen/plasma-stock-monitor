@@ -50,8 +50,32 @@ msgid "Import / Export"
 msgstr "Import / Export"
 
 #: contents/ui/configAppearance.qml
-msgid "Theme:"
-msgstr "Temă:"
+msgid "The widget follows the system Plasma theme, including its background and colors."
+msgstr "Widgetul urmează tema Plasma a sistemului, inclusiv fundalul și culorile acesteia."
+
+#: contents/ui/configAppearance.qml
+msgid "The widget draws its own background and rounded cards. Choose its colors below."
+msgstr "Widgetul își desenează propriul fundal și cardurile rotunjite. Alege culorile mai jos."
+
+#: contents/ui/configAppearance.qml
+msgid "Theme"
+msgstr "Temă"
+
+#: contents/ui/configAppearance.qml contents/ui/configMouse.qml
+msgid "Preset:"
+msgstr "Presetare:"
+
+#: contents/ui/configAppearance.qml
+msgid "Application"
+msgstr "Aplicație"
+
+#: contents/ui/configAppearance.qml
+msgid "Plasma"
+msgstr "Plasma"
+
+#: contents/ui/configAppearance.qml
+msgid "Colors:"
+msgstr "Culori:"
 
 #: contents/ui/configAppearance.qml
 msgid "Light"
@@ -62,8 +86,16 @@ msgid "Dark"
 msgstr "Întunecată"
 
 #: contents/ui/configAppearance.qml
-msgid "Plasma"
-msgstr "Plasma"
+msgid "System"
+msgstr "Sistem"
+
+#: contents/ui/configAppearance.qml
+msgid "Colors apply only to the Application preset. Plasma always uses the system colors."
+msgstr "Culorile se aplică doar presetului Aplicație. Plasma folosește întotdeauna culorile sistemului."
+
+#: contents/ui/configAppearance.qml
+msgid "The panel indicator stays transparent and uses the panel colors, whichever theme is selected."
+msgstr "Indicatorul din panou rămâne transparent și folosește culorile panoului, indiferent de tema aleasă."
 
 #: contents/ui/configAppearance.qml
 msgid "Positive Color (Hex):"
@@ -92,22 +124,6 @@ msgstr "Opacitate:"
 #: contents/ui/configAppearance.qml
 msgid "Stock Price Text"
 msgstr "Textul prețului acțiunii"
-
-#: contents/ui/configAppearance.qml
-msgid "Panel popup"
-msgstr "Popup din panou"
-
-#: contents/ui/configAppearance.qml
-msgid "Background:"
-msgstr "Fundal:"
-
-#: contents/ui/configAppearance.qml
-msgid "Use the Plasma background"
-msgstr "Folosește fundalul Plasma"
-
-#: contents/ui/configAppearance.qml
-msgid "Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop."
-msgstr "Se aplică doar când widgetul este extins dintr-un panou: bifat afișează fundalul Plasma, debifat doar cardurile. Pe desktop nu are efect."
 
 #: contents/ui/configBackup.qml
 msgid "The selected file is empty."
@@ -418,10 +434,6 @@ msgstr "Când piața este închisă:"
 #: contents/ui/configGeneral.qml
 msgid "Keep showing the last pre-market/after-hours quote"
 msgstr "Continuă să afișezi ultima cotație înaintea deschiderii / după închidere"
-
-#: contents/ui/configMouse.qml
-msgid "Preset:"
-msgstr "Presetare:"
 
 #: contents/ui/configMouse.qml
 msgid "Standard"
@@ -1083,6 +1095,78 @@ msgstr "Linie"
 msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
+
+#~ msgid "The desktop draws the background; the widget only draws a single surface when the chosen color mode is the opposite of the system."
+#~ msgstr "Desktopul desenează fundalul; widgetul desenează o singură suprafață doar când modul de culoare ales este opusul sistemului."
+
+#~ msgid "Choose separately where the widget draws its own background and where the desktop draws it."
+#~ msgstr "Alege separat unde widgetul își desenează propriul fundal și unde îl desenează desktopul."
+
+#~ msgid "The widget draws its own background and rounded cards."
+#~ msgstr "Widgetul își desenează propriul fundal și cardurile rotunjite."
+
+#~ msgid "Colors control only the text and chart colors. With Plasma, matching the system keeps the system background and colors; the opposite mode draws a single widget surface in that palette."
+#~ msgstr "Culorile controlează doar textul și graficul. Cu Plasma, modul care corespunde sistemului păstrează fundalul și culorile sistemului; modul opus desenează o singură suprafață a widgetului în acea paletă."
+
+#~ msgid "Desktop background:"
+#~ msgstr "Fundal desktop:"
+
+#~ msgid "Expanded panel background:"
+#~ msgstr "Fundal panou extins:"
+
+#~ msgid "With the Application background for the expanded panel, the popup is transparent, so only the widget cards are visible."
+#~ msgstr "Cu fundalul Aplicație pentru panoul extins, popup-ul este transparent, astfel încât să fie vizibile doar cardurile widgetului."
+
+#~ msgid "The desktop draws the background; the widget only changes the text and chart colors."
+#~ msgstr "Desktopul desenează fundalul; widgetul schimbă doar culorile textului și ale graficului."
+
+#~ msgid "Colors control only the text and chart colors; they never change who draws the background. With Plasma, the system background and colors are used when the selected mode matches the system; the opposite mode changes only the content colors."
+#~ msgstr "Culorile controlează doar textul și graficul; nu schimbă niciodată cine desenează fundalul. Cu Plasma, fundalul și culorile sistemului sunt folosite când modul ales corespunde sistemului; modul opus schimbă doar culorile conținutului."
+
+#~ msgid "The widget uses the Plasma background on the desktop and in the expanded panel view."
+#~ msgstr "Widgetul folosește fundalul Plasma pe desktop și în vizualizarea extinsă din panou."
+
+#~ msgid "Choose separately where the widget draws its own cards and where it keeps the Plasma background."
+#~ msgstr "Alege separat unde widgetul își desenează propriile carduri și unde păstrează fundalul Plasma."
+
+#~ msgid "The widget draws its own rounded cards on the desktop and in the expanded panel view."
+#~ msgstr "Widgetul își desenează propriile carduri rotunjite pe desktop și în vizualizarea extinsă din panou."
+
+#~ msgid "Colors apply to the surfaces the widget draws itself. System keeps the Plasma background and its colors; Light and Dark paint those surfaces in that mode."
+#~ msgstr "Culorile se aplică suprafețelor desenate de widget. Sistem păstrează fundalul Plasma și culorile acestuia; Luminoasă și Întunecată pictează acele suprafețe în modul respectiv."
+
+#~ msgid "Colors apply to the cards the widget draws itself. System keeps the Plasma background and its colors; Light and Dark paint the cards in that mode."
+#~ msgstr "Culorile se aplică cardurilor desenate de widget. Sistem păstrează fundalul Plasma și culorile acestuia; Luminoasă și Întunecată pictează cardurile în modul respectiv."
+
+#~ msgid "Panel background:"
+#~ msgstr "Fundal panou:"
+
+#~ msgid "With the Application background in the panel, the expanded panel uses a transparent popup, so only the widget cards are visible."
+#~ msgstr "Cu fundalul Aplicație în panou, vizualizarea extinsă folosește un popup transparent, astfel încât să fie vizibile doar cardurile widgetului."
+
+#~ msgid "The widget uses the Plasma background on the desktop and in the panel."
+#~ msgstr "Widgetul folosește fundalul Plasma pe desktop și în panou."
+
+#~ msgid "The widget draws its own rounded cards on the desktop and in the panel."
+#~ msgstr "Widgetul își desenează propriile carduri rotunjite pe desktop și în panou."
+
+#~ msgid "Colors apply to the cards the widget draws itself. System follows the Plasma color scheme."
+#~ msgstr "Culorile se aplică cardurilor desenate de widget. Sistem urmează schema de culori Plasma."
+
+#~ msgid "Theme:"
+#~ msgstr "Temă:"
+
+#~ msgid "Panel popup"
+#~ msgstr "Popup din panou"
+
+#~ msgid "Background:"
+#~ msgstr "Fundal:"
+
+#~ msgid "Use the Plasma background"
+#~ msgstr "Folosește fundalul Plasma"
+
+#~ msgid "Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop."
+#~ msgstr "Se aplică doar când widgetul este extins dintr-un panou: bifat afișează fundalul Plasma, debifat doar cardurile. Pe desktop nu are efect."
 
 #~ msgid "Actions"
 #~ msgstr "Operațiuni"

@@ -22,7 +22,8 @@ var DATA_KEYS = [
 // Everything else the user can configure. The exchange-rate cache is deliberately not
 // part of a backup: it is downloaded again and is not a user preference.
 var SETTINGS_KEYS = [
-    "selectedTheme",
+    "themePreset",
+    "themeColors",
     "twoColumnLeftWidth",
     "selectedTicker",
     "mouseRowLeftAction",
@@ -60,7 +61,6 @@ var SETTINGS_KEYS = [
     "alternateInterval",
     "fixedPanelWidth",
     "panelWidth",
-    "expandedViewBackground",
     "formatPrices",
     "showExtendedHours",
     "keepExtendedAfterClose",
@@ -83,7 +83,6 @@ var BOOL_KEYS = {
     autoCycle: true,
     alternatePricePercent: true,
     fixedPanelWidth: true,
-    expandedViewBackground: true,
     formatPrices: true,
     showExtendedHours: true,
     keepExtendedAfterClose: true,
@@ -99,7 +98,8 @@ var BOOL_KEYS = {
 // Sliders in the configuration pages, so an imported value cannot put the UI in a state
 // it would not let the user create.
 var INT_RANGES = {
-    selectedTheme: [0, 2],
+    themePreset: [0, 1],
+    themeColors: [0, 2],
     twoColumnLeftWidth: [0, 20000],
     chartStyle: [0, 1],
     chartLineStyle: [0, 1],
@@ -124,6 +124,10 @@ var COLOR_KEYS = {
 };
 
 var CHART_RANGES = ["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "Max"];
+
+// Keys from older backups. They are never exported, only read while importing so
+// migrateLegacyTheme() can turn them into the current theme keys.
+var LEGACY_THEME_KEYS = ["selectedTheme", "desktopThemeSource"];
 
 var MOUSE_ACTIONS = {
     mouseRowLeftAction: ["select", "open"],
@@ -305,6 +309,16 @@ function buildBackup(config, scope, exportedAt) {
                 settings[setting] = config[setting];
             }
         }
+        // A configuration saved before the theme migration still has the -1 sentinels.
+        // Export the values the applet would resolve, so the backup stays importable.
+        // A stored Custom preset is mapped to the desktop source it used.
+        var theme = legacyThemeValues(config.selectedTheme);
+        if (!(settings.themePreset >= 0)) {
+            settings.themePreset = theme.preset;
+        } else if (Number(settings.themePreset) === 2) {
+            settings.themePreset = Number(config.desktopThemeSource) === 1 ? 1 : 0;
+        }
+        if (!(settings.themeColors >= 0)) settings.themeColors = theme.colors;
         backup.settings = settings;
     }
 
@@ -336,6 +350,48 @@ function collectData(rawData) {
         data[key] = validated.value;
     }
     return data ? { ok: true, data: data } : { ok: true, data: null };
+}
+
+// Values for the new theme keys derived from the old single theme choice. Used both
+// while importing an old backup and while exporting a configuration the applet has not
+// migrated yet.
+function legacyThemeValues(selectedTheme) {
+    var legacy = Number(selectedTheme);
+    if (!isFinite(legacy)) legacy = -1;
+    // The new default for a fresh placement is Plasma + System.
+    var values = { preset: 1, colors: 2 };
+    if (legacy === 0) {
+        values.preset = 0;
+        values.colors = 0;
+    } else if (legacy === 1) {
+        values.preset = 0;
+        values.colors = 1;
+    }
+    return values;
+}
+
+// Old backups stored a single selectedTheme (0 = Light, 1 = Dark, 2 = Plasma). Adapt
+// them to the preset/colors keys. New keys that are already present always win, so
+// importing a new backup is unchanged.
+function migrateLegacyTheme(settings) {
+    if (!isObject(settings)) return settings;
+    var hasNew = has(settings, "themePreset") || has(settings, "themeColors");
+    if (hasNew || !has(settings, "selectedTheme")) return settings;
+
+    var values = legacyThemeValues(settings.selectedTheme);
+    settings.themePreset = values.preset;
+    settings.themeColors = values.colors;
+    return settings;
+}
+
+// The Custom preset was removed. An old backup that used it keeps the background its
+// desktop used: Plasma when desktopThemeSource is 1, otherwise Application.
+function migrateCustomPreset(settings) {
+    if (!isObject(settings)) return settings;
+    if (Number(settings.themePreset) === 2) {
+        settings.themePreset = Number(settings.desktopThemeSource) === 1 ? 1 : 0;
+    }
+    return settings;
 }
 
 // Parses and validates a backup file. Returns either
@@ -394,6 +450,9 @@ function parseBackup(text) {
         for (var j = 0; j < SETTINGS_KEYS.length; j++) {
             if (has(root, SETTINGS_KEYS[j])) flatSettings[SETTINGS_KEYS[j]] = root[SETTINGS_KEYS[j]];
         }
+        for (var l = 0; l < LEGACY_THEME_KEYS.length; l++) {
+            if (has(root, LEGACY_THEME_KEYS[l])) flatSettings[LEGACY_THEME_KEYS[l]] = root[LEGACY_THEME_KEYS[l]];
+        }
         if (Object.keys(flatSettings).length > 0) rawSettings = flatSettings;
     }
 
@@ -408,6 +467,8 @@ function parseBackup(text) {
 
     var settings = null;
     if (rawSettings) {
+        rawSettings = migrateLegacyTheme(rawSettings);
+        rawSettings = migrateCustomPreset(rawSettings);
         for (var k = 0; k < SETTINGS_KEYS.length; k++) {
             var settingKey = SETTINGS_KEYS[k];
             if (!has(rawSettings, settingKey)) continue;

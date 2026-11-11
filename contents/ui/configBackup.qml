@@ -13,7 +13,12 @@ Item {
     // as a cfg_ property and copies the properties back when Apply is pressed. Declaring
     // them here lets Import stage new values in the same way the other pages stage edits,
     // so Cancel really discards an import and Apply really saves it.
+    property int cfg_themePreset
+    property int cfg_themeColors
+    // Only used to resolve the theme when a backup is exported before the applet
+    // migrated the configuration; they are never written to the backup.
     property int cfg_selectedTheme
+    property int cfg_desktopThemeSource
     property string cfg_ticker
     property bool cfg_isMultiMode
     property bool cfg_showTwoList
@@ -55,7 +60,6 @@ Item {
     property int cfg_alternateInterval
     property bool cfg_fixedPanelWidth
     property int cfg_panelWidth
-    property bool cfg_expandedViewBackground
     property bool cfg_formatPrices
     property bool cfg_showExtendedHours
     property bool cfg_keepExtendedAfterClose
@@ -135,6 +139,9 @@ Item {
         for (var i = 0; i < keys.length; i++) {
             config[keys[i]] = page["cfg_" + keys[i]];
         }
+        // Legacy theme values only help Backup.buildBackup resolve the old theme keys.
+        config.selectedTheme = page.cfg_selectedTheme;
+        config.desktopThemeSource = page.cfg_desktopThemeSource;
         return config;
     }
 

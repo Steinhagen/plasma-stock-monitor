@@ -51,7 +51,31 @@ msgid "Import / Export"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
-msgid "Theme:"
+msgid "The widget follows the system Plasma theme, including its background and colors."
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "The widget draws its own background and rounded cards. Choose its colors below."
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Theme"
+msgstr ""
+
+#: contents/ui/configAppearance.qml contents/ui/configMouse.qml
+msgid "Preset:"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Application"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Plasma"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Colors:"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
@@ -63,7 +87,15 @@ msgid "Dark"
 msgstr ""
 
 #: contents/ui/configAppearance.qml
-msgid "Plasma"
+msgid "System"
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "Colors apply only to the Application preset. Plasma always uses the system colors."
+msgstr ""
+
+#: contents/ui/configAppearance.qml
+msgid "The panel indicator stays transparent and uses the panel colors, whichever theme is selected."
 msgstr ""
 
 #: contents/ui/configAppearance.qml
@@ -92,22 +124,6 @@ msgstr ""
 
 #: contents/ui/configAppearance.qml
 msgid "Stock Price Text"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Panel popup"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Background:"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Use the Plasma background"
-msgstr ""
-
-#: contents/ui/configAppearance.qml
-msgid "Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop."
 msgstr ""
 
 #: contents/ui/configBackup.qml
@@ -418,10 +434,6 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Keep showing the last pre-market/after-hours quote"
-msgstr ""
-
-#: contents/ui/configMouse.qml
-msgid "Preset:"
 msgstr ""
 
 #: contents/ui/configMouse.qml

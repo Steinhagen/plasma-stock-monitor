@@ -112,8 +112,10 @@ Rectangle {
     // when the row changed or when the widget was opened on an empty virtual desktop.
     readonly property real minimumContentHeight: 360
 
-    color: rootItem.customExpandedCard ? rootItem.customExpandedCardColor : rootItem.bgColor
-    radius: (rootItem.customExpandedCard || !rootItem.isPlasmaTheme) ? 22 : 0
+    // The Application preset paints its own rounded card; with Plasma the system
+    // background shows through and this view stays transparent.
+    color: rootItem.bgColor
+    radius: rootItem.appDrawnSurface ? 22 : 0
     clip: true
 
     Text {
@@ -654,6 +656,13 @@ Rectangle {
                         function onChartReferencePriceChanged() { singleCanvas.requestPaint(); }
                         function onChartSessionsChanged() { singleCanvas.requestPaint(); }
                         function onChartPreSessionChanged() { singleCanvas.requestPaint(); }
+                        // Theme changes alter the colors used while painting (and the
+                        // light/dark details), so repaint without waiting for new data.
+                        function onIsLightThemeChanged() { singleCanvas.requestPaint(); }
+                        function onChartBaseColorChanged() { singleCanvas.requestPaint(); }
+                        function onSecondaryTextColorChanged() { singleCanvas.requestPaint(); }
+                        function onPositiveColorChanged() { singleCanvas.requestPaint(); }
+                        function onNegativeColorChanged() { singleCanvas.requestPaint(); }
                         function onShowChartHoverChanged() {
                             if (!rootItem.showChartHover) singleStockRoot.chartHoverActive = false;
                             singleCanvas.requestPaint();

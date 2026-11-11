@@ -12,7 +12,7 @@ A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo
 - **Charts:** reference-line or candlestick + volume, with ranges from 1D to Max and optional in-chart range buttons.
 - **Live context:** pre-market and after-hours quotes, market status, and the last extended quote kept after close.
 - **Portfolio:** track purchase lots, profit/loss and multiple currencies.
-- **Appearance:** light, dark and Plasma themes; custom gain/loss colors, opacity and panel options.
+- **Appearance:** Application and Plasma presets; Application supports Light/Dark/System colors, while Plasma follows the system theme, plus a transparent panel indicator, custom gain/loss colors and opacity.
 - **Smart updates:** configurable refresh interval, market-hours-only updates and weekend skipping.
 - **Backup:** export and import the portfolio, watchlist and settings as JSON.
 - **Localized:** gettext/Ki18n support with a complete Romanian translation included.
@@ -39,7 +39,7 @@ To update an existing source installation, use `--upgrade` instead of `--install
 
 ## Configuration
 
-Right-click the widget and choose **Configure...** to change the display mode, tickers, chart style, refresh interval, colors and portfolio holdings. The same dialog can export or import a JSON backup of your data and settings.
+Right-click the widget and choose **Configure...** to change the display mode, tickers, chart style, refresh interval, theme, colors and portfolio holdings. New widgets start with the **Plasma** preset, which follows the system theme; the Appearance page lets you switch to the widget's own Application cards and choose their Light/Dark/System colors. The same dialog can export or import a JSON backup of your data and settings.
 
 Ticker symbols must match [Yahoo Finance](https://finance.yahoo.com). For example:
 

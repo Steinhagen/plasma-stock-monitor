@@ -6,7 +6,11 @@ import org.kde.kirigami as Kirigami
 Item {
     id: page
 
-    property alias cfg_selectedTheme: themeCombo.currentIndex
+    // 0 = Application, 1 = Plasma.
+    property alias cfg_themePreset: presetCombo.currentIndex
+    // 0 = Light, 1 = Dark, 2 = System. Kept as a normal property because the combo
+    // displays System while Plasma is selected without overwriting the Application color.
+    property int cfg_themeColors
     property alias cfg_positiveColor: posColorButton.text
     property alias cfg_negativeColor: negColorButton.text
     property alias cfg_bgOpacity: bgOpacitySlider.value
@@ -14,7 +18,49 @@ Item {
     property alias cfg_tickerOpacity: tickerOpacitySlider.value
     property alias cfg_priceColor: priceColorButton.text
     property alias cfg_priceOpacity: priceOpacitySlider.value
-    property alias cfg_expandedViewBackground: popupBackgroundSwitch.checked
+
+    // Only the Application preset paints its own background, so only then do the
+    // opacity and color controls apply. Plasma follows the system colors.
+    readonly property bool appBackgroundUsed: cfg_themePreset === 0
+
+    signal configurationChanged()
+
+    function presetHint() {
+        if (page.cfg_themePreset === 1) {
+            return i18n("The widget follows the system Plasma theme, including its background and colors.");
+        }
+        return i18n("The widget draws its own background and rounded cards. Choose its colors below.");
+    }
+
+    function applyPreset(index) {
+        // The color choice is kept when switching presets, so it is still there when
+        // going back to Application.
+        page.cfg_themePreset = index === 1 ? 1 : 0;
+        page.syncColorsCombo();
+        page.configurationChanged();
+    }
+
+    // Plasma always uses the system colors. The combo shows System while it is selected,
+    // but the stored Application color is kept for when the user switches back.
+    function syncColorsCombo() {
+        if (!colorsCombo) return;
+        colorsCombo.currentIndex = page.cfg_themePreset === 1 ? 2 : page.cfg_themeColors;
+    }
+
+    onCfg_themePresetChanged: page.syncColorsCombo()
+    onCfg_themeColorsChanged: page.syncColorsCombo()
+
+    // The applet migrates these before the dialog opens; this only keeps the page
+    // usable if it is ever shown before that migration wrote its values.
+    function ensureThemeDefaults() {
+        if (page.cfg_themePreset !== 0 && page.cfg_themePreset !== 1) page.cfg_themePreset = 1;
+        if (page.cfg_themeColors < 0) page.cfg_themeColors = 2;
+    }
+
+    Component.onCompleted: {
+        page.ensureThemeDefaults();
+        page.syncColorsCombo();
+    }
 
     ScrollView {
         anchors.fill: parent
@@ -25,12 +71,60 @@ Item {
         Kirigami.FormLayout {
             width: parent.availableWidth
 
-            ComboBox {
-                id: themeCombo
+            Item {
+                Kirigami.FormData.isSection: true
+                Kirigami.FormData.label: i18n("Theme")
+            }
 
-                Kirigami.FormData.label: i18n("Theme:")
-                // The theme is stored by index, so the labels can be translated freely.
-                model: [i18n("Light"), i18n("Dark"), i18n("Plasma")]
+            ComboBox {
+                id: presetCombo
+
+                Kirigami.FormData.label: i18n("Preset:")
+                model: [
+                    i18n("Application"),
+                    i18n("Plasma")
+                ]
+                onActivated: page.applyPreset(currentIndex)
+            }
+
+            ComboBox {
+                id: colorsCombo
+
+                Kirigami.FormData.label: i18n("Colors:")
+                enabled: page.cfg_themePreset === 0
+                model: [
+                    i18n("Light"),
+                    i18n("Dark"),
+                    i18n("System")
+                ]
+                onActivated: {
+                    page.cfg_themeColors = currentIndex;
+                    page.configurationChanged();
+                }
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: page.presetHint()
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                color: Kirigami.Theme.disabledTextColor
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("Colors apply only to the Application preset. Plasma always uses the system colors.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                color: Kirigami.Theme.disabledTextColor
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("The panel indicator stays transparent and uses the panel colors, whichever theme is selected.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                color: Kirigami.Theme.disabledTextColor
             }
 
             TextField {
@@ -47,7 +141,7 @@ Item {
 
             RowLayout {
                 Kirigami.FormData.label: i18n("Background Opacity:")
-                visible: themeCombo.currentIndex !== 2
+                visible: page.appBackgroundUsed
 
                 Slider {
                     id: bgOpacitySlider
@@ -122,25 +216,6 @@ Item {
                     text: priceOpacitySlider.value + "%"
                 }
 
-            }
-
-            Item {
-                Kirigami.FormData.isSection: true
-                Kirigami.FormData.label: i18n("Panel popup")
-            }
-
-            CheckBox {
-                id: popupBackgroundSwitch
-                Kirigami.FormData.label: i18n("Background:")
-                text: i18n("Use the Plasma background")
-            }
-
-            Label {
-                Layout.fillWidth: true
-                text: i18n("Only applies when the widget is expanded from a panel: checked shows the Plasma background, unchecked shows only the cards. Has no effect on the desktop.")
-                wrapMode: Text.WordWrap
-                font.pixelSize: 10
-                color: Kirigami.Theme.disabledTextColor
             }
 
         }

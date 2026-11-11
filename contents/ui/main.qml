@@ -10,7 +10,11 @@ PlasmoidItem {
     id: root
 
     // --- CONFIGURATION ---
-    Plasmoid.backgroundHints: root.isPlasmaTheme ? PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground : PlasmaCore.Types.NoBackground
+    // The compact panel indicator is always transparent over the panel. On the desktop,
+    // Plasma leaves the background to the system, while Application paints the cards.
+    Plasmoid.backgroundHints: !root.inPanel && root.usesPlasmaSurface
+        ? PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
+        : PlasmaCore.Types.NoBackground
     // Detect where we are (Panel vs Desktop) to switch views
     preferredRepresentation: (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical) ? root.compactRepresentation : root.fullRepresentation
 
@@ -138,23 +142,44 @@ PlasmoidItem {
     property string panelCurrentPercent: "+0.00%"
     property bool panelCurrentIsPositive: true
     readonly property string panelSymbol: root.isMultiMode ? root.panelTicker : root.singleTicker
-    property bool isLightTheme: Plasmoid.configuration.selectedTheme === 0
-    property bool isDarkTheme: Plasmoid.configuration.selectedTheme === 1
-    property bool isPlasmaTheme: Plasmoid.configuration.selectedTheme === 2
+
+    // --- THEME ---
+    // The background has two independent choices: a preset that applies to both the
+    // desktop and the panel, or a per-context source under Custom. The colors are a
+    // separate choice so the cards the widget draws always have a readable palette.
+    //
+    // Preset: 0 = Application, 1 = Plasma. Fresh placements default to Plasma;
+    // -1 is only the "not migrated yet" sentinel.
+    readonly property int themePreset: Plasmoid.configuration.themePreset === 0 ? 0 : 1
+    // Colors: 0 = Light, 1 = Dark, 2 = System. They apply to the Application preset;
+    // Plasma always follows the system colors.
+    readonly property int themeColors: Plasmoid.configuration.themeColors === 0 ? 0
+                                      : (Plasmoid.configuration.themeColors === 1 ? 1 : 2)
+    readonly property bool inPanel: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+                                    || Plasmoid.formFactor === PlasmaCore.Types.Vertical
+    // Plasma follows the system background and colors; Application draws its own cards.
+    readonly property bool usesPlasmaSurface: themePreset === 1
+    readonly property bool appDrawnSurface: themePreset === 0
+    // Light/dark detection for the Application System color choice. Kirigami follows
+    // the Plasma color scheme, so this updates when the system theme changes.
+    readonly property bool systemLightColors: Kirigami.Theme.backgroundColor.hslLightness > 0.5
+    readonly property bool appLightPalette: themeColors === 0 || (themeColors === 2 && systemLightColors)
+    // Effective lightness of the surface currently on screen. The chart and the views
+    // use it for their own light/dark details.
+    property bool isLightTheme: root.usesPlasmaSurface ? root.systemLightColors : root.appLightPalette
+    // The panel indicator always uses the panel's own palette, independent of the
+    // widget theme, so it looks the same whichever background/colors are selected.
+    readonly property color panelTextColor: Kirigami.Theme.textColor
+    readonly property color panelPositiveColor: root.withContrast(Plasmoid.configuration.positiveColor, Kirigami.Theme.backgroundColor)
+    readonly property color panelNegativeColor: root.withContrast(Plasmoid.configuration.negativeColor, Kirigami.Theme.backgroundColor)
     // A vertical panel constrains the applet to the panel thickness, so the compact
     // view has to fit (and elide) inside that width instead of using the content width.
     readonly property bool isVerticalPanel: Plasmoid.formFactor === PlasmaCore.Types.Vertical
-    // Colour the gain/loss text is measured against. In a panel that is the Plasma
-    // theme background, in the widget it is the background of the selected theme.
-    property color contrastBackground: {
-        if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical)
-            return Kirigami.Theme.backgroundColor;
-        if (isLightTheme)
-            return "#ffffff";
-        if (isDarkTheme)
-            return "#1a1a1a";
-        return Kirigami.Theme.backgroundColor;
-    }
+    // Colour the gain/loss text is measured against: the base colour of the widget's
+    // own cards, otherwise the Plasma surface.
+    property color contrastBackground: root.usesPlasmaSurface
+        ? Kirigami.Theme.backgroundColor
+        : (root.appLightPalette ? "#ffffff" : "#1a1a1a")
     // The configured gain/loss colours, adjusted only as far as needed to stay readable
     // (WCAG AA, 4.5:1) on that background. The default green is bright enough for the
     // dark theme but washes out on white, so it is darkened in the light theme.
@@ -232,48 +257,69 @@ PlasmoidItem {
 
     function getThemeColor(what) {
         if (what === "ticker") {
-            if (isPlasmaTheme)
+            if (root.usesPlasmaSurface)
                 return Kirigami.Theme.textColor;
 
-            return Qt.colorEqual(Plasmoid.configuration.tickerColor, "#ffffff") && isLightTheme ? "#000000" : Plasmoid.configuration.tickerColor;
+            return Qt.colorEqual(Plasmoid.configuration.tickerColor, "#ffffff") && root.appLightPalette ? "#000000" : Plasmoid.configuration.tickerColor;
         } else if (what === "price") {
-            if (isPlasmaTheme)
+            if (root.usesPlasmaSurface)
                 return Kirigami.Theme.textColor;
 
-            return Qt.colorEqual(Plasmoid.configuration.priceColor, "#ffffff") && isLightTheme ? "#000000" : Plasmoid.configuration.priceColor;
+            return Qt.colorEqual(Plasmoid.configuration.priceColor, "#ffffff") && root.appLightPalette ? "#000000" : Plasmoid.configuration.priceColor;
         } else if (what === "background") {
-            let color = undefined;
-            if (isLightTheme)
-                color = "#ffffff";
-            else if (isDarkTheme)
-                color = "#1a1a1a";
-            if (isLightTheme || isDarkTheme) {
-                const c = Qt.color(color);
-                return Qt.rgba(c.r, c.g, c.b, bgOpacity / 100);
-            }
-            return "transparent";
+            // Plasma paints the surface behind the views, or the full view draws the
+            // single forced light/dark Plasma-style surface instead.
+            if (root.usesPlasmaSurface)
+                return "transparent";
+
+            const c = Qt.color(root.appLightPalette ? "#ffffff" : "#1a1a1a");
+            return Qt.rgba(c.r, c.g, c.b, root.bgOpacity / 100);
         } else if (what === "chart") {
-            if (isLightTheme)
-                return "#e0e0e0";
-            else if (isDarkTheme)
-                return "#333333";
-            return Kirigami.Theme.disabledTextColor;
+            if (root.usesPlasmaSurface)
+                return Kirigami.Theme.disabledTextColor;
+            return root.appLightPalette ? "#e0e0e0" : "#333333";
         } else if (what === "text") {
-            if (isLightTheme)
-                return "#555555";
-            else if (isDarkTheme)
-                return "#888888";
-            return Kirigami.Theme.disabledTextColor;
+            if (root.usesPlasmaSurface)
+                return Kirigami.Theme.disabledTextColor;
+            return root.appLightPalette ? "#555555" : "#888888";
         }
         return "";
     }
 
-    function getColor(color) {
-        if (isLightTheme) {
-            return "#ffffff";
-        } else if (isDarkTheme) {
+    // Rewrites the old single Light/Dark/Plasma choice as the new preset and colors.
+    // Every new entry defaults to -1 ("not migrated yet"), so a real value is what a
+    // previous run or the settings dialog wrote. That makes the migration idempotent
+    // and keeps a theme picked in the settings page from being overwritten.
+    function migrateThemeSettings() {
+        var c = Plasmoid.configuration;
+        // The Custom preset was removed: keep the background its desktop used.
+        if (c.themePreset === 2) {
+            c.themePreset = c.desktopThemeSource === 1 ? 1 : 0;
+        }
+        if (c.themePreset >= 0 && c.themeColors >= 0) return;
+        try {
+            var legacy = Number(c.selectedTheme);
+            var preset = 1;
+            var colors = 2;
+            if (legacy === 0) {
+                preset = 0;
+                colors = 0;
+            } else if (legacy === 1) {
+                preset = 0;
+                colors = 1;
+            } else if (legacy === 2) {
+                preset = 1;
+            }
+            // legacy === -1 means the old setting was never saved: use the new
+            // defaults, Plasma with System colors.
+            if (c.themePreset < 0) c.themePreset = preset;
+            if (c.themeColors < 0) c.themeColors = colors;
+        } catch (e) {
+            console.log("Error migrating theme settings: " + e);
         }
     }
+
+    Component.onCompleted: root.migrateThemeSettings()
 
     function getCurrencySymbol(code) {
         // Yahoo occasionally reports the literal text "null" for a missing currency.
@@ -1883,21 +1929,9 @@ PlasmoidItem {
     readonly property bool panelAlternate: Plasmoid.configuration.alternatePricePercent
                                            && !root.hideChangePercentage
                                            && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
-    // The expanded panel view normally lives in Plasma's popup, whose background is drawn
-    // by the shell. Turning the option off uses a popup of our own with no background, so
-    // only the widget cards remain visible.
-    readonly property bool expandedViewBackground: Plasmoid.configuration.expandedViewBackground
-    // Our own panel popup has no Plasma background behind the cards, so in Plasma-theme
-    // mode the views must paint a card background themselves instead of staying transparent.
-    readonly property bool customExpandedCard: !expandedViewBackground
-                                            && (Plasmoid.formFactor === PlasmaCore.Types.Horizontal
-                                                || Plasmoid.formFactor === PlasmaCore.Types.Vertical)
-    readonly property color customExpandedCardColor: root.isPlasmaTheme
-        ? Qt.rgba(Kirigami.Theme.backgroundColor.r,
-                  Kirigami.Theme.backgroundColor.g,
-                  Kirigami.Theme.backgroundColor.b,
-                  root.bgOpacity / 100)
-        : root.bgColor
+    // The expanded panel view uses our transparent popup for Application, which paints
+    // its own cards. Plasma keeps the standard Plasma popup and its system background.
+    readonly property bool customPanelPopup: !root.usesPlasmaSurface
     property bool panelShowPercent: false
 
     Timer {
@@ -1950,9 +1984,9 @@ PlasmoidItem {
     }
 
     // Open the expanded panel view in Plasma's popup (with its background) or in our own
-    // popup, which draws no background and therefore shows only the widget's cards.
+    // popup, which draws no background and therefore shows only the widget's surface.
     function togglePanelPopup() {
-        if (root.expandedViewBackground) {
+        if (!root.customPanelPopup) {
             root.expanded = !root.expanded;
             return;
         }
@@ -1979,10 +2013,10 @@ PlasmoidItem {
         onTriggered: root.panelPopupRecentlyClosed = false
     }
 
-    onExpandedViewBackgroundChanged: {
-        // Close the mode that is no longer selected, so changing the option takes effect
+    onCustomPanelPopupChanged: {
+        // Close the mode that is no longer selected, so changing the theme takes effect
         // immediately instead of leaving the old popup on screen.
-        if (root.expandedViewBackground) {
+        if (!root.customPanelPopup) {
             if (panelPopupWindowLoader.item)
                 panelPopupWindowLoader.item.visible = false;
             panelPopupWindowLoader.active = false;
@@ -2195,7 +2229,7 @@ PlasmoidItem {
                     Layout.fillWidth: root.isVerticalPanel
                     Text {
                         text: (root.isMultiMode ? root.panelTicker : root.singleTicker).toUpperCase()
-                        color:  Kirigami.Theme.textColor
+                        color: root.panelTextColor
                         font.pixelSize: 9
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
@@ -2211,7 +2245,7 @@ PlasmoidItem {
                     Text {
                         visible: !root.isVerticalPanel
                         text: compactRoot.shownPositive ? "▲" : "▼"
-                        color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
+                        color: compactRoot.shownPositive ? root.panelPositiveColor : root.panelNegativeColor
                         font.pixelSize: 8
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
@@ -2225,7 +2259,7 @@ PlasmoidItem {
                               : (compactRoot.ext
                                  ? (compactRoot.ext.kind === "pre" ? root.tagPreMarket : root.tagAfterHours)
                                  : "")
-                        color: Kirigami.Theme.textColor
+                        color: root.panelTextColor
                         opacity: 0.6
                         font.pixelSize: 8
                         font.weight: Font.Bold
@@ -2263,7 +2297,7 @@ PlasmoidItem {
                                              : (compactRoot.useFixedWidth ? compactRoot.widestPrice : 0)
                         Layout.fillWidth: root.isVerticalPanel
                         elide: Text.ElideRight
-                        color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
+                        color: compactRoot.shownPositive ? root.panelPositiveColor : root.panelNegativeColor
                         font.pixelSize: root.isVerticalPanel
                                          ? (compactRoot.shownPrice.length > 7 ? 8 : 9)
                                          : 11
@@ -2280,9 +2314,9 @@ PlasmoidItem {
                                  && (!root.panelAlternate || root.panelShowPercent)
                         // Background: translucent tint of the positive/negative color for theme independence
                         color: compactRoot.shownPositive
-                               ? Qt.rgba(root.positiveColor.r, root.positiveColor.g, root.positiveColor.b, 0.18)
-                               : Qt.rgba(root.negativeColor.r, root.negativeColor.g, root.negativeColor.b, 0.18)
-                        border.color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
+                               ? Qt.rgba(root.panelPositiveColor.r, root.panelPositiveColor.g, root.panelPositiveColor.b, 0.18)
+                               : Qt.rgba(root.panelNegativeColor.r, root.panelNegativeColor.g, root.panelNegativeColor.b, 0.18)
+                        border.color: compactRoot.shownPositive ? root.panelPositiveColor : root.panelNegativeColor
                         border.width: 1
                         Layout.preferredWidth: pctText2.implicitWidth + (Kirigami.Units.smallSpacing * 2)
                         // Fixed width: every value gets the same badge width (the text stays centred),
@@ -2296,7 +2330,7 @@ PlasmoidItem {
                             id: pctText2
                             anchors.centerIn: parent
                             text: compactRoot.shownPercent
-                            color: compactRoot.shownPositive ? root.positiveColor : root.negativeColor
+                            color: compactRoot.shownPositive ? root.panelPositiveColor : root.panelNegativeColor
                             font.pixelSize: 10
                             font.weight: Font.Black
                             renderType: Text.NativeRendering
@@ -2319,7 +2353,7 @@ PlasmoidItem {
             // Two columns only in multi mode with the side-by-side list.
             readonly property bool twoColumns: root.isMultiMode && root.showTwoList
             // Width of the drag zone between the two columns, including its visual line.
-            readonly property int dividerWidth: root.isPlasmaTheme ? 8 : 10
+            readonly property int dividerWidth: root.usesPlasmaSurface ? 8 : 10
             // A stored width of 0 keeps the automatic layout: both columns share the card.
             readonly property bool manualSplit: twoColumns && root.twoColumnLeftWidth > 0
             // The stored width can be too large for the current widget width; clamp it so the
@@ -2481,7 +2515,7 @@ PlasmoidItem {
                     anchors.fill: parent
                     // Do not instantiate a second copy of the full view unless the custom
                     // panel popup is actually in use.
-                    active: root.customExpandedCard
+                    active: root.customPanelPopup
                     sourceComponent: fullViewComponent
                 }
 
