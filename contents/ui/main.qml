@@ -235,8 +235,10 @@ PlasmoidItem {
     // Show the Line/Candles toggle in the chart.
     property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
     property bool showChartHover: Plasmoid.configuration.showChartHover
-    // Latest Yahoo headlines for the single-stock view (the Chart/News icons in its header).
+    // Latest news headlines for the single-stock view (the Chart/News icons in its header).
     property bool showNews: Plasmoid.configuration.showNews
+    property bool newsSourceYahoo: Plasmoid.configuration.newsSourceYahoo
+    property bool newsSourceBvb: Plasmoid.configuration.newsSourceBvb
     property int newsCount: Plasmoid.configuration.newsCount
     property int newsRefreshMinutes: Plasmoid.configuration.newsRefreshMinutes
     // "chart" or "news": what the single-stock view shows below the quote. Not persisted:
@@ -526,8 +528,15 @@ PlasmoidItem {
     // Set by our own panel popup; Plasma's popup reports through `expanded`.
     property bool panelPopupShown: false
     readonly property bool fullViewShown: !root.inPanel || root.expanded || root.panelPopupShown
+    // The News pane exists only when the feature is on and at least one source can
+    // provide something for the shown symbol (BVB only covers Romanian listings).
+    readonly property bool newsAvailable: root.showNews
+                                          && root.singleTicker.trim() !== ""
+                                          && (root.newsSourceYahoo
+                                              || (root.newsSourceBvb
+                                                  && BvbNews.baseSymbol(root.singleTicker) !== ""))
     // The single-stock view is not shown in the list-only multi-stock view.
-    readonly property bool newsPaneShown: root.showNews && root.singleViewPane === "news"
+    readonly property bool newsPaneShown: root.newsAvailable && root.singleViewPane === "news"
                                           && root.fullViewShown && (!root.isMultiMode || root.showTwoList)
                                           && root.singleTicker.trim() !== ""
 
@@ -744,7 +753,7 @@ PlasmoidItem {
     // Fetches the headlines for `symbol` unless they are fresh. `force` (the refresh
     // button and menu) skips the freshness and retry checks.
     function requestNews(symbol, force) {
-        if (!root.showNews) return;
+        if (!root.newsAvailable) return;
         var sym = String(symbol || "").trim();
         if (sym === "") return;
         var key = root.newsKey(sym);
@@ -760,17 +769,20 @@ PlasmoidItem {
             // interval, the next time the pane opens, or the refresh button.
             if (now - entry.attempt < 60000) return;
         }
-        var wantsBvb = BvbNews.baseSymbol(sym) !== "";
-        root.setNewsEntry(key, { pending: true, remaining: wantsBvb ? 2 : 1,
+        var wantsYahoo = root.newsSourceYahoo;
+        var wantsBvb = root.newsSourceBvb && BvbNews.baseSymbol(sym) !== "";
+        var remaining = (wantsYahoo ? 1 : 0) + (wantsBvb ? 1 : 0);
+        if (remaining === 0) return;
+        root.setNewsEntry(key, { pending: true, remaining: remaining,
                                  attempt: now, error: false });
-        root.fetchYahooNews(key, sym, sym, false);
+        if (wantsYahoo) root.fetchYahooNews(key, sym, sym, false);
         if (wantsBvb) root.fetchBvbNews(key, sym);
     }
 
     // Runs the company-name query for the shown symbol when its ticker query found
     // nothing before the name was known.
     function retryNewsWithName() {
-        if (!root.newsPaneShown) return;
+        if (!root.newsPaneShown || !root.newsSourceYahoo) return;
         var sym = root.singleTicker.trim();
         var key = root.newsKey(sym);
         var entry = root.newsCache[key];
@@ -838,6 +850,19 @@ PlasmoidItem {
     onShowNewsChanged: {
         if (!root.showNews) root.singleViewPane = "chart";
     }
+    // The source selection changes what a cached entry can contain, so drop it. If the
+    // current symbol has no remaining source, close the News pane and hide its icons.
+    function refreshNewsSources() {
+        root.newsGeneration++;
+        root.newsCache = ({});
+        if (!root.newsAvailable) {
+            root.singleViewPane = "chart";
+            return;
+        }
+        if (root.newsPaneShown) root.requestNews(root.singleTicker, true);
+    }
+    onNewsSourceYahooChanged: Qt.callLater(root.refreshNewsSources)
+    onNewsSourceBvbChanged: Qt.callLater(root.refreshNewsSources)
     // A larger count must not wait for the next interval.
     onNewsCountChanged: {
         root.newsGeneration++;
@@ -982,7 +1007,7 @@ PlasmoidItem {
     }
 
     // Chart type selected from the chart buttons. It writes the same setting as the
-    // Chart page, so both stay in sync.
+    // Chart & News page, so both stay in sync.
     function setChartStyle(style) {
         if (style === root.chartStyle) return;
         try {

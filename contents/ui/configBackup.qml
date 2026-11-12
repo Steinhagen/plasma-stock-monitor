@@ -40,6 +40,8 @@ Item {
     property bool cfg_showChartStyleButtons
     property bool cfg_showChartHover
     property bool cfg_showNews
+    property bool cfg_newsSourceYahoo
+    property bool cfg_newsSourceBvb
     property int cfg_newsCount
     property int cfg_newsRefreshMinutes
     property bool cfg_limitHours

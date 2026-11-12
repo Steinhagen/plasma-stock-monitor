@@ -35,7 +35,7 @@ msgid "Mouse actions"
 msgstr ""
 
 #: contents/config/config.qml
-msgid "Chart"
+msgid "Chart & News"
 msgstr ""
 
 #: contents/config/config.qml
@@ -381,7 +381,23 @@ msgid "Show news headlines in the single-stock view"
 msgstr ""
 
 #: contents/ui/configChart.qml
-msgid "Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
+msgid "News sources:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Yahoo Finance"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "BVB (Romanian symbols)"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Select at least one news source."
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Headlines from the sources selected above. Yahoo Finance covers general news; BVB provides the issuer's announcements for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
 msgstr ""
 
 #: contents/ui/configChart.qml

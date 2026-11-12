@@ -118,8 +118,16 @@
             <label>Show news headlines (Chart/News icons) in the single-stock view</label>
             <default>false</default>
         </entry>
+        <entry name="newsSourceYahoo" type="Bool">
+            <label>Use Yahoo Finance as a news source</label>
+            <default>true</default>
+        </entry>
+        <entry name="newsSourceBvb" type="Bool">
+            <label>Use BVB as a news source for Romanian symbols</label>
+            <default>true</default>
+        </entry>
         <entry name="newsCount" type="Int">
-            <label>Number of headlines to show</label>
+            <label>Number of headlines to show per source</label>
             <default>24</default>
             <min>5</min>
             <max>50</max>

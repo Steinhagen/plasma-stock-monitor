@@ -23,7 +23,7 @@ ConfigModel {
         source: "configMouse.qml"
     }
     ConfigCategory {
-        name: i18n("Chart")
+        name: i18n("Chart & News")
         icon: "office-chart-line"
         source: "configChart.qml"
     }

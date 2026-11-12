@@ -34,8 +34,8 @@ msgid "Mouse actions"
 msgstr "Acțiuni mouse"
 
 #: contents/config/config.qml
-msgid "Chart"
-msgstr "Grafic"
+msgid "Chart & News"
+msgstr "Grafic & Știri"
 
 #: contents/config/config.qml
 msgid "Portfolio Tracking"
@@ -380,8 +380,24 @@ msgid "Show news headlines in the single-stock view"
 msgstr "Afișează titlurile știrilor în vizualizarea unei singure acțiuni"
 
 #: contents/ui/configChart.qml
-msgid "Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
-msgstr "Titluri de pe Yahoo Finance, plus comunicatele emitentului de la BVB pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
+msgid "News sources:"
+msgstr "Surse de știri:"
+
+#: contents/ui/configChart.qml
+msgid "Yahoo Finance"
+msgstr "Yahoo Finance"
+
+#: contents/ui/configChart.qml
+msgid "BVB (Romanian symbols)"
+msgstr "BVB (simboluri românești)"
+
+#: contents/ui/configChart.qml
+msgid "Select at least one news source."
+msgstr "Selectați cel puțin o sursă de știri."
+
+#: contents/ui/configChart.qml
+msgid "Headlines from the sources selected above. Yahoo Finance covers general news; BVB provides the issuer's announcements for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
+msgstr "Titluri din sursele selectate mai sus. Yahoo Finance acoperă știrile generale; BVB oferă comunicatele emitentului pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
 
 #: contents/ui/configChart.qml
 msgid "Headlines per source (5–50):"
@@ -1205,6 +1221,12 @@ msgstr "Mai multe pe Yahoo Finance"
 #: contents/ui/SingleStockView.qml
 msgid "Open on BVB"
 msgstr "Deschide pe BVB"
+
+#~ msgid "Chart"
+#~ msgstr "Grafic"
+
+#~ msgid "Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
+#~ msgstr "Titluri de pe Yahoo Finance, plus comunicatele emitentului de la BVB pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
 
 #~ msgid "Headlines per source:"
 #~ msgstr "Titluri per sursă:"

@@ -14,6 +14,8 @@ Item {
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
     property alias cfg_showNews: newsSwitch.checked
+    property alias cfg_newsSourceYahoo: newsYahooSwitch.checked
+    property alias cfg_newsSourceBvb: newsBvbSwitch.checked
     property alias cfg_newsCount: newsCountSpin.value
     property alias cfg_newsRefreshMinutes: newsRefreshSpin.value
     property string cfg_chartRange
@@ -110,12 +112,37 @@ Item {
                 text: i18n("Show news headlines in the single-stock view")
             }
 
+            ColumnLayout {
+                Kirigami.FormData.label: i18n("News sources:")
+                spacing: 0
+
+                CheckBox {
+                    id: newsYahooSwitch
+                    text: i18n("Yahoo Finance")
+                    enabled: newsSwitch.checked
+                }
+                CheckBox {
+                    id: newsBvbSwitch
+                    text: i18n("BVB (Romanian symbols)")
+                    enabled: newsSwitch.checked
+                }
+                Label {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Kirigami.Units.gridUnit * 22
+                    visible: newsSwitch.checked && !newsYahooSwitch.checked && !newsBvbSwitch.checked
+                    text: i18n("Select at least one news source.")
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: 10
+                    color: Kirigami.Theme.disabledTextColor
+                }
+            }
+
             Label {
                 Layout.fillWidth: true
                 // A wrapping Label still asks for its whole text width; without a cap the
                 // form makes the column that wide and the note runs past the page.
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 22
-                text: i18n("Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view.")
+                text: i18n("Headlines from the sources selected above. Yahoo Finance covers general news; BVB provides the issuer's announcements for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view.")
                 wrapMode: Text.WordWrap
                 font.pixelSize: 10
                 color: Kirigami.Theme.disabledTextColor
@@ -126,7 +153,7 @@ Item {
                 Kirigami.FormData.label: i18n("Headlines per source (5–50):")
                 from: 5
                 to: 50
-                enabled: newsSwitch.checked
+                enabled: newsSwitch.checked && (newsYahooSwitch.checked || newsBvbSwitch.checked)
             }
 
             SpinBox {
@@ -134,7 +161,7 @@ Item {
                 Kirigami.FormData.label: i18n("Update every (minutes):")
                 from: 10
                 to: 240
-                enabled: newsSwitch.checked
+                enabled: newsSwitch.checked && (newsYahooSwitch.checked || newsBvbSwitch.checked)
             }
         }
     }

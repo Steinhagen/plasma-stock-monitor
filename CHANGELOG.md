@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Optional **News** headlines from Yahoo Finance for the shown stock (Chart page,
+- Optional **News** headlines from Yahoo Finance for the shown stock (Chart & News page,
   off by default). Two small icons next to the market status switch the single-stock
   view between the chart and a scrollable list of the latest headlines, 24 by
   default (5–50). The list is fetched only while it is shown and refreshed at most
@@ -19,10 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full list (up to 60 entries) is returned by the "Stiri" tab postback and is sliced
   to the configured per-source count, with the five embedded entries as a fallback.
   BVB items are merged with Yahoo's headlines and labelled as the **BVB** source.
+- A **News sources** selector on the same page; Yahoo Finance and BVB are both on by
+  default. Turning every source off hides the Chart/News icons and closes the News
+  pane.
 - Source filter buttons in the News header, built from the sources of the shown
   headlines: one button when everything comes from the same source, or **All** plus
-  each source when there are several. Yahoo and, for `.RO` symbols, BVB appear
-  automatically.
+  each source when there are several. The buttons are built from the providers
+  present in the shown headlines.
 
 ### Fixed
 - Enabling the News option no longer reserves an empty control bar above the chart

@@ -20,7 +20,7 @@ Rectangle {
     // Background of the selected Chart/News icon, the same tint as a selected chart button.
     readonly property color selectedTint: Qt.rgba(rootItem.tickerColor.r, rootItem.tickerColor.g, rootItem.tickerColor.b, 0.14)
     // News pane: the headlines replace the chart; the cache and the fetch live in main.qml.
-    readonly property bool newsMode: rootItem.showNews && rootItem.singleViewPane === "news"
+    readonly property bool newsMode: rootItem.newsAvailable && rootItem.singleViewPane === "news"
     readonly property var newsEntry: rootItem.newsEntry
     // Distinct sources among the shown headlines, in the order their newest item appears.
     // Other providers (BVB, for example) will add their label to the items they return.
@@ -305,14 +305,14 @@ Rectangle {
                     // Not bound to marketStatusTip.visible: a child reads as hidden while its
                     // parent is, so the row could never show again. Without this, an empty row
                     // would still keep its margin from the name while the status is hidden.
-                    visible: singleStockRoot.marketSessionText !== "" || singleStockRoot.rootItem.showNews
+                    visible: singleStockRoot.marketSessionText !== "" || singleStockRoot.rootItem.newsAvailable
 
                     // The status (open/closed) doubles as the data-freshness affordance: its
                     // tooltip says how often the widget polls and when Yahoo last quoted this
                     // instrument, so delayed exchange data is visible without extra chrome.
                     PlasmaCore.ToolTipArea {
                         id: marketStatusTip
-                        Layout.alignment: singleStockRoot.rootItem.showNews ? Qt.AlignVCenter : Qt.AlignTop
+                        Layout.alignment: singleStockRoot.rootItem.newsAvailable ? Qt.AlignVCenter : Qt.AlignTop
                         implicitWidth: marketStatusRow.implicitWidth
                         implicitHeight: marketStatusRow.implicitHeight
                         visible: singleStockRoot.marketSessionText !== ""
@@ -443,7 +443,7 @@ Rectangle {
                                 // Centering the line box puts the x-height center 1 px below
                                 // the dot and the icons; this lifts the text by 1 px (the dot
                                 // stays centered on the taller cell).
-                                Layout.bottomMargin: singleStockRoot.rootItem.showNews ? 2 : 0
+                                Layout.bottomMargin: singleStockRoot.rootItem.newsAvailable ? 2 : 0
                             }
                         }
                     }
@@ -454,7 +454,7 @@ Rectangle {
                     Row {
                         id: viewPaneButtons
                         Layout.alignment: Qt.AlignVCenter
-                        visible: singleStockRoot.rootItem.showNews
+                        visible: singleStockRoot.rootItem.newsAvailable
                         spacing: 2
 
                         Repeater {
@@ -875,7 +875,7 @@ Rectangle {
                     }
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
-                // setting as the Chart page.
+                // setting as the Chart & News page.
                 Row {
                     id: chartStyleButtons
                     objectName: "chartStyleButtons"
