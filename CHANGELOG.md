@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The last successful quotes are stored in the applet configuration and shown at
+  startup while the first request is in flight, so a launch without a network (or
+  before a VPN connects) shows the previous values instead of placeholders. Cached
+  values are marked as stale — the timestamp line and the tooltip show when they were
+  fetched, and the panel shows an **OFF** tag with dimmed values. Only the list and
+  single-view numbers are cached, not the chart, and a snapshot older than seven days
+  is ignored.
+
 ### Fixed
 - The last after-hours quote is no longer dropped when Yahoo timestamps its final
   print exactly at the session end (20:00:00 ET). Such a symbol kept showing only
@@ -14,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   data, while other tickers still showed their kept after-hours value. The same
   inclusive end now applies to the chart's after-hours zone and to the kept quote,
   so the final print is not missing from the chart either.
+- A failed first quote request is now retried after 5 seconds and then with a
+  backoff up to 30 seconds, instead of waiting for the next scheduled refresh. This
+  keeps a network or VPN that is still starting at login from leaving the widget on
+  its placeholder values for minutes.
 
 ## [1.4] - 2026-11-11
 ### Added

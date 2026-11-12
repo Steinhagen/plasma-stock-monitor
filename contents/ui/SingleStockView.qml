@@ -69,6 +69,8 @@ Rectangle {
             .toLocaleTimeString(Qt.locale(), "HH:mm");
     }
     readonly property string marketDataUpdatedLine: {
+        // The cached startup values replace the usual line so their age stays visible.
+        if (rootItem.currentShowingCached) return rootItem.currentStatusText;
         if (rootItem.lastUpdated === "") return "";
         return rootItem.nextUpdate !== ""
             ? i18n("Updated %1 · Next %2", rootItem.lastUpdated, rootItem.nextUpdate)
@@ -195,11 +197,18 @@ Rectangle {
                     }
 
                     Text {
-                        text: (rootItem.lastUpdated && rootItem.nextUpdate)
-                              ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
-                        color: rootItem.secondaryTextColor
+                        text: rootItem.currentStatusText
+                        color: rootItem.currentShowingCached ? rootItem.warningTextColor
+                                                              : rootItem.secondaryTextColor
                         font.pixelSize: 9
-                        visible: rootItem.lastUpdated !== "" && !rootItem.isMultiMode && !rootItem.hideTimestamps
+                        // Cached values keep their age visible even when the user hid
+                        // the normal refresh timestamps. The date makes the line longer
+                        // than the usual time, so it must elide inside the card.
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        visible: rootItem.lastUpdated !== ""
+                                 && (!rootItem.isMultiMode || rootItem.currentShowingCached)
+                                 && (!rootItem.hideTimestamps || rootItem.currentShowingCached)
                     }
                 }
 

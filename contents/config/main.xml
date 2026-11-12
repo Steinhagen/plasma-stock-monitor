@@ -246,5 +246,15 @@
             <label>Exchange rates next update (Unix seconds)</label>
             <default></default>
         </entry>
+        <!-- Last successful quotes, kept so a launch without a network can show the
+             previous values (clearly marked as stale) instead of placeholders. -->
+        <entry name="cachedQuotes" type="String">
+            <label>Last quotes snapshot (JSON)</label>
+            <default></default>
+        </entry>
+        <entry name="cachedQuotesTime" type="String">
+            <label>Last quotes snapshot time (Unix seconds)</label>
+            <default></default>
+        </entry>
     </group>
 </kcfg>

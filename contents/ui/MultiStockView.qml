@@ -42,11 +42,13 @@ Rectangle {
     property string totalsSym: ""
     property string totalsLabel: ""
     // The timestamp line sits in the list's bottom margin; when it is hidden, do not
-    // leave that empty strip below the portfolio total.
+    // leave that empty strip below the portfolio total. Cached values always show it,
+    // even when the normal timestamps are hidden, so stale prices are never unmarked.
     readonly property bool showUpdateTimestamps: rootItem !== null && rootItem !== undefined
-                                                 && rootItem.lastUpdated !== ""
-                                                 && rootItem.isMultiMode
-                                                 && !rootItem.hideTimestamps
+                                                 && (rootItem.showingCachedData
+                                                     || (rootItem.lastUpdated !== ""
+                                                         && rootItem.isMultiMode
+                                                         && !rootItem.hideTimestamps))
 
     function recomputeTotals() {
         multiStockRoot.totals = null;
@@ -444,9 +446,12 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 8
-        text: (rootItem.lastUpdated && rootItem.nextUpdate)
-              ? i18n("Updated: %1 • Next: %2", rootItem.lastUpdated, rootItem.nextUpdate) : ""
-        color: rootItem.secondaryTextColor
+        // The cached line carries a date and can be longer than the usual time.
+        width: Math.max(0, parent.width - 16)
+        horizontalAlignment: Text.AlignHCenter
+        elide: Text.ElideRight
+        text: rootItem.updateStatusText
+        color: rootItem.showingCachedData ? rootItem.warningTextColor : rootItem.secondaryTextColor
         font.pixelSize: 10
         visible: multiStockRoot.showUpdateTimestamps
     }

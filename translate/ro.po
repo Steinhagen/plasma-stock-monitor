@@ -1096,6 +1096,20 @@ msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
 
+#: contents/ui/main.qml
+msgid "Cached data from %1"
+msgstr "Date din cache: %1"
+
+#: contents/ui/main.qml
+msgctxt "@item:panel stock data state"
+msgid "OFF"
+msgstr "OFF"
+
+#: contents/ui/main.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · cached data from %3"
+msgstr "%1 · %2 · date din cache: %3"
+
 #~ msgid "The desktop draws the background; the widget only draws a single surface when the chosen color mode is the opposite of the system."
 #~ msgstr "Desktopul desenează fundalul; widgetul desenează o singură suprafață doar când modul de culoare ales este opusul sistemului."
 

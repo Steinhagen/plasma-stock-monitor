@@ -251,6 +251,42 @@ PlasmoidItem {
     readonly property string chartPeriodLabel: root.effectiveChartRange === "1D" ? i18n("Today") : root.rangeLabel(root.effectiveChartRange)
     property string lastUpdated: ""
     property string nextUpdate: ""
+    // The range and ticker the current single-view numbers were fetched for (empty while
+    // they are placeholders). The cache stores change/percentage per range, so a save
+    // that races a ticker or range change must not label old values as the new ones.
+    property string singleDataRange: ""
+    property string singleDataTicker: ""
+    // The last successful quote batch, persisted in the applet config. At login Plasma
+    // can start the widget before the network (or a VPN) is up; showing the previous
+    // values with their real timestamp keeps the widget useful as long as they are
+    // never presented as live prices.
+    property double cachedQuotesTime: Number(Plasmoid.configuration.cachedQuotesTime) || 0
+    // True while the list (or, in single mode, the whole view) still shows cached values.
+    property bool showingCachedData: false
+    // Whether the values in the panel indicator come from the snapshot. In multi mode one
+    // row can still be cached while another is already live, so the panel marks its own
+    // ticker instead of trusting the list-wide flag.
+    property bool panelCurrentIsCached: false
+    property var cachedQuotesSnapshot: null
+    readonly property string cachedQuotesLabel: root.cachedQuotesTime > 0
+        ? new Date(root.cachedQuotesTime * 1000).toLocaleString(Qt.locale(), Locale.ShortFormat)
+        : ""
+    // One status line for the list and the tooltip: the cached state replaces the usual
+    // "Updated … Next …" so the age of the data is never hidden.
+    readonly property string updateStatusText: root.showingCachedData
+        ? i18n("Cached data from %1", root.cachedQuotesLabel)
+        : (root.lastUpdated !== "" && root.nextUpdate !== ""
+           ? i18n("Updated: %1 • Next: %2", root.lastUpdated, root.nextUpdate) : "")
+    // The single view can show a live row while another list row is still cached, so its
+    // line follows its own ticker rather than the list-wide state.
+    readonly property bool currentShowingCached: !root.showingCachedData ? false
+        : (!root.isMultiMode || root.rowIsCached(root.panelSymbol))
+    readonly property string currentStatusText: root.currentShowingCached
+        ? i18n("Cached data from %1", root.cachedQuotesLabel)
+        : (root.lastUpdated !== "" && root.nextUpdate !== ""
+           ? i18n("Updated: %1 • Next: %2", root.lastUpdated, root.nextUpdate) : "")
+    // Amber that stays readable on light and dark cards, used while data is cached.
+    readonly property color warningTextColor: root.isLightTheme ? "#8a5a00" : "#e0b25a"
     property color bgColor: getThemeColor("background")
     property color chartBaseColor: getThemeColor("chart")
     property color secondaryTextColor: getThemeColor("text")
@@ -319,7 +355,12 @@ PlasmoidItem {
         }
     }
 
-    Component.onCompleted: root.migrateThemeSettings()
+    Component.onCompleted: {
+        root.migrateThemeSettings();
+        // Before the startup timer sends its first request, so the placeholders are
+        // replaced by the previous values while the network comes up.
+        root.readCachedQuotes();
+    }
 
     function getCurrencySymbol(code) {
         // Yahoo occasionally reports the literal text "null" for a missing currency.
@@ -626,6 +667,7 @@ PlasmoidItem {
             root.panelCurrentPrice = row.price;
             root.panelCurrentPercent = row.pct;
             root.panelCurrentIsPositive = row.isPos;
+            root.panelCurrentIsCached = row.cached === true;
             return;
         }
     }
@@ -1074,19 +1116,335 @@ PlasmoidItem {
         refreshData();
     }
 
+    // --- STARTUP RETRY ---
+    // Quote requests are one-shot and the periodic refresh can be minutes away. At login
+    // Plasma can start the widget before the network (or a VPN) is ready, so a failed
+    // first batch used to leave the placeholders on screen until the regular interval.
+    // Retry soon after a failure, backing off to 30 s, and stop as soon as a quote
+    // arrives. The attempt cap keeps an offline widget from polling forever; after it,
+    // the normal refresh timer takes over.
+    property int quoteRetryDelay: 5
+    property int quoteRetryAttempts: 0
+    property bool quoteRetryScheduled: false
+    // Set only by a successful network response, never by cached data. This keeps the
+    // fast retry working even if a future cache fills the view before the first fetch.
+    property bool quoteDataReceived: false
+    Timer {
+        id: quoteRetryTimer
+        repeat: false
+        onTriggered: {
+            root.quoteRetryScheduled = false;
+            if (root.quoteDataReceived || root.quoteRetryAttempts >= 8) return;
+            root.quoteRetryAttempts++;
+            root.quoteRetryDelay = Math.min(root.quoteRetryDelay * 2, 30);
+            // Respect the active-hours and weekend settings, like the normal timer.
+            root.checkTimeAndRefresh();
+        }
+    }
+    function scheduleQuoteRetry() {
+        if (root.quoteDataReceived || root.quoteRetryScheduled
+                || root.quoteRetryAttempts >= 8) return;
+        root.quoteRetryScheduled = true;
+        quoteRetryTimer.interval = root.quoteRetryDelay * 1000;
+        quoteRetryTimer.start();
+    }
+    function noteQuoteReceived() {
+        root.quoteDataReceived = true;
+        root.quoteRetryDelay = 5;
+        root.quoteRetryAttempts = 0;
+        root.quoteRetryScheduled = false;
+        if (quoteRetryTimer.running) quoteRetryTimer.stop();
+        // In multi mode the list stays marked as cached until every restored row has its
+        // own network reply; one answered ticker must not make the others look live. In
+        // single mode the caller that owns the header values clears the flag itself.
+        if (root.isMultiMode) root.refreshCachedRowsState();
+    }
+
+    // --- CACHED QUOTES ---
+    // The last successful batch is stored in the config (like the exchange rates) so a
+    // launch without a network still has prices. Only the values needed for display are
+    // saved: the chart is fetched fresh, since a stale graph would look live.
+    readonly property int cachedQuotesMaxAge: 7 * 24 * 60 * 60
+    // A restored row is replaced by its own reply within moments on a working network.
+    // If one ticker never answers (delisted, typo) it must not keep its old price while
+    // the rest of the list shows live data, so it falls back to a placeholder after this
+    // grace period. A total outage never starts the timer, so the cache stays up.
+    readonly property int cachedRowGraceMs: 15000
+    Timer {
+        id: cachedRowGraceTimer
+        interval: root.cachedRowGraceMs
+        repeat: false
+        onTriggered: root.dropUnrefreshedCachedRows()
+    }
+    function refreshCachedRowsState() {
+        var any = false;
+        for (var i = 0; i < stockModel.count; i++) {
+            if (stockModel.get(i).cached === true) { any = true; break; }
+        }
+        root.showingCachedData = any;
+        if (!any) {
+            if (cachedRowGraceTimer.running) cachedRowGraceTimer.stop();
+        } else if (root.quoteDataReceived && !cachedRowGraceTimer.running) {
+            cachedRowGraceTimer.start();
+        }
+    }
+    // Drops the rows the network never refreshed, after the grace period. Keeping them
+    // unmarked would present yesterday's price as live; a placeholder is honest.
+    function dropUnrefreshedCachedRows() {
+        var dropped = false;
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            if (row.cached !== true) continue;
+            stockModel.set(i, {
+                "price": "---", "change": "", "pct": "", "isPos": true,
+                "currentRaw": 0.0, "prevClose": 0.0, "quoteTime": 0.0,
+                "cached": false
+            });
+            dropped = true;
+            if (row.ticker === root.panelTicker) {
+                root.panelCurrentPrice = "---";
+                root.panelCurrentPercent = "+0.00%";
+                root.panelCurrentIsPositive = true;
+                root.panelCurrentIsCached = false;
+                root.currentPrice = "---";
+                root.priceChange = "";
+                root.percentChange = "";
+                root.currentRawPrice = 0;
+                root.previousClose = 0;
+                root.quoteTimestamp = 0;
+            }
+        }
+        root.showingCachedData = false;
+        if (dropped) root.queueQuotesCacheSave();
+    }
+
+    // Parses the stored snapshot. Kept separate from readCachedQuotes() because the
+    // startup refresh timer can fire before Component.onCompleted, and the list still
+    // needs the rows on its first pass.
+    function parseCachedQuotes() {
+        var raw = Plasmoid.configuration.cachedQuotes;
+        var saved = Number(Plasmoid.configuration.cachedQuotesTime) || 0;
+        if (!raw || !(saved > 0)) return null;
+        var data;
+        try { data = JSON.parse(raw); } catch (e) { return null; }
+        return data || null;
+    }
+
+    // Restores the cached snapshot at startup. The single view gets its values here; the
+    // multi rows are filled by fetchMultiStocks(), which owns the row order.
+    function readCachedQuotes() {
+        if (root.quoteDataReceived) return;
+        var data = root.parseCachedQuotes();
+        if (!data) return;
+        var saved = Number(Plasmoid.configuration.cachedQuotesTime) || 0;
+        root.cachedQuotesSnapshot = data;
+        root.cachedQuotesTime = saved;
+        if (root.isMultiMode) {
+            // The refresh may be skipped at startup (weekend or outside the configured
+            // hours); create the rows anyway so the cached values have somewhere to go.
+            root.ensureStockRows(root.configuredTickers());
+            root.applyCachedQuotesToRows();
+            return;
+        }
+        var s = data.single;
+        // Never show another instrument's values after the configured ticker changed,
+        // nor a change/percentage that belongs to a different data range.
+        if (!s || s.ticker !== root.singleTicker || s.range !== root.effectiveChartRange
+                || !s.price || s.price === "---") return;
+        // Each half of the snapshot carries its own timestamp, so refreshing the list
+        // never makes an older single-mode value look newer than it is.
+        var singleTime = Number(data.singleTime) || saved;
+        var now = Math.floor(Date.now() / 1000);
+        if (now - singleTime > root.cachedQuotesMaxAge) return;
+        root.cachedQuotesTime = singleTime;
+        root.showingCachedData = true;
+        root.singleCompanyName = s.name || root.singleTicker;
+        root.currentPrice = s.price;
+        root.priceChange = s.change || "";
+        root.percentChange = s.pct || "";
+        root.isPositive = s.isPos !== false;
+        root.currentRawPrice = Number(s.currentRaw) || 0;
+        root.previousClose = Number(s.prevClose) || 0;
+        root.currencySym = s.currencySym || "";
+        root.quoteCurrency = s.currency || "";
+        root.quoteTimestamp = Number(s.quoteTime) || 0;
+        // The panel follows the configured range, while the header may show the chart's
+        // own range. Restore the panel values only when the two ranges agree.
+        if (root.effectiveChartRange === root.chartRange) {
+            root.panelCurrentPrice = root.currentPrice;
+            root.panelCurrentPercent = root.percentChange;
+            root.panelCurrentIsPositive = root.isPositive;
+            root.panelCurrentIsCached = true;
+        }
+        root.lastUpdated = new Date(singleTime * 1000).toLocaleTimeString(Qt.locale(), "HH:mm");
+        root.nextUpdate = "";
+        root.singleDataRange = s.range;
+        root.singleDataTicker = s.ticker;
+    }
+
+    // Fills the list placeholders from the cached snapshot, matching by ticker so the
+    // configured order and any newly added symbols are respected. Rows that already have
+    // a live value are left alone, which also makes this safe on retries.
+    function applyCachedQuotesToRows() {
+        if (!root.cachedQuotesSnapshot) root.cachedQuotesSnapshot = root.parseCachedQuotes();
+        var data = root.cachedQuotesSnapshot;
+        if (!data || !data.rows || root.quoteDataReceived) return;
+        // The stored change and percentage belong to the range they were fetched with.
+        if ((data.rowsRange || data.range) !== root.chartRange) return;
+        var rowsTime = Number(data.rowsTime) || root.cachedQuotesTime;
+        var now = Math.floor(Date.now() / 1000);
+        if (rowsTime > 0 && now - rowsTime > root.cachedQuotesMaxAge) return;
+        var applied = false;
+        for (var i = 0; i < data.rows.length; i++) {
+            var c = data.rows[i];
+            if (!c || !c.ticker || !c.price || c.price === "---") continue;
+            for (var k = 0; k < stockModel.count; k++) {
+                var row = stockModel.get(k);
+                if (row.ticker !== c.ticker || row.price !== "---") continue;
+                stockModel.set(k, {
+                    "name": c.name || c.ticker,
+                    "price": c.price || "---",
+                    "change": c.change || "",
+                    "pct": c.pct || "",
+                    "isPos": c.isPos !== false,
+                    "currentRaw": Number(c.currentRaw) || 0,
+                    "prevClose": Number(c.prevClose) || 0,
+                    "currencySym": c.currencySym || "",
+                    "currency": c.currency || "",
+                    "quoteTime": Number(c.quoteTime) || 0,
+                    "cached": true
+                });
+                applied = true;
+                break;
+            }
+        }
+        if (!applied) return;
+        root.cachedQuotesTime = rowsTime > 0 ? rowsTime : root.cachedQuotesTime;
+        root.showingCachedData = true;
+        root.lastUpdated = new Date(root.cachedQuotesTime * 1000).toLocaleTimeString(Qt.locale(), "HH:mm");
+        root.nextUpdate = "";
+        root.updatePanelFromRow(root.panelTicker);
+        // The two-column desktop view also shows the selected row in the single column.
+        root.applyCachedSingleFromRow(root.singleTicker);
+    }
+
+    // Mirrors selectTicker() for cached rows: price and currency always, the change and
+    // the quote time only when the chart shares the list's range (otherwise they belong
+    // to a different period and would be labelled incorrectly).
+    function applyCachedSingleFromRow(ticker) {
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            if (row.ticker !== ticker || row.price === "---") continue;
+            root.singleCompanyName = row.name || ticker;
+            root.currentRawPrice = Number(row.currentRaw) || 0;
+            root.currentPrice = row.price;
+            root.currencySym = row.currencySym || "";
+            root.quoteCurrency = row.currency || "";
+            root.previousClose = Number(row.prevClose) || 0;
+            if (root.effectiveChartRange === root.chartRange) {
+                root.isPositive = row.isPos !== false;
+                root.priceChange = row.change || "";
+                root.percentChange = row.pct || "";
+                root.quoteTimestamp = Number(row.quoteTime) || 0;
+            }
+            return;
+        }
+    }
+
+    // Writes are debounced because a refresh answers one ticker at a time.
+    Timer {
+        id: quotesCacheTimer
+        interval: 1500
+        repeat: false
+        onTriggered: root.writeQuotesCache()
+    }
+    function queueQuotesCacheSave() {
+        if (root.showingCachedData) return;
+        quotesCacheTimer.restart();
+    }
+    function writeQuotesCache() {
+        var previous = null;
+        try { previous = JSON.parse(Plasmoid.configuration.cachedQuotes || "null"); } catch (e) {}
+        var now = Math.floor(Date.now() / 1000);
+        var data = { "time": now, "range": root.chartRange, "rowsRange": root.chartRange,
+                     "rows": [], "rowsTime": 0, "single": null, "singleTime": 0 };
+
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            // Never re-stamp a restored value as if it had just been fetched; a save that
+            // runs while some rows are still cached stores only the answered ones.
+            if (!row || !row.ticker || row.cached === true || row.price === "---") continue;
+            data.rows.push({
+                "ticker": row.ticker, "name": row.name,
+                "price": row.price, "change": row.change, "pct": row.pct,
+                "isPos": row.isPos,
+                "currentRaw": row.currentRaw, "prevClose": row.prevClose,
+                "currencySym": row.currencySym, "currency": row.currency,
+                "quoteTime": row.quoteTime
+            });
+        }
+        if (data.rows.length > 0) {
+            data.rowsTime = now;
+        } else if (previous && previous.rows && previous.rows.length > 0) {
+            // The other view is the live source right now; keep its older snapshot with
+            // its own timestamp instead of presenting it as just refreshed.
+            data.rows = previous.rows;
+            data.rowsRange = previous.rowsRange || previous.range || data.rowsRange;
+            data.rowsTime = Number(previous.rowsTime) || Number(previous.time) || 0;
+        }
+
+        if (!root.isMultiMode && !root.showingCachedData
+                && root.singleTicker !== "" && root.singleDataTicker === root.singleTicker
+                && root.currentPrice !== "---") {
+            data.single = {
+                "ticker": root.singleTicker,
+                "name": root.singleCompanyName,
+                "price": root.currentPrice,
+                "change": root.priceChange,
+                "pct": root.percentChange,
+                "isPos": root.isPositive,
+                "currentRaw": root.currentRawPrice,
+                "prevClose": root.previousClose,
+                "currencySym": root.currencySym,
+                "currency": root.quoteCurrency,
+                "quoteTime": root.quoteTimestamp,
+                // The change and percentage belong to the range that was fetched; a
+                // different range after a restart must not reuse them.
+                "range": root.singleDataRange || root.effectiveChartRange
+            };
+            data.singleTime = now;
+        } else if (previous && previous.single) {
+            data.single = previous.single;
+            data.singleTime = Number(previous.singleTime) || Number(previous.time) || 0;
+        }
+
+        if (data.rows.length === 0 && !data.single) return;
+        // The top-level time is the newest part; each part is still aged by its own.
+        data.time = Math.max(data.rowsTime, data.singleTime) || now;
+        try {
+            Plasmoid.configuration.cachedQuotes = JSON.stringify(data);
+            Plasmoid.configuration.cachedQuotesTime = String(data.time);
+            root.cachedQuotesTime = data.time;
+            root.cachedQuotesSnapshot = data;
+        } catch (e) { console.log("Error saving cached quotes: " + e); }
+    }
+
     function fetchSingleStock(symbol, range) {
         var chartRange = range || root.effectiveChartRange;
         var xhr = new XMLHttpRequest();
         var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?" + getApiParams(chartRange);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                // Ignore a reply for a range or symbol the user has already switched away from.
-                if (chartRange !== root.effectiveChartRange || symbol !== root.singleTicker) return;
-                var response = JSON.parse(xhr.responseText);
-                processSingleData(response, symbol, chartRange);
-            }
-        }
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            if (xhr.status !== 200) { root.scheduleQuoteRetry(); return; }
+            // Ignore a reply for a range or symbol the user has already switched away from.
+            if (chartRange !== root.effectiveChartRange || symbol !== root.singleTicker) return;
+            var response = JSON.parse(xhr.responseText);
+            processSingleData(response, symbol, chartRange);
+        };
+        xhr.onerror = function() { root.scheduleQuoteRetry(); };
+        xhr.ontimeout = function() { root.scheduleQuoteRetry(); };
         xhr.open("GET", url);
+        xhr.timeout = 20000;
         xhr.send();
     }
 
@@ -1097,76 +1455,95 @@ PlasmoidItem {
         var xhr = new XMLHttpRequest();
         var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?" + getApiParams(range);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                if (range !== root.chartRange || symbol !== root.panelSymbol) return;
-                processPanelData(JSON.parse(xhr.responseText), symbol, range);
-            }
-        }
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            if (xhr.status !== 200) { root.scheduleQuoteRetry(); return; }
+            if (range !== root.chartRange || symbol !== root.panelSymbol) return;
+            processPanelData(JSON.parse(xhr.responseText), symbol, range);
+        };
+        xhr.onerror = function() { root.scheduleQuoteRetry(); };
+        xhr.ontimeout = function() { root.scheduleQuoteRetry(); };
         xhr.open("GET", url);
+        xhr.timeout = 20000;
         xhr.send();
     }
 
-    function fetchMultiStocks() {
-        var range = root.chartRange;
+    // The configured watchlist, cleaned and in display order.
+    function configuredTickers() {
         var tickers = root.multiTickers.split(",");
-        var targetTickers = [];
+        var list = [];
         tickers.forEach(function(t) {
             var clean = t.trim();
-            if (clean !== "") targetTickers.push(clean);
+            if (clean !== "") list.push(clean);
         });
-
         if (root.sortAlphabetically) {
-            targetTickers.sort(function(a, b) {
+            list.sort(function(a, b) {
                 return a.localeCompare(b);
             });
         }
-        
+        return list;
+    }
+
+    // Creates the list placeholders in display order and keeps the panel selection. Used
+    // before fetching, and by the cached values at startup when a refresh is skipped
+    // (weekend, or outside the configured hours), so the list is not left empty.
+    function ensureStockRows(targetTickers) {
         var defaultPanelTicker = targetTickers.length > 0 ? targetTickers[0] : "";
         root.panelTicker = root.manualPanelTickerOverride !== "" && targetTickers.indexOf(root.manualPanelTickerOverride) !== -1 ? root.manualPanelTickerOverride : defaultPanelTicker;
         root.singleTicker = root.panelTicker;
 
-        // Initialize placeholders to maintain display order before async completion
-        if (stockModel.count !== targetTickers.length) {
-            stockModel.clear();
-            targetTickers.forEach(function(cleanSymbol) {
-                stockModel.append({
-                    "ticker": cleanSymbol,
-                    "name": root.loadingText,
-                    "price": "---",
-                    "change": "",
-                    "pct": "",
-                    "isPos": true,
-                    "chartPoints": "[]",
-                    "chartTimes": "[]",
-                    // ListModel does not create a role from a null value; use an empty
-                    // object as the placeholder and treat it as "no sessions" on read.
-                    "chartSessions": ({}),
-                    "chartCandles": "[]",
-                    "chartRef": 0.0,
-                    "chartPre": false,
-                    "chartSessionStart": 0.0,
-                    "chartSessionCurrent": true,
-                    "quoteTime": 0.0,
-                    "prevClose": 0.0,
-                    "currentRaw": 0.0,
-                    "currencySym": "",
-                    "currency": ""
-                });
+        if (stockModel.count === targetTickers.length) return;
+        stockModel.clear();
+        targetTickers.forEach(function(cleanSymbol) {
+            stockModel.append({
+                "ticker": cleanSymbol,
+                "name": root.loadingText,
+                "price": "---",
+                "change": "",
+                "pct": "",
+                "isPos": true,
+                "chartPoints": "[]",
+                "chartTimes": "[]",
+                // ListModel does not create a role from a null value; use an empty
+                // object as the placeholder and treat it as "no sessions" on read.
+                "chartSessions": ({}),
+                "chartCandles": "[]",
+                "chartRef": 0.0,
+                "chartPre": false,
+                "chartSessionStart": 0.0,
+                "chartSessionCurrent": true,
+                "quoteTime": 0.0,
+                "prevClose": 0.0,
+                "currentRaw": 0.0,
+                "currencySym": "",
+                "currency": "",
+                "cached": false
             });
-        }
+        });
+    }
+
+    function fetchMultiStocks() {
+        var range = root.chartRange;
+        var targetTickers = root.configuredTickers();
+        root.ensureStockRows(targetTickers);
+
+        // Show the previous values (marked as cached) while the replies are in flight.
+        root.applyCachedQuotesToRows();
 
         targetTickers.forEach(function(cleanSymbol) {
             var xhr = new XMLHttpRequest();
             var url = "https://query1.finance.yahoo.com/v8/finance/chart/" + cleanSymbol + "?" + getApiParams(range);
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                    // Ignore a reply for a range the user has already switched away from.
-                    if (range !== root.chartRange) return;
-                    var response = JSON.parse(xhr.responseText);
-                    processListRow(cleanSymbol, response, range);
-                }
-            }
+                if (xhr.readyState !== XMLHttpRequest.DONE) return;
+                if (xhr.status !== 200) { root.scheduleQuoteRetry(); return; }
+                // Ignore a reply for a range the user has already switched away from.
+                if (range !== root.chartRange) return;
+                var response = JSON.parse(xhr.responseText);
+                processListRow(cleanSymbol, response, range);
+            };
+            xhr.onerror = function() { root.scheduleQuoteRetry(); };
+            xhr.ontimeout = function() { root.scheduleQuoteRetry(); };
             xhr.open("GET", url);
+            xhr.timeout = 20000;
             xhr.send();
         });
     }
@@ -1471,6 +1848,8 @@ PlasmoidItem {
             root.panelCurrentPrice = curSym + root.formatNumber(current, false);
             root.panelCurrentPercent = root.formatNumber(prev > 0 ? (change / prev) * 100 : 0, true) + "%";
             root.panelCurrentIsPositive = change >= 0;
+            root.panelCurrentIsCached = false;
+            root.noteQuoteReceived();
         } catch (e) { console.log("Error parsing panel quote: " + e); }
     }
 
@@ -1566,12 +1945,18 @@ PlasmoidItem {
                 root.panelCurrentPrice = root.currentPrice;
                 root.panelCurrentPercent = root.percentChange;
                 root.panelCurrentIsPositive = root.isPositive;
+                root.panelCurrentIsCached = false;
             }
 
             var now = new Date();
             root.lastUpdated = now.toLocaleTimeString(Qt.locale(), "HH:mm");
             var next = new Date(now.getTime() + (Plasmoid.configuration.refreshInterval * 60000));
             root.nextUpdate = next.toLocaleTimeString(Qt.locale(), "HH:mm");
+            root.singleDataRange = chartRange;
+            root.singleDataTicker = symbol;
+            if (!root.isMultiMode) root.showingCachedData = false;
+            root.noteQuoteReceived();
+            root.queueQuotesCacheSave();
         } catch (e) { console.log("Error parsing single: " + e); }
     }
 
@@ -1649,13 +2034,15 @@ PlasmoidItem {
                 "prevClose": prev,
                 "currentRaw": current,
                 "currencySym": curSym,
-                "currency": meta.currency || ""
+                "currency": meta.currency || "",
+                "cached": false
             };
 
             if (root.isMultiMode && symbol === root.panelTicker) {
                 root.panelCurrentPrice = itemData.price;
                 root.panelCurrentPercent = itemData.pct;
                 root.panelCurrentIsPositive = itemData.isPos;
+                root.panelCurrentIsCached = false;
             }
 
             var found = false;
@@ -1672,6 +2059,8 @@ PlasmoidItem {
             root.lastUpdated = now.toLocaleTimeString(Qt.locale(), "HH:mm");
             var next = new Date(now.getTime() + (Plasmoid.configuration.refreshInterval * 60000));
             root.nextUpdate = next.toLocaleTimeString(Qt.locale(), "HH:mm");
+            root.noteQuoteReceived();
+            root.queueQuotesCacheSave();
 
         } catch (e) { console.log("Error parsing multi: " + e); }
     }
@@ -1699,16 +2088,53 @@ PlasmoidItem {
         return sign + formatted;
     }
 
+    // Empty the list and forget any cached state attached to its rows. The next fetch
+    // re-applies the snapshot when it belongs to the new tickers/range.
+    function clearStockRows() {
+        stockModel.clear();
+        // Do not persist the rows that are about to be rebuilt.
+        if (quotesCacheTimer.running) quotesCacheTimer.stop();
+        root.showingCachedData = false;
+        root.panelCurrentIsCached = false;
+        if (cachedRowGraceTimer.running) cachedRowGraceTimer.stop();
+    }
     onSingleTickerChanged: {
         // In multi mode selecting a row reuses its cached chart; the periodic list
         // refresh keeps that cache current, so no request is needed here. Only the
         // single view needs a refresh when its configured ticker changes.
-        if (!root.isMultiMode) root.refreshData();
+        if (!root.isMultiMode) {
+            // The values on screen (and any save already queued) belong to the previous
+            // ticker, not to the one that is about to be fetched.
+            quotesCacheTimer.stop();
+            root.singleDataRange = "";
+            root.singleDataTicker = "";
+            // A cached single-view value belongs to the previous ticker; carrying it
+            // over would show the old symbol's price under the new one if the network
+            // is still down.
+            if (root.showingCachedData) {
+                root.showingCachedData = false;
+                root.panelCurrentIsCached = false;
+                root.singleCompanyName = root.loadingText;
+                root.currentPrice = "---";
+                root.priceChange = "";
+                root.percentChange = "";
+                root.currentRawPrice = 0;
+                root.previousClose = 0;
+                root.quoteTimestamp = 0;
+                root.panelCurrentPrice = "---";
+                root.panelCurrentPercent = "+0.00%";
+            }
+            root.readCachedQuotes();
+            root.refreshData();
+        }
     }
     onIsMultiModeChanged: {
-        stockModel.clear();
+        root.clearStockRows();
         if (!isMultiMode) {
             root.singleTicker = Qt.binding(function() { return Plasmoid.configuration.ticker; });
+            quotesCacheTimer.stop();
+            root.singleDataRange = "";
+            root.singleDataTicker = "";
             root.singleCompanyName = root.loadingText;
             root.currentPrice = "---";
             root.priceChange = "";
@@ -1718,15 +2144,38 @@ PlasmoidItem {
             root.chartSessions = null;
             root.chartCandles = [];
             root.chartReferencePrice = 0;
+            root.readCachedQuotes();
         }
         refreshData();
     }
-    onMultiTickersChanged: { stockModel.clear(); refreshData(); }
-    onSortAlphabeticallyChanged: { stockModel.clear(); refreshData(); }
+    onMultiTickersChanged: { root.clearStockRows(); refreshData(); }
+    onSortAlphabeticallyChanged: { root.clearStockRows(); refreshData(); }
     onFormatPricesChanged: refreshData()
     onHideDecimalsChanged: refreshData()
     // CHANGED: Update when the list's configured range changes
-    onChartRangeChanged: { stockModel.clear(); refreshData(); }
+    onChartRangeChanged: {
+        // The values on screen (and any save already queued) belong to the previous
+        // range, not to the one that is about to be fetched.
+        quotesCacheTimer.stop();
+        root.singleDataRange = "";
+        root.singleDataTicker = "";
+        // A cached change belongs to the range it was fetched with; do not keep it on
+        // screen under the new range while the first request is in flight.
+        if (!root.isMultiMode && root.showingCachedData) {
+            root.showingCachedData = false;
+            root.panelCurrentIsCached = false;
+            root.currentPrice = "---";
+            root.priceChange = "";
+            root.percentChange = "";
+            root.currentRawPrice = 0;
+            root.previousClose = 0;
+            root.quoteTimestamp = 0;
+            root.panelCurrentPrice = "---";
+            root.panelCurrentPercent = "+0.00%";
+        }
+        root.clearStockRows();
+        refreshData();
+    }
     // The chart's own range only refreshes the chart, never the list.
     onChartViewRangeChanged: {
         // A value changed outside the chart buttons (backup import, for example).
@@ -1774,6 +2223,9 @@ PlasmoidItem {
         if (n === 0)
             return i18n("Plasma Stock Monitor");
         var count = i18np("%1 stock", "%1 stocks", n);
+        if (root.showingCachedData)
+            return i18nc("@info:tooltip", "%1 · %2 · cached data from %3",
+                         count, root.rangeLabel(root.chartRange), root.cachedQuotesLabel);
         return root.lastUpdated !== ""
                ? i18nc("@info:tooltip", "%1 · %2 · updated %3", count, root.rangeLabel(root.chartRange), root.lastUpdated)
                : i18nc("@info:tooltip", "%1 · %2", count, root.rangeLabel(root.chartRange));
@@ -1921,10 +2373,14 @@ PlasmoidItem {
                             + root.htmlColored(p.plIsPos, root.formatNumber(p.plPercent, true) + "%") + "</td></tr>");
         }
 
-        if (root.lastUpdated !== "")
+        if (root.showingCachedData) {
+            singleRows.push("<tr><td colspan=\"3\" style=\"" + cell + "\">"
+                            + muted(i18n("Cached data from %1", root.cachedQuotesLabel)) + "</td></tr>");
+        } else if (root.lastUpdated !== "") {
             singleRows.push("<tr><td style=\"" + labelCell + "\">" + muted(i18n("Updated")) + "</td>"
                             + "<td colspan=\"2\" style=\"" + cell + "\">"
                             + root.htmlEscape(root.lastUpdated) + "</td></tr>");
+        }
 
         return "<table cellspacing=\"0\" cellpadding=\"0\">" + singleRows.join("") + "</table>";
     }
@@ -1932,6 +2388,17 @@ PlasmoidItem {
     readonly property string tooltipBody: root.buildTooltipBody()
 
     ListModel { id: stockModel }
+
+    // Whether a list row still shows its restored value. Reading tooltipRevision makes
+    // bindings that call this re-evaluate whenever a row changes.
+    function rowIsCached(ticker) {
+        var revision = root.tooltipRevision;
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            if (row.ticker === ticker) return row.cached === true;
+        }
+        return false;
+    }
 
     // Optionally show the price and the change percentage in the same spot of
     // the panel indicator, switching between them every N seconds, instead of
@@ -2095,7 +2562,7 @@ PlasmoidItem {
             if (mouse.button === Qt.MiddleButton) {
                 if (root.performMiddleClick(root.panelSymbol)) {
                     // Visual feedback for a refresh; open/none need no flicker.
-                    if (panelPrice) panelPrice.opacity = 0.3;
+                    compactRoot.priceFlicker = 0.3;
                     timerFlicker.restart();
                 }
             } else {
@@ -2106,7 +2573,7 @@ PlasmoidItem {
         Timer {
             id: timerFlicker
             interval: 300
-            onTriggered: if (panelPrice) panelPrice.opacity = 1.0;
+            onTriggered: compactRoot.priceFlicker = 1.0;
         }
 
         // While an extended-hours session is running, the ticker has a pre-market /
@@ -2129,6 +2596,9 @@ PlasmoidItem {
         // in the extended-hours session. The width then stays the same while values change.
         readonly property bool useFixedWidth: Plasmoid.configuration.fixedPanelWidth
                                               && Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+        // 1 normally; 0.3 for the brief refresh feedback. Kept as a property so the
+        // cached-data dimming below stays bound instead of being overwritten.
+        property real priceFlicker: 1.0
         property real widestContent: 0
         property real widestPrice: 0
         // Width of the values currently shown. Used as a floor so a stale layout from
@@ -2292,14 +2762,19 @@ PlasmoidItem {
                     // Session tag: AH = after-hours, PRE = pre-market, CLOSED = the
                     // exchange is not trading and there is no extended quote to show.
                     Text {
-                        visible: (compactRoot.ext !== undefined || compactRoot.marketClosed) && !root.isVerticalPanel
-                        text: compactRoot.marketClosed
-                              ? root.tagClosed
-                              : (compactRoot.ext
-                                 ? (compactRoot.ext.kind === "pre" ? root.tagPreMarket : root.tagAfterHours)
-                                 : "")
-                        color: root.panelTextColor
-                        opacity: 0.6
+                        visible: (compactRoot.ext !== undefined || compactRoot.marketClosed
+                                  || root.panelCurrentIsCached) && !root.isVerticalPanel
+                        // While the values come from the config snapshot, mark them as
+                        // stale instead of showing a session tag computed from live data.
+                        text: root.panelCurrentIsCached
+                              ? i18nc("@item:panel stock data state", "OFF")
+                              : (compactRoot.marketClosed
+                                 ? root.tagClosed
+                                 : (compactRoot.ext
+                                    ? (compactRoot.ext.kind === "pre" ? root.tagPreMarket : root.tagAfterHours)
+                                    : ""))
+                        color: root.panelCurrentIsCached ? root.warningTextColor : root.panelTextColor
+                        opacity: root.panelCurrentIsCached ? 1.0 : 0.6
                         font.pixelSize: 8
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
@@ -2343,11 +2818,13 @@ PlasmoidItem {
                         font.weight: Font.Bold
                         renderType: Text.NativeRendering
                         // Ensure the price text is fully opaque; color is controlled by the line above
-                        opacity: 1.0
+                        // Cached startup values are dimmed, so they never read as live.
+                        opacity: compactRoot.priceFlicker * (root.panelCurrentIsCached ? 0.7 : 1.0)
                     }
 
                     Rectangle {
                         radius: 4
+                        opacity: root.panelCurrentIsCached ? 0.7 : 1.0
                         // Vertical Panel Support: Hide badge in vertical panels to avoid overlap
                         visible: Plasmoid.formFactor !== PlasmaCore.Types.Vertical && !root.hideChangePercentage
                                  && (!root.panelAlternate || root.panelShowPercent)
