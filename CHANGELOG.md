@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6] - 2026-11-12
+
 ### Added
 - Optional **News** headlines from Yahoo Finance for the shown stock (Chart & News page,
   off by default). Two small icons next to the market status switch the single-stock
