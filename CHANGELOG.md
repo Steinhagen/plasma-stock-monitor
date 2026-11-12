@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The last after-hours quote is no longer dropped when Yahoo timestamps its final
+  print exactly at the session end (20:00:00 ET). Such a symbol kept showing only
+  "Market closed" and "No after-hours quote" even though the extended session had
+  data, while other tickers still showed their kept after-hours value. The same
+  inclusive end now applies to the chart's after-hours zone and to the kept quote,
+  so the final print is not missing from the chart either.
+
 ## [1.4] - 2026-11-11
 ### Added
 - A **Line style** setting (Chart page): Smooth (default) or Straight segments, like

@@ -865,6 +865,16 @@ PlasmoidItem {
         return !(s.quoteTime > 0) || s.quoteTime < s.regular.start;
     }
 
+    // True when a quote or candle at `time` belongs to the extended session `period`.
+    // The after-hours window is inclusive at its end: Yahoo can timestamp the final
+    // print exactly at the session end (20:00:00 ET), and a strict "before the end"
+    // check dropped that quote for some symbols. The pre-market end stays exclusive: a
+    // trade at 09:30 belongs to the regular session.
+    function inExtendedSession(period, time, kind) {
+        if (!period) return false;
+        return time >= period.start && (kind === "post" ? time <= period.end : time < period.end);
+    }
+
     // The extended quote to show for a symbol: the live one while its session runs,
     // or — when the option is enabled — the last one after the market closes. The
     // session checks keep a Friday after-hours quote from being shown as current
@@ -894,7 +904,7 @@ PlasmoidItem {
         if (!e || !s || !e.time) return undefined;
         var period = status === "pre" ? s.pre : (status === "post" ? s.post : null);
         if (!period) return undefined;
-        if (e.time < period.start || e.time >= period.end) return undefined;
+        if (!root.inExtendedSession(period, e.time, status)) return undefined;
         if ((status === "pre" && e.kind !== "pre")
             || (status === "post" && e.kind !== "post")) return undefined;
         return e;
@@ -945,18 +955,18 @@ PlasmoidItem {
                 // left "No after-hours" on screen after a restart.
                 var days = root.tradingDays(meta);
                 for (var d = days.length - 1; d >= 0 && !period; d--) {
-                    if (days[d].post && stamps[last] >= days[d].post.start && stamps[last] < days[d].post.end) {
+                    if (root.inExtendedSession(days[d].post, stamps[last], "post")) {
                         period = days[d].post;
                         kind = "post";
                         label = i18n("After-Hours");
-                    } else if (days[d].pre && stamps[last] >= days[d].pre.start && stamps[last] < days[d].pre.end) {
+                    } else if (root.inExtendedSession(days[d].pre, stamps[last], "pre")) {
                         period = days[d].pre;
                         kind = "pre";
                         label = i18n("Pre-Market");
                     }
                 }
             }
-            if (!period || stamps[last] < period.start || stamps[last] >= period.end) {
+            if (!root.inExtendedSession(period, stamps[last], kind)) {
                 root.setExtendedData(symbol, null);
                 return;
             }
@@ -1243,8 +1253,8 @@ PlasmoidItem {
         for (var i = 0; i < quotes.length; i++) {
             var v = quotes[i], t = timestamps[i];
             if (v === null || v === undefined) continue;
-            if (day.pre && t >= day.pre.start && t < day.pre.end) { preTimes.push(t); preValues.push(v); }
-            else if (day.post && t >= day.post.start && t < day.post.end) { postTimes.push(t); postValues.push(v); }
+            if (day.pre && root.inExtendedSession(day.pre, t, "pre")) { preTimes.push(t); preValues.push(v); }
+            else if (day.post && root.inExtendedSession(day.post, t, "post")) { postTimes.push(t); postValues.push(v); }
         }
         if (preValues.length === 0 && postValues.length === 0) return null;
         return {
@@ -1404,7 +1414,7 @@ PlasmoidItem {
         var opens = [], highs = [], lows = [], closes = [], volumes = [], times = [];
         for (var i = 0; i < timestamps.length; i++) {
             var t = timestamps[i];
-            if (t < period.start || t >= period.end) continue;
+            if (!root.inExtendedSession(period, t, zone)) continue;
             var c = quote.close ? quote.close[i] : null;
             if (c === null || c === undefined) continue;
             closes.push(c);
