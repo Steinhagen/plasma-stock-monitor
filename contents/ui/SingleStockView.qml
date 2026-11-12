@@ -628,12 +628,12 @@ Rectangle {
                 id: chartHeaderRow
                 // Bind to the settings, not to the children's visible: a child reads as
                 // invisible while this row is hidden, which would keep the row hidden for good.
-                // With the news on, the row is always there, so switching to the headlines
-                // (which draw "Updated…" and a refresh button over it) never resizes the chart.
+                // The news pane needs the row for its "Updated…" line and refresh button, but
+                // merely enabling the news must not reserve an empty bar over the chart.
                 visible: singleStockRoot.rootItem.showChartRangeButtons
                          || singleStockRoot.rootItem.showChartStyleButtons
                          || singleStockRoot.chartSessionNote !== ""
-                         || singleStockRoot.rootItem.showNews
+                         || singleStockRoot.newsMode
                 Layout.fillWidth: true
                 Layout.topMargin: 6
                 Layout.bottomMargin: 2
@@ -641,7 +641,7 @@ Rectangle {
                     singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0,
                     singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0,
                     singleStockRoot.chartSessionNote !== "" ? 14 : 0,
-                    singleStockRoot.rootItem.showNews ? 18 : 0)
+                    singleStockRoot.newsMode ? 18 : 0)
                 spacing: 6
                 // A Row, not a Flow: the buttons stay on one row and its implicitWidth (the
                 // one-row width) feeds the card's minimum width.

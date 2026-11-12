@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every 30 minutes (10–240); a click opens the article. News is not available in the
   list-only view, and Yahoo has no news for some exchanges (for example Bucharest).
 
+### Fixed
+- Enabling the News option no longer reserves an empty control bar above the chart
+  when the range buttons, the chart style buttons and the session note are all off.
+  The bar appears only when it has something to show: those controls, the note, or
+  the headlines pane with its "Updated…" line and refresh button.
+
 ## [1.5] - 2026-11-12
 
 ### Added
