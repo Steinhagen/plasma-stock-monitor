@@ -35,7 +35,7 @@ msgstr "Acțiuni mouse"
 
 #: contents/config/config.qml
 msgid "Chart & News"
-msgstr "Grafic & Știri"
+msgstr "Grafic și știri"
 
 #: contents/config/config.qml
 msgid "Portfolio Tracking"
