@@ -380,12 +380,12 @@ msgid "Show news headlines in the single-stock view"
 msgstr "Afișează titlurile știrilor în vizualizarea unei singure acțiuni"
 
 #: contents/ui/configChart.qml
-msgid "Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view."
-msgstr "Titluri de pe Yahoo Finance pentru acțiunea afișată. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
+msgid "Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
+msgstr "Titluri de pe Yahoo Finance, plus comunicatele emitentului de la BVB pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
 
 #: contents/ui/configChart.qml
-msgid "Headlines:"
-msgstr "Titluri:"
+msgid "Headlines per source (5–50):"
+msgstr "Titluri per sursă (5–50):"
 
 #: contents/ui/configChart.qml
 msgid "Update every (minutes):"
@@ -1195,8 +1195,25 @@ msgid "Candles"
 msgstr "Candele"
 
 #: contents/ui/SingleStockView.qml
+msgid "More on BVB"
+msgstr "Mai multe pe BVB"
+
+#: contents/ui/SingleStockView.qml
 msgid "More on Yahoo Finance"
 msgstr "Mai multe pe Yahoo Finance"
+
+#: contents/ui/SingleStockView.qml
+msgid "Open on BVB"
+msgstr "Deschide pe BVB"
+
+#~ msgid "Headlines per source:"
+#~ msgstr "Titluri per sursă:"
+
+#~ msgid "Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view."
+#~ msgstr "Titluri de pe Yahoo Finance pentru acțiunea afișată. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
+
+#~ msgid "Headlines:"
+#~ msgstr "Titluri:"
 
 #~ msgid "The desktop draws the background; the widget only draws a single surface when the chosen color mode is the opposite of the system."
 #~ msgstr "Desktopul desenează fundalul; widgetul desenează o singură suprafață doar când modul de culoare ales este opusul sistemului."

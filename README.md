@@ -10,7 +10,7 @@ A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo
 
 - **Two display modes:** a single-stock view or a multi-stock list, including a side-by-side layout.
 - **Charts:** reference-line or candlestick + volume, with ranges from 1D to Max and optional in-chart range buttons.
-- **News (optional):** the latest Yahoo Finance headlines for the shown stock, switched with the chart/news icons next to the market status in the single-stock view; the number of headlines and the update interval are configurable, and source buttons filter the list by provider when more than one is available.
+- **News (optional):** the latest Yahoo Finance headlines for the shown stock, plus the issuer announcements from BVB for symbols ending in `.RO`, switched with the chart/news icons next to the market status in the single-stock view; the number of headlines per source and the update interval are configurable, and source buttons filter the list by provider when more than one is available.
 - **Live context:** pre-market and after-hours quotes, market status, and the last extended quote kept after close.
 - **Portfolio:** track purchase lots, profit/loss and multiple currencies.
 - **Appearance:** Application and Plasma presets; Application supports Light/Dark/System colors, while Plasma follows the system theme, plus a transparent panel indicator, custom gain/loss colors and opacity.

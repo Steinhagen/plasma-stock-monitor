@@ -34,6 +34,15 @@ Rectangle {
             seen[source] = true;
             sources.push(source);
         }
+        // Yahoo is the primary feed, BVB follows; unknown providers are alphabetical.
+        var order = ["Yahoo", "BVB"];
+        sources.sort(function(a, b) {
+            var ia = order.indexOf(a);
+            var ib = order.indexOf(b);
+            if (ia < 0) ia = order.length;
+            if (ib < 0) ib = order.length;
+            return ia !== ib ? ia - ib : a.localeCompare(b);
+        });
         return sources;
     }
     // "" is All. A selection that is no longer among the sources falls back to All, so a
@@ -41,6 +50,8 @@ Rectangle {
     property string newsSource: ""
     readonly property bool newsFilterRelevant: newsSources.length > 1
     readonly property string newsSourceFilter: newsSources.indexOf(newsSource) >= 0 ? newsSource : ""
+    readonly property bool newsMoreIsBvb: newsSourceFilter === "BVB"
+                                          || (newsSources.length === 1 && newsSources[0] === "BVB")
     readonly property var newsFilteredItems: {
         var items = rootItem.newsItems;
         if (newsSourceFilter === "") return items;
@@ -62,7 +73,8 @@ Rectangle {
     // Centered message instead of the list: loading, nothing found, or no reply at all.
     readonly property string newsStateText: {
         if (newsHasItems) return "";
-        if (!newsEntry || (!newsEntry.loaded && !newsEntry.error)) return i18n("Loading headlines…");
+        if (!newsEntry || newsEntry.pending || (!newsEntry.loaded && !newsEntry.error))
+            return i18n("Loading headlines…");
         if (newsEntry.error) return i18n("Headlines unavailable");
         return i18n("No recent headlines for %1", rootItem.singleTicker.trim().toUpperCase());
     }
@@ -167,8 +179,13 @@ Rectangle {
     // positions change with the selected ticker and range, and using them made the minimum
     // (and therefore the split between the two desktop columns) move by a few pixels. Text
     // that grows with data no longer widens the card; it keeps its own elision/clipping.
-    readonly property real chartControlsWidth: (rootItem.showChartRangeButtons || rootItem.showChartStyleButtons)
-                                                ? chartHeaderRow.implicitWidth : 0
+    // Measure both control groups even when one is hidden: the range row alone stays under
+    // the floor, while range + style crosses it, so deriving this from the visible row made
+    // enabling the style buttons resize the whole applet. The reserved width never moves
+    // when an option is toggled.
+    readonly property real chartControlsWidth: chartRangeButtons.implicitWidth
+                                                + chartStyleButtons.implicitWidth
+                                                + 2 * chartHeaderRow.spacing
     readonly property real minimumContentWidth: Math.max(300, Math.ceil(chartControlsWidth) + 32)
     // Fixed floor, not content-derived: the extended-hours quote row appears and
     // disappears with the session. A moving minimum made Plasma resize the widget
@@ -1073,7 +1090,8 @@ Rectangle {
                             anchors.left: parent.left
                             anchors.leftMargin: 6
                             anchors.verticalCenter: parent.verticalCenter
-                            text: i18n("More on Yahoo Finance") + " ›"
+                            text: (singleStockRoot.newsMoreIsBvb ? i18n("More on BVB")
+                                                                 : i18n("More on Yahoo Finance")) + " ›"
                             textFormat: Text.PlainText
                             color: singleStockRoot.rootItem.secondaryTextColor
                             font.pixelSize: 9
@@ -1082,7 +1100,12 @@ Rectangle {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: singleStockRoot.rootItem.openYahooNews(singleStockRoot.rootItem.singleTicker)
+                                onClicked: {
+                                    if (singleStockRoot.newsMoreIsBvb)
+                                        singleStockRoot.rootItem.openBvbNews(singleStockRoot.rootItem.singleTicker);
+                                    else
+                                        singleStockRoot.rootItem.openYahooNews(singleStockRoot.rootItem.singleTicker);
+                                }
                             }
                         }
                     }
@@ -1106,6 +1129,11 @@ Rectangle {
                     MenuItem {
                         text: i18n("Open on Yahoo Finance")
                         onTriggered: singleStockRoot.rootItem.openYahooNews(singleStockRoot.rootItem.singleTicker)
+                    }
+                    MenuItem {
+                        text: i18n("Open on BVB")
+                        visible: singleStockRoot.newsSources.indexOf("BVB") >= 0
+                        onTriggered: singleStockRoot.rootItem.openBvbNews(singleStockRoot.rootItem.singleTicker)
                     }
                     MenuItem {
                         text: i18n("Refresh news")

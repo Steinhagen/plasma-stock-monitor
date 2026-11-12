@@ -381,11 +381,11 @@ msgid "Show news headlines in the single-stock view"
 msgstr ""
 
 #: contents/ui/configChart.qml
-msgid "Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view."
+msgid "Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
 msgstr ""
 
 #: contents/ui/configChart.qml
-msgid "Headlines:"
+msgid "Headlines per source (5–50):"
 msgstr ""
 
 #: contents/ui/configChart.qml
@@ -1188,5 +1188,13 @@ msgid "Candles"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
+msgid "More on BVB"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
 msgid "More on Yahoo Finance"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Open on BVB"
 msgstr ""

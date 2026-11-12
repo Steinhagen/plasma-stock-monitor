@@ -115,7 +115,7 @@ Item {
                 // A wrapping Label still asks for its whole text width; without a cap the
                 // form makes the column that wide and the note runs past the page.
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 22
-                text: i18n("Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view.")
+                text: i18n("Headlines from Yahoo Finance, plus the issuer's announcements from BVB for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view.")
                 wrapMode: Text.WordWrap
                 font.pixelSize: 10
                 color: Kirigami.Theme.disabledTextColor
@@ -123,7 +123,7 @@ Item {
 
             SpinBox {
                 id: newsCountSpin
-                Kirigami.FormData.label: i18n("Headlines:")
+                Kirigami.FormData.label: i18n("Headlines per source (5–50):")
                 from: 5
                 to: 50
                 enabled: newsSwitch.checked

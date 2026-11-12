@@ -14,16 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default (5–50). The list is fetched only while it is shown and refreshed at most
   every 30 minutes (10–240); a click opens the article. News is not available in the
   list-only view, and Yahoo has no news for some exchanges (for example Bucharest).
+- Bucharest Stock Exchange symbols (ending in `.RO`) also get the issuer's latest
+  announcements from BVB. The instrument page exposes the five newest directly; the
+  full list (up to 60 entries) is returned by the "Stiri" tab postback and is sliced
+  to the configured per-source count, with the five embedded entries as a fallback.
+  BVB items are merged with Yahoo's headlines and labelled as the **BVB** source.
 - Source filter buttons in the News header, built from the sources of the shown
   headlines: one button when everything comes from the same source, or **All** plus
-  each source when there are several. Currently every headline is from Yahoo, but
-  the list is ready for additional providers such as BVB.
+  each source when there are several. Yahoo and, for `.RO` symbols, BVB appear
+  automatically.
 
 ### Fixed
 - Enabling the News option no longer reserves an empty control bar above the chart
   when the range buttons, the chart style buttons and the session note are all off.
   The bar appears only when it has something to show: those controls, the note, or
   the headlines pane with its "Updated…" line and refresh button.
+- Toggling the chart range or style buttons no longer resizes the applet card. The
+  minimum width now reserves room for both control groups regardless of which ones
+  are shown. Previously the range row alone stayed under the 300 px floor, while
+  adding the style buttons pushed the minimum past it and the whole widget resized.
 
 ## [1.5] - 2026-11-12
 
