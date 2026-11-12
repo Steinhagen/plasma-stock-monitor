@@ -358,6 +358,9 @@ Rectangle {
                 id: extendedQuoteRow
                 readonly property color accent: singleStockRoot.hasExtendedQuote && singleStockRoot.extendedQuote.isPos
                                                 ? rootItem.positiveColor : rootItem.negativeColor
+                // Width shared by the two columns: the row minus the divider and its margins.
+                readonly property real avail: width - extendedDivider.Layout.preferredWidth
+                                              - extendedDivider.Layout.leftMargin - extendedDivider.Layout.rightMargin
                 visible: singleStockRoot.hasExtendedQuote
                 Layout.fillWidth: true
                 Layout.preferredHeight: 64
@@ -365,8 +368,15 @@ Rectangle {
                 spacing: 0
 
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    // Half of the row, not a share proportional to the text widths: with two
+                    // fillWidth columns the divider moved with every price (and jumped while
+                    // the price showed "—"). The column grows past half only when its own
+                    // content needs it, and gives up room when the extended column needs it.
+                    Layout.fillWidth: false
                     Layout.minimumWidth: 0
+                    Layout.preferredWidth: Math.max(Math.ceil(implicitWidth),
+                                                    Math.min(extendedQuoteRow.avail / 2,
+                                                             extendedQuoteRow.avail - Math.ceil(extendedColumn.implicitWidth)))
                     spacing: 1
 
                     Text {
@@ -402,6 +412,7 @@ Rectangle {
                 }
 
                 Rectangle {
+                    id: extendedDivider
                     Layout.preferredWidth: 1
                     Layout.preferredHeight: 46
                     Layout.leftMargin: 12
@@ -411,6 +422,7 @@ Rectangle {
                 }
 
                 ColumnLayout {
+                    id: extendedColumn
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     spacing: 1

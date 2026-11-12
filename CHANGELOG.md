@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backoff up to 30 seconds, instead of waiting for the next scheduled refresh. This
   keeps a network or VPN that is still starting at login from leaving the widget on
   its placeholder values for minutes.
+- The divider between the regular and the pre-market/after-hours quote no longer
+  moves with the prices. The space was split in proportion to the price widths, so
+  the pre-market column sat further right for a wider price (for example NVDA versus
+  INTC) and jumped while the price showed "—". The regular column now takes half of
+  the row and grows past it only when its price would otherwise be cut off.
 
 ## [1.4] - 2026-11-11
 ### Added
