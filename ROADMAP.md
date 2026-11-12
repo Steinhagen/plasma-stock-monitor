@@ -14,9 +14,9 @@ Issues planned for the next releases.
 
 ## Settings
 
-- [x] Keep stock search and the list settings together on the **Symbols & lists**
+- [x] Keep stock search and the list settings together on the **Symbols & Lists**
       page.
-- [x] Put all chart options on one page (now the **Chart** page).
+- [x] Put all chart options on one page (now the **Chart & News** page).
 - [x] Rework the color settings so it is clear how a theme looks and which
       custom colors are allowed.
 - [x] Add a **Mouse actions** page with presets and configurable left/middle/double

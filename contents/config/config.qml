@@ -8,9 +8,9 @@ ConfigModel {
         source: "configGeneral.qml"
     }
     ConfigCategory {
-        name: i18n("Symbols & lists")
+        name: i18n("Symbols & Lists")
         icon: "view-list-text"
-        source: "configSearch.qml"
+        source: "configSymbolsLists.qml"
     }
     ConfigCategory {
         name: i18n("Panel view")

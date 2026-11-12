@@ -22,7 +22,7 @@ msgid "General"
 msgstr "General"
 
 #: contents/config/config.qml
-msgid "Symbols & lists"
+msgid "Symbols & Lists"
 msgstr "Simboluri și liste"
 
 #: contents/config/config.qml
@@ -721,7 +721,7 @@ msgstr "Editează lotul"
 msgid "Ticker:"
 msgstr "Simbol:"
 
-#: contents/ui/configPortfolio.qml contents/ui/configSearch.qml
+#: contents/ui/configPortfolio.qml contents/ui/configSymbolsLists.qml
 msgid "e.g., AAPL"
 msgstr "de ex., AAPL"
 
@@ -781,125 +781,125 @@ msgstr "Cursuri de schimb: actualizate la %1"
 msgid "Close"
 msgstr "Închide"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Enter a search term."
 msgstr "Introdu un termen de căutare."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Searching..."
 msgstr "Se caută..."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "No symbols found."
 msgstr "Nu s-au găsit simboluri."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Suggestions:"
 msgstr "Sugestii:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Error parsing search results."
 msgstr "Eroare la interpretarea rezultatelor căutării."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search failed (HTTP %1)."
 msgstr "Căutarea a eșuat (HTTP %1)."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Lists"
 msgstr "Liste"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Display Mode:"
 msgstr "Mod de afișare:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Show Multi-Stock List"
 msgstr "Afișează lista cu mai multe acțiuni"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Two List:"
 msgstr "Două liste:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "single-stock on left side and multi-stock on right side"
 msgstr "o singură acțiune în stânga și lista cu mai multe acțiuni în dreapta"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Single Ticker:"
 msgstr "Simbol bursier:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Ticker List:"
 msgstr "Listă de simboluri:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Sorting:"
 msgstr "Sortare:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Sort stocks alphabetically"
 msgstr "Sortează acțiunile alfabetic"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Names:"
 msgstr "Nume:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
 msgstr "Afișează numele companiei împreună cu simbolul, de ex. Apple Inc. (AAPL)"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
 msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Swap company name and ticker symbol"
 msgstr "Inversează numele companiei și simbolul bursier"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Find symbols"
 msgstr "Caută simboluri"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search:"
 msgstr "Caută:"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "e.g. Tesla, AAPL..."
 msgstr "de ex. Tesla, AAPL..."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search"
 msgstr "Caută"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Type to find symbols and click Search."
 msgstr "Scrie pentru a găsi simboluri, apoi apasă Caută."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgctxt "@action:button abbreviation for single stock"
 msgid "SS"
 msgstr "SS"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Add to Single Stock"
 msgstr "Adaugă ca acțiune unică"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Set %1 as Single Stock."
 msgstr "Am setat %1 ca acțiune unică."
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgctxt "@action:button abbreviation for multi stock list"
 msgid "MSL"
 msgstr "MSL"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Add to Multi Stock List"
 msgstr "Adaugă la lista cu mai multe acțiuni"
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Added %1 to Multi Stock List."
 msgstr "Am adăugat %1 la lista cu mai multe acțiuni."
 
@@ -1221,6 +1221,9 @@ msgstr "Mai multe pe Yahoo Finance"
 #: contents/ui/SingleStockView.qml
 msgid "Open on BVB"
 msgstr "Deschide pe BVB"
+
+#~ msgid "Symbols & lists"
+#~ msgstr "Simboluri și liste"
 
 #~ msgid "Chart"
 #~ msgstr "Grafic"

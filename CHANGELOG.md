@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each source when there are several. The buttons are built from the providers
   present in the shown headlines.
 
+### Changed
+- The **Symbols & Lists** settings page is capitalised consistently, and its file
+  now reflects that it holds both the symbol search and the list settings.
+
 ### Fixed
 - Enabling the News option no longer reserves an empty control bar above the chart
   when the range buttons, the chart style buttons and the session note are all off.
@@ -157,10 +161,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - All chart options (style, range, in-chart buttons, hover and axes) now live together
-  on a dedicated **Chart** settings page instead of being split between General and
+  on a dedicated **Chart & News** settings page instead of being split between General and
   Appearance.
 - Moved the symbol-list settings (display mode, two-list layout, ticker list, sorting
-  and naming) from **General** to the renamed **Symbols & lists** page.
+  and naming) from **General** to the renamed **Symbols & Lists** page.
 - The Romanian translation now uses consistent session terminology: **Înaintea
   deschiderii** for pre-market and **După închidere** for after-hours, with matching
   compact labels and panel tags.

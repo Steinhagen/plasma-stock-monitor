@@ -23,7 +23,7 @@ msgid "General"
 msgstr ""
 
 #: contents/config/config.qml
-msgid "Symbols & lists"
+msgid "Symbols & Lists"
 msgstr ""
 
 #: contents/config/config.qml
@@ -720,7 +720,7 @@ msgstr ""
 msgid "Ticker:"
 msgstr ""
 
-#: contents/ui/configPortfolio.qml contents/ui/configSearch.qml
+#: contents/ui/configPortfolio.qml contents/ui/configSymbolsLists.qml
 msgid "e.g., AAPL"
 msgstr ""
 
@@ -780,125 +780,125 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Enter a search term."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Searching..."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "No symbols found."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Suggestions:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Error parsing search results."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search failed (HTTP %1)."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Lists"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Display Mode:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Show Multi-Stock List"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Two List:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "single-stock on left side and multi-stock on right side"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Single Ticker:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Ticker List:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Sorting:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Sort stocks alphabetically"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Names:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Swap company name and ticker symbol"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Find symbols"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search:"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "e.g. Tesla, AAPL..."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Search"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Type to find symbols and click Search."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgctxt "@action:button abbreviation for single stock"
 msgid "SS"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Add to Single Stock"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Set %1 as Single Stock."
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgctxt "@action:button abbreviation for multi stock list"
 msgid "MSL"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Add to Multi Stock List"
 msgstr ""
 
-#: contents/ui/configSearch.qml
+#: contents/ui/configSymbolsLists.qml
 msgid "Added %1 to Multi Stock List."
 msgstr ""
 
