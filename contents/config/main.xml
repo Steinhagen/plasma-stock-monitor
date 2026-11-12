@@ -114,6 +114,23 @@
             <default>true</default>
         </entry>
 
+        <entry name="showNews" type="Bool">
+            <label>Show news headlines (Chart/News icons) in the single-stock view</label>
+            <default>false</default>
+        </entry>
+        <entry name="newsCount" type="Int">
+            <label>Number of headlines to show</label>
+            <default>24</default>
+            <min>5</min>
+            <max>50</max>
+        </entry>
+        <entry name="newsRefreshMinutes" type="Int">
+            <label>Minutes between headline updates while the news is shown</label>
+            <default>30</default>
+            <min>10</min>
+            <max>240</max>
+        </entry>
+
         <entry name="limitHours" type="Bool">
             <label>Only update during specific hours</label>
             <default>false</default>

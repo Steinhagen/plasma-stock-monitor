@@ -372,6 +372,26 @@ msgstr ""
 msgid "Show dates and times under the chart"
 msgstr ""
 
+#: contents/ui/configChart.qml
+msgid "News"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Show news headlines in the single-stock view"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view."
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Headlines:"
+msgstr ""
+
+#: contents/ui/configChart.qml
+msgid "Update every (minutes):"
+msgstr ""
+
 #: contents/ui/configGeneral.qml
 msgid "Refresh Interval (minutes):"
 msgstr ""
@@ -891,6 +911,40 @@ msgid "Previous close"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Cached data from %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Updated: %1 • Next: %2"
+msgstr ""
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "just now"
+msgstr ""
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 min ago"
+msgid_plural "%1 min ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 h ago"
+msgid_plural "%1 h ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 d ago"
+msgid_plural "%1 d ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
 msgctxt "@item:chart range"
 msgid "All"
 msgstr ""
@@ -912,6 +966,11 @@ msgid "%1 stock"
 msgid_plural "%1 stocks"
 msgstr[0] ""
 msgstr[1] ""
+
+#: contents/ui/main.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · cached data from %3"
+msgstr ""
 
 #: contents/ui/main.qml
 msgctxt "@info:tooltip"
@@ -966,6 +1025,11 @@ msgstr ""
 msgid "Updated"
 msgstr ""
 
+#: contents/ui/main.qml
+msgctxt "@item:panel stock data state"
+msgid "OFF"
+msgstr ""
+
 #: contents/ui/MultiStockView.qml
 msgid "%1 position"
 msgid_plural "%1 positions"
@@ -1004,16 +1068,32 @@ msgctxt "@item:short stock market session"
 msgid "After"
 msgstr ""
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Updated: %1 • Next: %2"
-msgstr ""
-
 #: contents/ui/PositionLine.qml
 msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/PositionLine.qml
 msgid "%1 @ %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Loading headlines…"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Headlines unavailable"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "No recent headlines for %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Could not update headlines"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Updated %1"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
@@ -1046,10 +1126,6 @@ msgid "Updated %1 · Next %2"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
-msgid "Updated %1"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
 msgid "Refresh %1 min"
 msgstr ""
 
@@ -1078,8 +1154,22 @@ msgid "The market is open; waiting for its first regular quote."
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
+msgctxt "@info:tooltip"
+msgid "Chart"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@info:tooltip"
+msgid "News"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Refresh news"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
@@ -1090,4 +1180,8 @@ msgstr ""
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:chart style"
 msgid "Candles"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "More on Yahoo Finance"
 msgstr ""

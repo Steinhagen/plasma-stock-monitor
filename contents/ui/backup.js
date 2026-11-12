@@ -40,6 +40,9 @@ var SETTINGS_KEYS = [
     "chartLineStyle",
     "showChartStyleButtons",
     "showChartHover",
+    "showNews",
+    "newsCount",
+    "newsRefreshMinutes",
     "limitHours",
     "skipWeekendRefresh",
     "startHour",
@@ -91,7 +94,8 @@ var BOOL_KEYS = {
     showTimeAxis: true,
     showChartRangeButtons: true,
     showChartStyleButtons: true,
-    showChartHover: true
+    showChartHover: true,
+    showNews: true
 };
 
 // [minimum, maximum] for every integer setting. The ranges mirror the SpinBoxes and
@@ -113,7 +117,9 @@ var INT_RANGES = {
     bgOpacity: [0, 100],
     autoCycleInterval: [3, 3600],
     alternateInterval: [3, 3600],
-    panelWidth: [0, 1000]
+    panelWidth: [0, 1000],
+    newsCount: [5, 50],
+    newsRefreshMinutes: [10, 240]
 };
 
 var COLOR_KEYS = {

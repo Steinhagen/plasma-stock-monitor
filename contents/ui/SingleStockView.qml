@@ -1,3 +1,6 @@
+// Delegates (all with required properties) may use the ids of this file, such as
+// singleStockRoot and newsList.
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -13,6 +16,28 @@ Rectangle {
     // Hover crosshair state for the chart. Coordinates are local to the chart canvas.
     property bool chartHoverActive: false
     property real chartHoverX: 0
+
+    // Background of the selected Chart/News icon, the same tint as a selected chart button.
+    readonly property color selectedTint: Qt.rgba(rootItem.tickerColor.r, rootItem.tickerColor.g, rootItem.tickerColor.b, 0.14)
+    // News pane: the headlines replace the chart; the cache and the fetch live in main.qml.
+    readonly property bool newsMode: rootItem.showNews && rootItem.singleViewPane === "news"
+    readonly property var newsEntry: rootItem.newsEntry
+    readonly property bool newsHasItems: rootItem.newsItems.length > 0
+    // Centered message instead of the list: loading, nothing found, or no reply at all.
+    readonly property string newsStateText: {
+        if (newsHasItems) return "";
+        if (!newsEntry || (!newsEntry.loaded && !newsEntry.error)) return i18n("Loading headlines…");
+        if (newsEntry.error) return i18n("Headlines unavailable");
+        return i18n("No recent headlines for %1", rootItem.singleTicker.trim().toUpperCase());
+    }
+    // A failed update keeps the headlines that are already shown and says so here.
+    readonly property bool newsHeaderWarning: newsEntry !== null && newsEntry.error && newsHasItems
+    readonly property string newsHeaderText: {
+        if (newsHeaderWarning) return i18n("Could not update headlines");
+        if (newsEntry && newsEntry.loaded && newsEntry.time > 0)
+            return i18n("Updated %1", rootItem.newsAge(newsEntry.time / 1000));
+        return "";
+    }
 
     // Extended quote and market session for the compact quote block. `extendedQuote`
     // is undefined while the regular session is running or when extended data is off.
@@ -147,6 +172,7 @@ Rectangle {
                 spacing: 0
 
                 ColumnLayout {
+                    id: headerNameColumn
                     spacing: 2
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                     // Take the space left of the status, so a long "Name (TICK)"
@@ -212,140 +238,214 @@ Rectangle {
                     }
                 }
 
-                // The status (open/closed) doubles as the data-freshness affordance: its
-                // tooltip says how often the widget polls and when Yahoo last quoted this
-                // instrument, so delayed exchange data is visible without extra chrome.
-                PlasmaCore.ToolTipArea {
-                    id: marketStatusTip
+                // The market status and the Chart/News icons share one row, so both are
+                // centered on the icons' 20 px height. With the news off the row holds only
+                // the status, at the same place as before.
+                RowLayout {
+                    id: headerStatusRow
                     Layout.alignment: Qt.AlignRight | Qt.AlignTop
                     Layout.leftMargin: 8
-                    implicitWidth: marketStatusRow.implicitWidth
-                    implicitHeight: marketStatusRow.implicitHeight
-                    visible: singleStockRoot.marketSessionText !== ""
-                    active: singleStockRoot.marketDataAvailable
-                    mainText: i18n("Market data")
-                    mainItem: ColumnLayout {
-                        implicitWidth: 340
-                        spacing: 5
+                    // The 20 px icon buttons are taller than a name line alone. They may overhang
+                    // the row by a pixel or two, but never make the header taller than before.
+                    Layout.maximumHeight: headerNameColumn.implicitHeight
+                    spacing: 10
+                    // Not bound to marketStatusTip.visible: a child reads as hidden while its
+                    // parent is, so the row could never show again. Without this, an empty row
+                    // would still keep its margin from the name while the status is hidden.
+                    visible: singleStockRoot.marketSessionText !== "" || singleStockRoot.rootItem.showNews
+
+                    // The status (open/closed) doubles as the data-freshness affordance: its
+                    // tooltip says how often the widget polls and when Yahoo last quoted this
+                    // instrument, so delayed exchange data is visible without extra chrome.
+                    PlasmaCore.ToolTipArea {
+                        id: marketStatusTip
+                        Layout.alignment: singleStockRoot.rootItem.showNews ? Qt.AlignVCenter : Qt.AlignTop
+                        implicitWidth: marketStatusRow.implicitWidth
+                        implicitHeight: marketStatusRow.implicitHeight
+                        visible: singleStockRoot.marketSessionText !== ""
+                        active: singleStockRoot.marketDataAvailable
+                        mainText: i18n("Market data")
+                        mainItem: ColumnLayout {
+                            implicitWidth: 340
+                            spacing: 5
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                Rectangle {
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    color: singleStockRoot.marketSessionColor
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: i18n("Market data")
+                                    color: Kirigami.Theme.textColor
+                                    font.pixelSize: 12
+                                    font.weight: Font.DemiBold
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    implicitWidth: marketTipRefreshLabel.implicitWidth + 12
+                                    implicitHeight: marketTipRefreshLabel.implicitHeight + 4
+                                    radius: height / 2
+                                    color: Qt.rgba(Kirigami.Theme.textColor.r,
+                                                   Kirigami.Theme.textColor.g,
+                                                   Kirigami.Theme.textColor.b, 0.06)
+                                    border.width: 1
+                                    border.color: Qt.rgba(Kirigami.Theme.textColor.r,
+                                                          Kirigami.Theme.textColor.g,
+                                                          Kirigami.Theme.textColor.b, 0.12)
+
+                                    Text {
+                                        id: marketTipRefreshLabel
+                                        anchors.centerIn: parent
+                                        text: singleStockRoot.marketDataRefreshLabel
+                                        color: Kirigami.Theme.disabledTextColor
+                                        font.pixelSize: 9
+                                    }
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: text !== ""
+                                text: singleStockRoot.marketDataUpdatedLine
+                                color: Kirigami.Theme.textColor
+                                font.pixelSize: 11
+                                wrapMode: Text.WordWrap
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                visible: singleStockRoot.marketDataQuoteTime !== ""
+
+                                Text {
+                                    text: i18n("Yahoo quote %1", singleStockRoot.marketDataQuoteTime)
+                                    color: Kirigami.Theme.disabledTextColor
+                                    font.pixelSize: 10
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Item { Layout.fillWidth: true }
+
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    implicitWidth: marketTipDelayLabel.implicitWidth + 12
+                                    implicitHeight: marketTipDelayLabel.implicitHeight + 4
+                                    radius: height / 2
+                                    color: singleStockRoot.marketDataWarnBackground
+                                    border.width: 1
+                                    border.color: Qt.rgba(singleStockRoot.marketDataWarnColor.r,
+                                                          singleStockRoot.marketDataWarnColor.g,
+                                                          singleStockRoot.marketDataWarnColor.b, 0.28)
+
+                                    Text {
+                                        id: marketTipDelayLabel
+                                        anchors.centerIn: parent
+                                        text: i18n("may be delayed")
+                                        color: singleStockRoot.marketDataWarnColor
+                                        font.pixelSize: 9
+                                        font.weight: Font.DemiBold
+                                    }
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: singleStockRoot.waitingForFirstQuote
+                                text: i18n("The market is open; waiting for its first regular quote.")
+                                color: Kirigami.Theme.disabledTextColor
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                            }
+                        }
 
                         RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 6
+                            id: marketStatusRow
+                            anchors.fill: parent
+                            spacing: 4
 
                             Rectangle {
-                                width: 6
-                                height: 6
-                                radius: 3
+                                width: 5
+                                height: 5
+                                radius: 2.5
                                 color: singleStockRoot.marketSessionColor
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
                             Text {
-                                text: i18n("Market data")
-                                color: Kirigami.Theme.textColor
-                                font.pixelSize: 12
-                                font.weight: Font.DemiBold
+                                text: singleStockRoot.marketSessionText
+                                color: rootItem.secondaryTextColor
+                                font.pixelSize: 9
                                 Layout.alignment: Qt.AlignVCenter
+                                // Centering the line box puts the x-height center 1 px below
+                                // the dot and the icons; this lifts the text by 1 px (the dot
+                                // stays centered on the taller cell).
+                                Layout.bottomMargin: singleStockRoot.rootItem.showNews ? 2 : 0
                             }
-
-                            Item { Layout.fillWidth: true }
-
-                            Rectangle {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitWidth: marketTipRefreshLabel.implicitWidth + 12
-                                implicitHeight: marketTipRefreshLabel.implicitHeight + 4
-                                radius: height / 2
-                                color: Qt.rgba(Kirigami.Theme.textColor.r,
-                                               Kirigami.Theme.textColor.g,
-                                               Kirigami.Theme.textColor.b, 0.06)
-                                border.width: 1
-                                border.color: Qt.rgba(Kirigami.Theme.textColor.r,
-                                                      Kirigami.Theme.textColor.g,
-                                                      Kirigami.Theme.textColor.b, 0.12)
-
-                                Text {
-                                    id: marketTipRefreshLabel
-                                    anchors.centerIn: parent
-                                    text: singleStockRoot.marketDataRefreshLabel
-                                    color: Kirigami.Theme.disabledTextColor
-                                    font.pixelSize: 9
-                                }
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: text !== ""
-                            text: singleStockRoot.marketDataUpdatedLine
-                            color: Kirigami.Theme.textColor
-                            font.pixelSize: 11
-                            wrapMode: Text.WordWrap
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-                            visible: singleStockRoot.marketDataQuoteTime !== ""
-
-                            Text {
-                                text: i18n("Yahoo quote %1", singleStockRoot.marketDataQuoteTime)
-                                color: Kirigami.Theme.disabledTextColor
-                                font.pixelSize: 10
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-
-                            Item { Layout.fillWidth: true }
-
-                            Rectangle {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitWidth: marketTipDelayLabel.implicitWidth + 12
-                                implicitHeight: marketTipDelayLabel.implicitHeight + 4
-                                radius: height / 2
-                                color: singleStockRoot.marketDataWarnBackground
-                                border.width: 1
-                                border.color: Qt.rgba(singleStockRoot.marketDataWarnColor.r,
-                                                      singleStockRoot.marketDataWarnColor.g,
-                                                      singleStockRoot.marketDataWarnColor.b, 0.28)
-
-                                Text {
-                                    id: marketTipDelayLabel
-                                    anchors.centerIn: parent
-                                    text: i18n("may be delayed")
-                                    color: singleStockRoot.marketDataWarnColor
-                                    font.pixelSize: 9
-                                    font.weight: Font.DemiBold
-                                }
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            visible: singleStockRoot.waitingForFirstQuote
-                            text: i18n("The market is open; waiting for its first regular quote.")
-                            color: Kirigami.Theme.disabledTextColor
-                            font.pixelSize: 10
-                            wrapMode: Text.WordWrap
                         }
                     }
 
-                    RowLayout {
-                        id: marketStatusRow
-                        anchors.fill: parent
-                        spacing: 4
+                    // Chart / News view selector, at the right edge of the header so it does
+                    // not move with the length of the name. Hidden (not laid out) when the
+                    // news is off.
+                    Row {
+                        id: viewPaneButtons
+                        Layout.alignment: Qt.AlignVCenter
+                        visible: singleStockRoot.rootItem.showNews
+                        spacing: 2
 
-                        Rectangle {
-                            width: 5
-                            height: 5
-                            radius: 2.5
-                            color: singleStockRoot.marketSessionColor
-                            Layout.alignment: Qt.AlignVCenter
-                        }
+                        Repeater {
+                            model: [
+                                { pane: "chart", icon: "office-chart-line", tip: i18nc("@info:tooltip", "Chart") },
+                                { pane: "news", icon: "news-subscribe", tip: i18nc("@info:tooltip", "News") }
+                            ]
+                            delegate: PlasmaCore.ToolTipArea {
+                                id: paneButton
+                                required property var modelData
+                                readonly property bool selected: singleStockRoot.rootItem.singleViewPane === modelData.pane
+                                width: 22
+                                height: 20
+                                mainText: modelData.tip
 
-                        Text {
-                            text: singleStockRoot.marketSessionText
-                            color: rootItem.secondaryTextColor
-                            font.pixelSize: 9
-                            Layout.alignment: Qt.AlignVCenter
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 4
+                                    color: paneButton.selected ? singleStockRoot.selectedTint
+                                           : (paneMouse.containsMouse
+                                              ? Qt.rgba(singleStockRoot.rootItem.tickerColor.r,
+                                                        singleStockRoot.rootItem.tickerColor.g,
+                                                        singleStockRoot.rootItem.tickerColor.b, 0.07)
+                                              : "transparent")
+                                }
+
+                                Kirigami.Icon {
+                                    anchors.centerIn: parent
+                                    width: 16
+                                    height: 16
+                                    source: paneButton.modelData.icon
+                                    isMask: true
+                                    color: paneButton.selected ? singleStockRoot.rootItem.tickerColor
+                                                               : singleStockRoot.rootItem.secondaryTextColor
+                                }
+
+                                MouseArea {
+                                    id: paneMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: singleStockRoot.rootItem.singleViewPane = paneButton.modelData.pane
+                                }
+                            }
                         }
                     }
                 }
@@ -528,16 +628,20 @@ Rectangle {
                 id: chartHeaderRow
                 // Bind to the settings, not to the children's visible: a child reads as
                 // invisible while this row is hidden, which would keep the row hidden for good.
+                // With the news on, the row is always there, so switching to the headlines
+                // (which draw "Updated…" and a refresh button over it) never resizes the chart.
                 visible: singleStockRoot.rootItem.showChartRangeButtons
                          || singleStockRoot.rootItem.showChartStyleButtons
                          || singleStockRoot.chartSessionNote !== ""
+                         || singleStockRoot.rootItem.showNews
                 Layout.fillWidth: true
                 Layout.topMargin: 6
                 Layout.bottomMargin: 2
                 Layout.preferredHeight: Math.max(
                     singleStockRoot.rootItem.showChartRangeButtons ? chartRangeButtons.implicitHeight : 0,
                     singleStockRoot.rootItem.showChartStyleButtons ? 18 : 0,
-                    singleStockRoot.chartSessionNote !== "" ? 14 : 0)
+                    singleStockRoot.chartSessionNote !== "" ? 14 : 0,
+                    singleStockRoot.rootItem.showNews ? 18 : 0)
                 spacing: 6
                 // A Row, not a Flow: the buttons stay on one row and its implicitWidth (the
                 // one-row width) feeds the card's minimum width.
@@ -548,6 +652,10 @@ Rectangle {
                     Layout.alignment: Qt.AlignTop
                     spacing: 3
                     visible: rootItem.showChartRangeButtons
+                    // Stays laid out with the headlines (so the card's minimum width does
+                    // not change when switching) but is not shown and takes no clicks.
+                    opacity: singleStockRoot.newsMode ? 0 : 1
+                    enabled: !singleStockRoot.newsMode
 
                     Repeater {
                         model: ["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "Max"]
@@ -596,11 +704,65 @@ Rectangle {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         text: singleStockRoot.chartSessionNote
-                        visible: text !== ""
+                        visible: text !== "" && !singleStockRoot.newsMode
                         color: rootItem.secondaryTextColor
                         opacity: 0.8
                         font.pixelSize: 9
                         elide: Text.ElideRight
+                    }
+
+                    // News header. A plain child of the gap Item, placed over the whole
+                    // header row, so it never takes part in the row's layout.
+                    Item {
+                        visible: singleStockRoot.newsMode
+                        x: -chartHeaderGap.x
+                        y: -chartHeaderGap.y
+                        width: chartHeaderRow.width
+                        height: chartHeaderRow.height
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: newsRefreshButton.left
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: singleStockRoot.newsHeaderText
+                            textFormat: Text.PlainText
+                            color: singleStockRoot.newsHeaderWarning ? singleStockRoot.rootItem.warningTextColor
+                                                                     : singleStockRoot.rootItem.secondaryTextColor
+                            font.pixelSize: 9
+                            elide: Text.ElideRight
+                        }
+
+                        PlasmaCore.ToolTipArea {
+                            id: newsRefreshButton
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 20
+                            height: 18
+                            mainText: i18n("Refresh news")
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 4
+                                color: newsRefreshMouse.containsMouse ? singleStockRoot.selectedTint : "transparent"
+                            }
+                            Kirigami.Icon {
+                                anchors.centerIn: parent
+                                width: 14
+                                height: 14
+                                source: "view-refresh"
+                                isMask: true
+                                color: singleStockRoot.rootItem.secondaryTextColor
+                                opacity: singleStockRoot.newsEntry && singleStockRoot.newsEntry.pending ? 0.5 : 1
+                            }
+                            MouseArea {
+                                id: newsRefreshMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: singleStockRoot.rootItem.requestNews(singleStockRoot.rootItem.singleTicker, true)
+                            }
+                        }
                     }
                 }
                 // Chart type selector, same look as the range buttons. It writes the same
@@ -609,6 +771,8 @@ Rectangle {
                     id: chartStyleButtons
                     objectName: "chartStyleButtons"
                     visible: rootItem.showChartStyleButtons
+                    opacity: singleStockRoot.newsMode ? 0 : 1
+                    enabled: !singleStockRoot.newsMode
                     Layout.minimumWidth: implicitWidth
                     Layout.alignment: Qt.AlignTop | Qt.AlignRight
                     spacing: 3
@@ -660,7 +824,8 @@ Rectangle {
                 Canvas {
                     id: singleCanvas
                     anchors.fill: parent
-                    visible: Array.isArray(rootItem.chartDataPoints) && rootItem.chartDataPoints.length > 0
+                    visible: !singleStockRoot.newsMode
+                             && Array.isArray(rootItem.chartDataPoints) && rootItem.chartDataPoints.length > 0
                     renderStrategy: Canvas.Threaded
                     renderTarget: Canvas.Image
                     onPaint: { drawChart(getContext("2d"), width, height, rootItem.chartDataPoints, rootItem.chartTimestamps, rootItem.previousClose, rootItem.isPositive, true, rootItem.showChartAxis, rootItem.showTimeAxis); }
@@ -695,6 +860,165 @@ Rectangle {
                         function onChartHoverXChanged() { singleCanvas.requestPaint(); }
                         function onExtendedQuoteChanged() { singleCanvas.requestPaint(); }
                     }
+                    // Do not bring back a stale crosshair when returning to the chart.
+                    Connections {
+                        target: singleStockRoot.rootItem
+                        function onSingleViewPaneChanged() {
+                            singleStockRoot.chartHoverActive = false;
+                            singleCanvas.requestPaint();
+                        }
+                    }
+                }
+
+                // --- News pane: the headline list replaces the chart. ---
+                // Right click on the empty pane (loading or no headlines) opens the menu too.
+                MouseArea {
+                    anchors.fill: parent
+                    visible: singleStockRoot.newsMode
+                    acceptedButtons: Qt.RightButton
+                    onClicked: newsMenu.popup()
+                }
+
+                ListView {
+                    id: newsList
+                    anchors.fill: parent
+                    visible: singleStockRoot.newsMode && singleStockRoot.newsHasItems
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: singleStockRoot.rootItem.newsItems
+                    // Shown whenever the headlines overflow (not only while scrolling), so
+                    // the user can tell there is more below the visible rows.
+                    readonly property bool overflows: contentHeight > height + 1
+                    // Rows and footer end left of the scrollbar, so it never covers a
+                    // separator, the hover tint or the text.
+                    readonly property real rowWidth: width - (overflows ? newsScrollBar.width + 4 : 0)
+                    ScrollBar.vertical: ScrollBar {
+                        id: newsScrollBar
+                        policy: newsList.overflows ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                    }
+
+                    delegate: PlasmaCore.ToolTipArea {
+                        id: newsRow
+                        required property var modelData
+                        required property int index
+                        width: newsList.rowWidth
+                        height: newsRowColumn.implicitHeight + 13
+                        // The full title, only when the row had to shorten it.
+                        mainText: newsRow.modelData.title
+                        active: newsTitle.truncated
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.bottomMargin: 1
+                            radius: 4
+                            visible: newsRowMouse.containsMouse
+                            color: Qt.rgba(singleStockRoot.rootItem.tickerColor.r,
+                                           singleStockRoot.rootItem.tickerColor.g,
+                                           singleStockRoot.rootItem.tickerColor.b, 0.06)
+                        }
+
+                        ColumnLayout {
+                            id: newsRowColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenterOffset: -0.5
+                            spacing: 3
+
+                            // Plain text: a headline is never rendered as markup.
+                            Text {
+                                id: newsTitle
+                                Layout.fillWidth: true
+                                text: newsRow.modelData.title
+                                textFormat: Text.PlainText
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                                color: singleStockRoot.rootItem.tickerColor
+                                font.pixelSize: 11
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                readonly property string age: singleStockRoot.rootItem.newsAge(newsRow.modelData.time)
+                                text: newsRow.modelData.publisher !== ""
+                                      ? (age !== "" ? newsRow.modelData.publisher + " · " + age : newsRow.modelData.publisher)
+                                      : age
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                                color: singleStockRoot.rootItem.secondaryTextColor
+                                font.pixelSize: 9
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 1
+                            color: singleStockRoot.rootItem.chartBaseColor
+                        }
+
+                        MouseArea {
+                            id: newsRowMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (mouse) => {
+                                if (mouse.button === Qt.RightButton) newsMenu.popup();
+                                else singleStockRoot.rootItem.openNewsLink(newsRow.modelData.link);
+                            }
+                        }
+                    }
+
+                    footer: Item {
+                        width: newsList.rowWidth
+                        height: 24
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: i18n("More on Yahoo Finance") + " ›"
+                            textFormat: Text.PlainText
+                            color: singleStockRoot.rootItem.secondaryTextColor
+                            font.pixelSize: 9
+                            font.bold: true
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: singleStockRoot.rootItem.openYahooNews(singleStockRoot.rootItem.singleTicker)
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    width: parent.width - 24
+                    visible: singleStockRoot.newsMode && singleStockRoot.newsStateText !== ""
+                    text: singleStockRoot.newsStateText
+                    textFormat: Text.PlainText
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    color: singleStockRoot.rootItem.secondaryTextColor
+                    font.pixelSize: 10
+                }
+
+                Menu {
+                    id: newsMenu
+
+                    MenuItem {
+                        text: i18n("Open on Yahoo Finance")
+                        onTriggered: singleStockRoot.rootItem.openYahooNews(singleStockRoot.rootItem.singleTicker)
+                    }
+                    MenuItem {
+                        text: i18n("Refresh news")
+                        onTriggered: singleStockRoot.rootItem.requestNews(singleStockRoot.rootItem.singleTicker, true)
+                    }
                 }
 
                 // The hover/click area lives inside the chart now. It must not cover the
@@ -702,6 +1026,7 @@ Rectangle {
                 MouseArea {
                     id: chartMouseArea
                     anchors.fill: parent
+                    visible: !singleStockRoot.newsMode
                     z: 100
                     hoverEnabled: true
                     cursorShape: singleStockRoot.chartHoverActive ? Qt.CrossCursor : Qt.PointingHandCursor

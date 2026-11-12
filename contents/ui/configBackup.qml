@@ -39,6 +39,9 @@ Item {
     property int cfg_chartLineStyle
     property bool cfg_showChartStyleButtons
     property bool cfg_showChartHover
+    property bool cfg_showNews
+    property int cfg_newsCount
+    property int cfg_newsRefreshMinutes
     property bool cfg_limitHours
     property bool cfg_skipWeekendRefresh
     property int cfg_startHour

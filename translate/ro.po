@@ -371,6 +371,26 @@ msgstr "Scară de timp:"
 msgid "Show dates and times under the chart"
 msgstr "Afișează datele și orele sub grafic"
 
+#: contents/ui/configChart.qml
+msgid "News"
+msgstr "Știri"
+
+#: contents/ui/configChart.qml
+msgid "Show news headlines in the single-stock view"
+msgstr "Afișează titlurile știrilor în vizualizarea unei singure acțiuni"
+
+#: contents/ui/configChart.qml
+msgid "Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view."
+msgstr "Titluri de pe Yahoo Finance pentru acțiunea afișată. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
+
+#: contents/ui/configChart.qml
+msgid "Headlines:"
+msgstr "Titluri:"
+
+#: contents/ui/configChart.qml
+msgid "Update every (minutes):"
+msgstr "Actualizează la fiecare (minute):"
+
 #: contents/ui/configGeneral.qml
 msgid "Refresh Interval (minutes):"
 msgstr "Interval de reîmprospătare (minute):"
@@ -892,6 +912,43 @@ msgid "Previous close"
 msgstr "Închidere anterioară"
 
 #: contents/ui/main.qml
+msgid "Cached data from %1"
+msgstr "Date din cache: %1"
+
+#: contents/ui/main.qml
+msgid "Updated: %1 • Next: %2"
+msgstr "Actualizat: %1 • Următorul: %2"
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "just now"
+msgstr "chiar acum"
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 min ago"
+msgid_plural "%1 min ago"
+msgstr[0] "acum %1 min"
+msgstr[1] "acum %1 min"
+msgstr[2] "acum %1 min"
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 h ago"
+msgid_plural "%1 h ago"
+msgstr[0] "acum %1 h"
+msgstr[1] "acum %1 h"
+msgstr[2] "acum %1 h"
+
+#: contents/ui/main.qml
+msgctxt "@item:news age"
+msgid "%1 d ago"
+msgid_plural "%1 d ago"
+msgstr[0] "acum %1 zi"
+msgstr[1] "acum %1 zile"
+msgstr[2] "acum %1 de zile"
+
+#: contents/ui/main.qml
 msgctxt "@item:chart range"
 msgid "All"
 msgstr "Tot"
@@ -914,6 +971,11 @@ msgid_plural "%1 stocks"
 msgstr[0] "%1 acțiune"
 msgstr[1] "%1 acțiuni"
 msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/main.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · cached data from %3"
+msgstr "%1 · %2 · date din cache: %3"
 
 #: contents/ui/main.qml
 msgctxt "@info:tooltip"
@@ -969,6 +1031,11 @@ msgstr "P/L"
 msgid "Updated"
 msgstr "Actualizat"
 
+#: contents/ui/main.qml
+msgctxt "@item:panel stock data state"
+msgid "OFF"
+msgstr "OFF"
+
 #: contents/ui/MultiStockView.qml
 msgid "%1 position"
 msgid_plural "%1 positions"
@@ -1008,10 +1075,6 @@ msgctxt "@item:short stock market session"
 msgid "After"
 msgstr "După"
 
-#: contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
-msgid "Updated: %1 • Next: %2"
-msgstr "Actualizat: %1 • Următorul: %2"
-
 #: contents/ui/PositionLine.qml
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
@@ -1019,6 +1082,26 @@ msgstr "%1 (%2)"
 #: contents/ui/PositionLine.qml
 msgid "%1 @ %2"
 msgstr "%1 la %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "Loading headlines…"
+msgstr "Se încarcă titlurile…"
+
+#: contents/ui/SingleStockView.qml
+msgid "Headlines unavailable"
+msgstr "Titluri indisponibile"
+
+#: contents/ui/SingleStockView.qml
+msgid "No recent headlines for %1"
+msgstr "Nu există titluri recente pentru %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "Could not update headlines"
+msgstr "Titlurile nu au putut fi actualizate"
+
+#: contents/ui/SingleStockView.qml
+msgid "Updated %1"
+msgstr "Actualizat %1"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:market session status"
@@ -1050,10 +1133,6 @@ msgid "Updated %1 · Next %2"
 msgstr "Actualizat %1 · Următoarea %2"
 
 #: contents/ui/SingleStockView.qml
-msgid "Updated %1"
-msgstr "Actualizat %1"
-
-#: contents/ui/SingleStockView.qml
 msgid "Refresh %1 min"
 msgstr "Reîmprospătare %1 min"
 
@@ -1082,9 +1161,23 @@ msgid "The market is open; waiting for its first regular quote."
 msgstr "Piața este deschisă; se așteaptă prima cotație din sesiunea regulată."
 
 #: contents/ui/SingleStockView.qml
+msgctxt "@info:tooltip"
+msgid "Chart"
+msgstr "Grafic"
+
+#: contents/ui/SingleStockView.qml
+msgctxt "@info:tooltip"
+msgid "News"
+msgstr "Știri"
+
+#: contents/ui/SingleStockView.qml
 msgctxt "@item:compact quote"
 msgid "Regular"
 msgstr "Normal"
+
+#: contents/ui/SingleStockView.qml
+msgid "Refresh news"
+msgstr "Reîmprospătează știrile"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:chart style"
@@ -1096,19 +1189,9 @@ msgctxt "@item:chart style"
 msgid "Candles"
 msgstr "Candele"
 
-#: contents/ui/main.qml
-msgid "Cached data from %1"
-msgstr "Date din cache: %1"
-
-#: contents/ui/main.qml
-msgctxt "@item:panel stock data state"
-msgid "OFF"
-msgstr "OFF"
-
-#: contents/ui/main.qml
-msgctxt "@info:tooltip"
-msgid "%1 · %2 · cached data from %3"
-msgstr "%1 · %2 · date din cache: %3"
+#: contents/ui/SingleStockView.qml
+msgid "More on Yahoo Finance"
+msgstr "Mai multe pe Yahoo Finance"
 
 #~ msgid "The desktop draws the background; the widget only draws a single surface when the chosen color mode is the opposite of the system."
 #~ msgstr "Desktopul desenează fundalul; widgetul desenează o singură suprafață doar când modul de culoare ales este opusul sistemului."

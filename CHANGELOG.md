@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Optional **News** headlines from Yahoo Finance for the shown stock (Chart page,
+  off by default). Two small icons next to the market status switch the single-stock
+  view between the chart and a scrollable list of the latest headlines, 24 by
+  default (5–50). The list is fetched only while it is shown and refreshed at most
+  every 30 minutes (10–240); a click opens the article. News is not available in the
+  list-only view, and Yahoo has no news for some exchanges (for example Bucharest).
+
 ## [1.5] - 2026-11-12
 
 ### Added

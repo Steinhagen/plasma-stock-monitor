@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 Item {
@@ -12,6 +13,9 @@ Item {
     property alias cfg_showChartHover: hoverSwitch.checked
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
+    property alias cfg_showNews: newsSwitch.checked
+    property alias cfg_newsCount: newsCountSpin.value
+    property alias cfg_newsRefreshMinutes: newsRefreshSpin.value
     property string cfg_chartRange
 
     onCfg_chartRangeChanged: {
@@ -94,6 +98,43 @@ Item {
                 id: showTimeAxisSwitch
                 Kirigami.FormData.label: i18n("Time scale:")
                 text: i18n("Show dates and times under the chart")
+            }
+
+            Item {
+                Kirigami.FormData.isSection: true
+                Kirigami.FormData.label: i18n("News")
+            }
+
+            CheckBox {
+                id: newsSwitch
+                text: i18n("Show news headlines in the single-stock view")
+            }
+
+            Label {
+                Layout.fillWidth: true
+                // A wrapping Label still asks for its whole text width; without a cap the
+                // form makes the column that wide and the note runs past the page.
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 22
+                text: i18n("Headlines from Yahoo Finance for the shown stock. Switch with the icons next to the market status. Not available in the list-only view.")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 10
+                color: Kirigami.Theme.disabledTextColor
+            }
+
+            SpinBox {
+                id: newsCountSpin
+                Kirigami.FormData.label: i18n("Headlines:")
+                from: 5
+                to: 50
+                enabled: newsSwitch.checked
+            }
+
+            SpinBox {
+                id: newsRefreshSpin
+                Kirigami.FormData.label: i18n("Update every (minutes):")
+                from: 10
+                to: 240
+                enabled: newsSwitch.checked
             }
         }
     }

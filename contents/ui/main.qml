@@ -5,6 +5,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import "currencies.js" as Currency
+import "news.js" as News
 
 PlasmoidItem {
     id: root
@@ -233,6 +234,13 @@ PlasmoidItem {
     // Show the Line/Candles toggle in the chart.
     property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
     property bool showChartHover: Plasmoid.configuration.showChartHover
+    // Latest Yahoo headlines for the single-stock view (the Chart/News icons in its header).
+    property bool showNews: Plasmoid.configuration.showNews
+    property int newsCount: Plasmoid.configuration.newsCount
+    property int newsRefreshMinutes: Plasmoid.configuration.newsRefreshMinutes
+    // "chart" or "news": what the single-stock view shows below the quote. Not persisted:
+    // the widget always starts on the chart, so a login never fetches news.
+    property string singleViewPane: "chart"
     // Portfolio Tracking (purchase price vs current price). Each purchase is its own lot
     // (same ticker can have several, bought at different prices); the lots of a ticker are
     // added up into one position, summarised on a single line.
@@ -498,6 +506,211 @@ PlasmoidItem {
         if (root.exchangeRatesFetching) return;
         if (root.exchangeRatesDue()) root.fetchExchangeRates();
     }
+
+    // --- NEWS HEADLINES ---
+    // Fetched only while the News pane is on screen, never by the quote timer. Kept in
+    // memory per symbol, so switching rows in the two-column view reuses fresh results;
+    // headlines go stale quickly, so they are not saved in the config like the quotes.
+    // key: upper-case symbol, value: { items, time (ms of the last success), attempt (ms),
+    // loaded, error, pending, nameTried (false while the company-name query is still due) }
+    property var newsCache: ({})
+    // Bumped when the cache is dropped, so a reply that was already on its way is ignored.
+    property int newsGeneration: 0
+    readonly property var newsEntry: root.newsCache[root.newsKey(root.singleTicker)] || null
+    readonly property var newsItems: root.newsEntry ? root.newsEntry.items : []
+    // Set by our own panel popup; Plasma's popup reports through `expanded`.
+    property bool panelPopupShown: false
+    readonly property bool fullViewShown: !root.inPanel || root.expanded || root.panelPopupShown
+    // The single-stock view is not shown in the list-only multi-stock view.
+    readonly property bool newsPaneShown: root.showNews && root.singleViewPane === "news"
+                                          && root.fullViewShown && (!root.isMultiMode || root.showTwoList)
+                                          && root.singleTicker.trim() !== ""
+
+    function newsKey(symbol) {
+        return String(symbol || "").trim().toUpperCase();
+    }
+
+    // Copy-on-write, so bindings on newsCache (and newsEntry) re-evaluate.
+    function setNewsEntry(key, changes) {
+        var old = root.newsCache[key];
+        var entry = old ? Object.assign({}, old)
+                        : { items: [], time: 0, attempt: 0, loaded: false, error: false,
+                            pending: false, nameTried: true };
+        Object.assign(entry, changes);
+        var copy = Object.assign({}, root.newsCache);
+        copy[key] = entry;
+        root.newsCache = copy;
+    }
+
+    // Company name for the fallback query, only when it is known to belong to `symbol`.
+    // In single mode the name keeps the previous ticker's value until the new quote
+    // arrives, so it is trusted only once singleDataTicker matches. In multi mode it is
+    // taken from the selected list row. Returns null while it is still unknown, and ""
+    // when there is no name other than the ticker.
+    function newsCompanyName(symbol) {
+        var sym = String(symbol || "").trim();
+        if (sym === "" || root.newsKey(root.singleTicker) !== root.newsKey(sym)) return null;
+        if (!root.isMultiMode && root.singleDataTicker !== root.singleTicker) return null;
+        var name = String(root.singleCompanyName || "").trim();
+        if (name === root.loadingText) return null;
+        if (name === "" || name.toUpperCase() === sym.toUpperCase()) return "";
+        return name;
+    }
+
+    function failNews(key, error) {
+        root.setNewsEntry(key, { error: true, pending: false });
+        console.log("News headlines: " + error);
+    }
+
+    // One search request. The ticker query (allowBase false) falls back to a query with
+    // the company name when Yahoo tags none of its headlines with the symbol, which is
+    // common for non-US listings (LHA.DE); that query also accepts the base symbol.
+    // The reply is stored under its own symbol even if the user has moved on.
+    function fetchNewsQuery(key, symbol, query, allowBase) {
+        var generation = root.newsGeneration;
+        var done = false;
+        var xhr = new XMLHttpRequest();
+        var finish = function(error) {
+            if (done) return;
+            done = true;
+            if (generation !== root.newsGeneration) return;
+            if (error) root.failNews(key, error);
+        };
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE || done) return;
+            if (xhr.status !== 200) {
+                finish("request failed (HTTP " + xhr.status + ")");
+                return;
+            }
+            var items;
+            try {
+                items = News.parse(JSON.parse(xhr.responseText), symbol, allowBase, root.newsCount);
+            } catch (e) {
+                finish("could not parse the reply: " + e);
+                return;
+            }
+            finish("");
+            if (generation !== root.newsGeneration) return;
+            if (items.length === 0 && !allowBase) {
+                var name = root.newsCompanyName(symbol);
+                if (name) {
+                    root.fetchNewsQuery(key, symbol, name, true);
+                    return;
+                }
+                // null: the name is not known yet; retryNewsWithName() runs it later.
+                root.setNewsEntry(key, { items: [], time: Date.now(), loaded: true, error: false,
+                                         pending: false, nameTried: name === "" });
+                return;
+            }
+            root.setNewsEntry(key, { items: items, time: Date.now(), loaded: true, error: false,
+                                     pending: false, nameTried: true });
+        };
+        xhr.ontimeout = function() { finish("request timed out"); };
+        xhr.onerror = function() { finish("request failed"); };
+        // No setRequestHeader: Yahoo answers 429 to non-browser User-Agents, and Qt
+        // already sends "Mozilla/5.0".
+        xhr.open("GET", News.searchUrl(query, root.newsCount));
+        xhr.timeout = 20000;
+        xhr.send();
+    }
+
+    // Fetches the headlines for `symbol` unless they are fresh. `force` (the refresh
+    // button and menu) skips the freshness and retry checks.
+    function requestNews(symbol, force) {
+        if (!root.showNews) return;
+        var sym = String(symbol || "").trim();
+        if (sym === "") return;
+        var key = root.newsKey(sym);
+        var entry = root.newsCache[key];
+        var now = Date.now();
+        if (entry && entry.pending) return;
+        if (!force && entry) {
+            if (entry.loaded && !entry.error && now - entry.time < root.newsRefreshMinutes * 60000) {
+                if (entry.nameTried === false) root.retryNewsWithName();
+                return;
+            }
+            // Do not hammer Yahoo after a failure; the next try comes with the interval,
+            // the next time the pane opens, or the refresh button.
+            if (now - entry.attempt < 60000) return;
+        }
+        root.setNewsEntry(key, { pending: true, attempt: now });
+        root.fetchNewsQuery(key, sym, sym, false);
+    }
+
+    // Runs the company-name query for the shown symbol when its ticker query found
+    // nothing before the name was known.
+    function retryNewsWithName() {
+        if (!root.newsPaneShown) return;
+        var sym = root.singleTicker.trim();
+        var key = root.newsKey(sym);
+        var entry = root.newsCache[key];
+        if (!entry || !entry.loaded || entry.pending || entry.error || entry.nameTried !== false
+                || entry.items.length > 0) return;
+        var name = root.newsCompanyName(sym);
+        if (name === null) return;
+        if (name === "") {
+            root.setNewsEntry(key, { nameTried: true });
+            return;
+        }
+        root.setNewsEntry(key, { pending: true, attempt: Date.now() });
+        root.fetchNewsQuery(key, sym, name, true);
+    }
+
+    function openNewsLink(url) {
+        Qt.openUrlExternally(News.safeLink(url, root.singleTicker));
+    }
+
+    function openYahooNews(symbol) {
+        var clean = symbol ? String(symbol).trim() : "";
+        if (clean === "") return;
+        Qt.openUrlExternally(News.newsPageUrl(clean));
+    }
+
+    // Bumped once a minute while the headlines are shown, so their ages re-evaluate.
+    property int newsClock: 0
+    Timer {
+        interval: 60000
+        running: root.newsPaneShown
+        repeat: true
+        onTriggered: root.newsClock++
+    }
+
+    // "just now", "5 min ago", "2 h ago", "3 d ago", or the date after a week.
+    function newsAge(timeSec) {
+        // Read the clock so QML re-evaluates callers every minute.
+        if (root.newsClock < 0) return "";
+        if (!(timeSec > 0)) return "";
+        var age = News.age(timeSec, Date.now());
+        switch (age.unit) {
+            case "now": return i18nc("@item:news age", "just now");
+            case "min": return i18ncp("@item:news age", "%1 min ago", "%1 min ago", age.n);
+            case "h": return i18ncp("@item:news age", "%1 h ago", "%1 h ago", age.n);
+            case "d": return i18ncp("@item:news age", "%1 d ago", "%1 d ago", age.n);
+            default: return new Date(timeSec * 1000).toLocaleDateString(Qt.locale(), "d MMM");
+        }
+    }
+
+    // Starts (and fires at once) every time the pane comes on screen, then refreshes on
+    // the interval. requestNews() skips the request while the cache is fresh.
+    Timer {
+        interval: Math.max(10, root.newsRefreshMinutes) * 60000
+        running: root.newsPaneShown
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.requestNews(root.singleTicker, false)
+    }
+
+    onShowNewsChanged: {
+        if (!root.showNews) root.singleViewPane = "chart";
+    }
+    // A larger count must not wait for the next interval.
+    onNewsCountChanged: {
+        root.newsGeneration++;
+        root.newsCache = ({});
+        if (root.newsPaneShown) root.requestNews(root.singleTicker, true);
+    }
+    onSingleCompanyNameChanged: Qt.callLater(root.retryNewsWithName)
+    onSingleDataTickerChanged: Qt.callLater(root.retryNewsWithName)
 
     // --- PORTFOLIO TRACKING HELPERS ---
     // A ticker can have several saved lots (bought at different times/prices). They are added up
@@ -2127,6 +2340,7 @@ PlasmoidItem {
             root.readCachedQuotes();
             root.refreshData();
         }
+        if (root.newsPaneShown) root.requestNews(root.singleTicker, false);
     }
     onIsMultiModeChanged: {
         root.clearStockRows();
@@ -3003,6 +3217,7 @@ PlasmoidItem {
             hideOnWindowDeactivate: true
 
             onVisibleChanged: {
+                root.panelPopupShown = visible;
                 if (visible) {
                     Qt.callLater(function() { panelPopupFocus.forceActiveFocus(); });
                 } else {
