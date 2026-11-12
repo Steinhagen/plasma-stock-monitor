@@ -15,6 +15,11 @@
 // the ticker filter can drop a few more. Ask for a few extra and cut after filtering.
 var EXTRA_REQUESTED = 4;
 
+// Source label attached to this endpoint's headlines. The news view builds its filter
+// buttons from the labels of the shown items, so another provider (BVB, for example)
+// only has to return its own label here.
+var YAHOO_SOURCE = "Yahoo";
+
 function searchUrl(query, shown) {
     return "https://query2.finance.yahoo.com/v1/finance/search?q=" + encodeURIComponent(query)
         + "&quotesCount=0&newsCount=" + (Number(shown) + EXTRA_REQUESTED);
@@ -55,8 +60,8 @@ function matchesSymbol(related, symbol, base) {
     return false;
 }
 
-// `data` is the parsed JSON reply. Returns [{id, title, publisher, link, time}], newest
-// first and at most `limit` items. `allowBase` also accepts the symbol without its
+// `data` is the parsed JSON reply. Returns [{id, title, publisher, source, link, time}],
+// newest first and at most `limit` items. `allowBase` also accepts the symbol without its
 // exchange suffix (SAP.DE -> SAP). Use it only for the company-name query: for a ticker
 // query the base can be another company (RRC.RO is not Range Resources, RRC).
 function parse(data, symbol, allowBase, limit) {
@@ -88,6 +93,7 @@ function parse(data, symbol, allowBase, limit) {
             id: id,
             title: title,
             publisher: decodeEntities(item.publisher).trim(),
+            source: YAHOO_SOURCE,
             link: link,
             time: Number(item.providerPublishTime) || 0
         });

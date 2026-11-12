@@ -1077,6 +1077,11 @@ msgid "%1 @ %2"
 msgstr ""
 
 #: contents/ui/SingleStockView.qml
+msgctxt "@item:news source"
+msgid "All"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
 msgid "Loading headlines…"
 msgstr ""
 

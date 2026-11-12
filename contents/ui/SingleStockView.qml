@@ -22,7 +22,43 @@ Rectangle {
     // News pane: the headlines replace the chart; the cache and the fetch live in main.qml.
     readonly property bool newsMode: rootItem.showNews && rootItem.singleViewPane === "news"
     readonly property var newsEntry: rootItem.newsEntry
-    readonly property bool newsHasItems: rootItem.newsItems.length > 0
+    // Distinct sources among the shown headlines, in the order their newest item appears.
+    // Other providers (BVB, for example) will add their label to the items they return.
+    readonly property var newsSources: {
+        var seen = {};
+        var sources = [];
+        var items = rootItem.newsItems;
+        for (var i = 0; i < items.length; i++) {
+            var source = String(items[i].source || "").trim();
+            if (source === "" || seen[source]) continue;
+            seen[source] = true;
+            sources.push(source);
+        }
+        return sources;
+    }
+    // "" is All. A selection that is no longer among the sources falls back to All, so a
+    // refresh that drops a source never leaves an empty list.
+    property string newsSource: ""
+    readonly property bool newsFilterRelevant: newsSources.length > 1
+    readonly property string newsSourceFilter: newsSources.indexOf(newsSource) >= 0 ? newsSource : ""
+    readonly property var newsFilteredItems: {
+        var items = rootItem.newsItems;
+        if (newsSourceFilter === "") return items;
+        var filtered = [];
+        for (var i = 0; i < items.length; i++) {
+            if (String(items[i].source || "") === newsSourceFilter) filtered.push(items[i]);
+        }
+        return filtered;
+    }
+    // One button per source; All is added only when there is something to choose between.
+    readonly property var newsSourceButtons: {
+        var sources = newsSources;
+        var buttons = [];
+        if (sources.length > 1) buttons.push({ source: "", label: i18nc("@item:news source", "All") });
+        for (var i = 0; i < sources.length; i++) buttons.push({ source: sources[i], label: sources[i] });
+        return buttons;
+    }
+    readonly property bool newsHasItems: newsFilteredItems.length > 0
     // Centered message instead of the list: loading, nothing found, or no reply at all.
     readonly property string newsStateText: {
         if (newsHasItems) return "";
@@ -720,47 +756,103 @@ Rectangle {
                         width: chartHeaderRow.width
                         height: chartHeaderRow.height
 
-                        Text {
-                            anchors.left: parent.left
-                            anchors.right: newsRefreshButton.left
-                            anchors.rightMargin: 6
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: singleStockRoot.newsHeaderText
-                            textFormat: Text.PlainText
-                            color: singleStockRoot.newsHeaderWarning ? singleStockRoot.rootItem.warningTextColor
-                                                                     : singleStockRoot.rootItem.secondaryTextColor
-                            font.pixelSize: 9
-                            elide: Text.ElideRight
-                        }
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing: 6
 
-                        PlasmaCore.ToolTipArea {
-                            id: newsRefreshButton
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 20
-                            height: 18
-                            mainText: i18n("Refresh news")
+                            // Source filters, in the same compact style as the chart
+                            // range buttons.
+                            Row {
+                                id: newsSourceFilters
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: 3
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 4
-                                color: newsRefreshMouse.containsMouse ? singleStockRoot.selectedTint : "transparent"
+                                Repeater {
+                                    model: singleStockRoot.newsSourceButtons
+                                    delegate: Rectangle {
+                                        id: newsSourceButton
+                                        required property var modelData
+                                        objectName: "newsSourceButton_" + (newsSourceButton.modelData.source === ""
+                                                                            ? "all" : newsSourceButton.modelData.source)
+                                        readonly property bool selected: !singleStockRoot.newsFilterRelevant
+                                                                         || singleStockRoot.newsSourceFilter === newsSourceButton.modelData.source
+                                        width: newsSourceButtonLabel.implicitWidth + 8
+                                        height: 18
+                                        radius: 4
+                                        color: newsSourceButton.selected
+                                               ? singleStockRoot.selectedTint
+                                               : (newsSourceMouse.containsMouse
+                                                  ? Qt.rgba(singleStockRoot.rootItem.tickerColor.r,
+                                                            singleStockRoot.rootItem.tickerColor.g,
+                                                            singleStockRoot.rootItem.tickerColor.b, 0.07)
+                                                  : "transparent")
+
+                                        Text {
+                                            id: newsSourceButtonLabel
+                                            anchors.centerIn: parent
+                                            text: newsSourceButton.modelData.label
+                                            textFormat: Text.PlainText
+                                            color: newsSourceButton.selected ? singleStockRoot.rootItem.tickerColor
+                                                                             : singleStockRoot.rootItem.secondaryTextColor
+                                            font.pixelSize: 9
+                                            font.bold: true
+                                        }
+
+                                        MouseArea {
+                                            id: newsSourceMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                singleStockRoot.newsSource = newsSourceButton.modelData.source;
+                                                newsList.positionViewAtBeginning();
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            Kirigami.Icon {
-                                anchors.centerIn: parent
-                                width: 14
-                                height: 14
-                                source: "view-refresh"
-                                isMask: true
-                                color: singleStockRoot.rootItem.secondaryTextColor
-                                opacity: singleStockRoot.newsEntry && singleStockRoot.newsEntry.pending ? 0.5 : 1
+
+                            Text {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                Layout.alignment: Qt.AlignVCenter
+                                horizontalAlignment: Text.AlignRight
+                                text: singleStockRoot.newsHeaderText
+                                textFormat: Text.PlainText
+                                color: singleStockRoot.newsHeaderWarning ? singleStockRoot.rootItem.warningTextColor
+                                                                         : singleStockRoot.rootItem.secondaryTextColor
+                                font.pixelSize: 9
+                                elide: Text.ElideRight
                             }
-                            MouseArea {
-                                id: newsRefreshMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: singleStockRoot.rootItem.requestNews(singleStockRoot.rootItem.singleTicker, true)
+
+                            PlasmaCore.ToolTipArea {
+                                id: newsRefreshButton
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 18
+                                mainText: i18n("Refresh news")
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 4
+                                    color: newsRefreshMouse.containsMouse ? singleStockRoot.selectedTint : "transparent"
+                                }
+                                Kirigami.Icon {
+                                    anchors.centerIn: parent
+                                    width: 14
+                                    height: 14
+                                    source: "view-refresh"
+                                    isMask: true
+                                    color: singleStockRoot.rootItem.secondaryTextColor
+                                    opacity: singleStockRoot.newsEntry && singleStockRoot.newsEntry.pending ? 0.5 : 1
+                                }
+                                MouseArea {
+                                    id: newsRefreshMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: singleStockRoot.rootItem.requestNews(singleStockRoot.rootItem.singleTicker, true)
+                                }
                             }
                         }
                     }
@@ -885,7 +977,7 @@ Rectangle {
                     visible: singleStockRoot.newsMode && singleStockRoot.newsHasItems
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
-                    model: singleStockRoot.rootItem.newsItems
+                    model: singleStockRoot.newsFilteredItems
                     // Shown whenever the headlines overflow (not only while scrolling), so
                     // the user can tell there is more below the visible rows.
                     readonly property bool overflows: contentHeight > height + 1

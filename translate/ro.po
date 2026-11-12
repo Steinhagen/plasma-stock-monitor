@@ -1084,6 +1084,11 @@ msgid "%1 @ %2"
 msgstr "%1 la %2"
 
 #: contents/ui/SingleStockView.qml
+msgctxt "@item:news source"
+msgid "All"
+msgstr "Toate"
+
+#: contents/ui/SingleStockView.qml
 msgid "Loading headlines…"
 msgstr "Se încarcă titlurile…"
 

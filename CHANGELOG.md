@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   default (5–50). The list is fetched only while it is shown and refreshed at most
   every 30 minutes (10–240); a click opens the article. News is not available in the
   list-only view, and Yahoo has no news for some exchanges (for example Bucharest).
+- Source filter buttons in the News header, built from the sources of the shown
+  headlines: one button when everything comes from the same source, or **All** plus
+  each source when there are several. Currently every headline is from Yahoo, but
+  the list is ready for additional providers such as BVB.
 
 ### Fixed
 - Enabling the News option no longer reserves an empty control bar above the chart
