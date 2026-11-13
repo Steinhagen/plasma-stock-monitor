@@ -291,6 +291,11 @@ Item {
         interval: 60000
         running: applet.newsPaneShown
         repeat: true
+        // The binding is not evaluated while the pane is hidden, and the age timer only
+        // ticks after a minute. Bump the clock as soon as the pane comes back, so the
+        // "Updated ..." label does not keep the age from the previous visit until the
+        // first tick (or until another change forces a re-evaluation).
+        triggeredOnStart: true
         onTriggered: newsClock++
     }
 

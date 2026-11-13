@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   suffix (`BVB`, `XETRA`, `LSE`, …) before the first quote arrives.
 
 ### Fixed
+- The News header's **Updated …** age is recomputed as soon as the News pane is
+  shown again. It kept the previous visit's value until the next one-minute tick,
+  so pressing refresh could reveal an older age before the new headlines arrived.
 - Every configuration page now applies the same **800×720** minimum, so the
   settings dialog no longer changes size while switching pages. Previously only
   the Portfolio Tracking page raised the minimum, and only after it had been
