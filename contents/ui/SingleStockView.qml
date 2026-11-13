@@ -13,6 +13,20 @@ Rectangle {
 
     property var rootItem
 
+    // Widths for the header cap. TextMetrics is available as soon as the view is
+    // built, unlike the width of a Text created later in the layout.
+    TextMetrics {
+        id: singleArrowMetrics
+        font.pixelSize: 12
+        text: "▲"
+    }
+    TextMetrics {
+        id: singleExchangeMetrics
+        font.pixelSize: 9
+        font.bold: true
+        text: rootItem.exchangeBadge(rootItem.singleTicker, rootItem.singleExchange)
+    }
+
     // Hover crosshair state for the chart. Coordinates are local to the chart canvas.
     property bool chartHoverActive: false
     property real chartHoverX: 0
@@ -76,7 +90,7 @@ Rectangle {
         if (!newsEntry || newsEntry.pending || (!newsEntry.loaded && !newsEntry.error))
             return i18n("Loading headlines…");
         if (newsEntry.error) return i18n("Headlines unavailable");
-        return i18n("No recent headlines for %1", rootItem.singleTicker.trim().toUpperCase());
+        return i18n("No recent headlines for %1", rootItem.displayTicker(rootItem.singleTicker));
     }
     // A failed update keeps the headlines that are already shown and says so here.
     readonly property bool newsHeaderWarning: newsEntry !== null && newsEntry.error && newsHasItems
@@ -234,8 +248,17 @@ Rectangle {
                     Layout.minimumWidth: 0
 
                     RowLayout {
+                        id: singleHeaderNameRow
                         Layout.fillWidth: true
                         spacing: 5
+
+                        readonly property real badgeWidth: singleExchangeBadge.visible
+                            ? Math.ceil(singleExchangeMetrics.advanceWidth)
+                              + Kirigami.Units.smallSpacing * 2 : 0
+                        readonly property real nameMaxWidth: Math.max(0, width
+                            - Math.max(10, Math.ceil(singleArrowMetrics.advanceWidth))
+                            - (singleExchangeBadge.visible ? badgeWidth + 4 : 0)
+                            - spacing * 2)
 
                         Text {
                             text: rootItem.isPositive ? "▲" : "▼"
@@ -244,31 +267,65 @@ Rectangle {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Text {
-                            id: singleNameText
-                            FontMetrics { id: singleNameMetrics; font: singleNameText.font }
-                            text: rootItem.showNameAndTicker
-                                  ? rootItem.fitNameAndTicker(rootItem.singleCompanyName, rootItem.singleTicker, width, singleNameMetrics)
-                                  : (rootItem.swapNameAndTicker ? rootItem.singleCompanyName : rootItem.singleTicker)
-                            // Width comes only from the space left in the row, never from the text,
-                            // so choosing the wording by width cannot loop.
-                            Layout.minimumWidth: 0
-                            Layout.preferredWidth: 0
-                            color: rootItem.tickerColor
-                            opacity: rootItem.tickerOpacity / 100.0
-                            font.bold: true
-                            font.pixelSize: 15
-                            font.family: "Arial"
+                        Row {
+                            id: singleNameGroup
                             Layout.alignment: Qt.AlignVCenter
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                            spacing: 4
+
+                            Text {
+                                id: singleNameText
+                                FontMetrics { id: singleNameMetrics; font: singleNameText.font }
+                                text: rootItem.showNameAndTicker
+                                      ? rootItem.fitNameAndTicker(rootItem.singleCompanyName, rootItem.displayTicker(rootItem.singleTicker), width, singleNameMetrics)
+                                      : (rootItem.swapNameAndTicker ? rootItem.singleCompanyName : rootItem.displayTicker(rootItem.singleTicker))
+                                // The name keeps its natural width so the badge follows
+                                // it, but never takes room from the status on the right.
+                                width: Math.min(implicitWidth, singleHeaderNameRow.nameMaxWidth)
+                                color: rootItem.tickerColor
+                                opacity: rootItem.tickerOpacity / 100.0
+                                font.bold: true
+                                font.pixelSize: 15
+                                font.family: "Arial"
+                                elide: Text.ElideRight
+                            }
+                            // Short exchange label, e.g. BVB for BRD.RO, in the same mode as
+                            // the watchlist. The full exchange name is in the tooltip.
+                            Rectangle {
+                                id: singleExchangeBadge
+                                readonly property string label: rootItem.exchangeBadge(rootItem.singleTicker, rootItem.singleExchange)
+                                visible: label !== ""
+                                width: singleHeaderNameRow.badgeWidth
+                                height: singleExchangeText.implicitHeight + Kirigami.Units.smallSpacing / 2
+                                y: (singleNameGroup.height - height) / 2
+                                radius: 3
+                                color: Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g,
+                                               rootItem.secondaryTextColor.b, 0.12)
+                                border.width: 1
+                                border.color: Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g,
+                                                      rootItem.secondaryTextColor.b, 0.35)
+
+                                Text {
+                                    id: singleExchangeText
+                                    anchors.centerIn: parent
+                                    text: singleExchangeBadge.label
+                                    color: rootItem.secondaryTextColor
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    opacity: 0.85
+                                }
+                                HoverHandler { id: singleExchangeHover }
+                                ToolTip.visible: singleExchangeHover.hovered
+                                ToolTip.text: rootItem.singleExchangeFull || rootItem.singleExchange
+                            }
                         }
+                        Item { Layout.fillWidth: true }
                     }
 
                     Text {
                         // The first line already carries the company name when name and ticker are shown together.
                         visible: !rootItem.showNameAndTicker
-                        text: rootItem.swapNameAndTicker ? rootItem.singleTicker : rootItem.singleCompanyName
+                        text: rootItem.swapNameAndTicker
+                              ? rootItem.displayTicker(rootItem.singleTicker) : rootItem.singleCompanyName
                         color: rootItem.secondaryTextColor
                         font.pixelSize: 10
                         elide: Text.ElideRight

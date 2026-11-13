@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- A **Symbol display** setting on the **Symbols & Lists** page: show the full
+  Yahoo Finance symbol (`BRD.RO`, the default), the base symbol only (`BRD`), or
+  the base symbol with a short exchange badge (`BRD · BVB`). The compact symbol
+  is used in the watchlist, the single-stock header, the panel indicator and the
+  tooltip; the stored ticker and every quote request keep the full Yahoo symbol.
+  The badge uses the exchange reported by Yahoo and falls back to the ticker
+  suffix (`BVB`, `XETRA`, `LSE`, …) before the first quote arrives.
+
 ### Fixed
+- Switching between the single-stock and multi-stock views keeps the current
+  window size but now reports the new view's minimum from the applet root, which
+  is what the Plasma applet container reads. A single-stock graph therefore grows
+  from a minimum-sized list to the graph's own minimum instead of staying too
+  small and clipping the chart.
 - The **Value** and **Gain** columns in the Portfolio Tracking table now size to
   the widest amount instead of staying at a fixed width. Large four-digit values
   in a currency shown as a code (for example `RON 13,234.78`) were left-elided,

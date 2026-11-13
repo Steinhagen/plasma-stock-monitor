@@ -31,6 +31,7 @@ Item {
     property bool cfg_sortAlphabetically
     property bool cfg_swapNameAndTicker
     property bool cfg_showNameAndTicker
+    property int cfg_symbolDisplayMode
     property int cfg_refreshInterval
     property string cfg_chartRange
     property string cfg_chartViewRange

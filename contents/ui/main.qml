@@ -5,6 +5,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import "currencies.js" as Currency
+import "exchanges.js" as Exchanges
 import "news.js" as News
 import "bvbnews.js" as BvbNews
 
@@ -19,6 +20,19 @@ PlasmoidItem {
         : PlasmaCore.Types.NoBackground
     // Detect where we are (Panel vs Desktop) to switch views
     preferredRepresentation: (Plasmoid.formFactor === PlasmaCore.Types.Horizontal || Plasmoid.formFactor === PlasmaCore.Types.Vertical) ? root.compactRepresentation : root.fullRepresentation
+
+    // The applet container reads its size constraints from this root item, not from the
+    // full-view component. The full view updates these when its mode or minimum changes,
+    // so switching from a minimum-sized list to the graph can grow the applet to the
+    // graph's minimum instead of leaving the chart clipped inside a smaller card.
+    property real fullViewMinimumWidth: 322
+    property real fullViewMinimumHeight: 360
+    property real fullViewPreferredWidth: 600
+    property real fullViewPreferredHeight: 520
+    Layout.minimumWidth: root.fullViewMinimumWidth
+    Layout.minimumHeight: root.fullViewMinimumHeight
+    Layout.preferredWidth: root.fullViewPreferredWidth
+    Layout.preferredHeight: root.fullViewPreferredHeight
 
     property string singleTicker: Plasmoid.configuration.ticker
     property bool isMultiMode: Plasmoid.configuration.isMultiMode
@@ -38,6 +52,12 @@ PlasmoidItem {
     property bool sortAlphabetically: Plasmoid.configuration.sortAlphabetically
     property bool swapNameAndTicker: Plasmoid.configuration.swapNameAndTicker
     property bool showNameAndTicker: Plasmoid.configuration.showNameAndTicker
+    // 0 = the full Yahoo Finance symbol (BRD.RO), 1 = the base symbol (BRD),
+    // 2 = the base symbol with a short exchange badge (BRD · BVB).
+    readonly property int symbolDisplayMode: {
+        var mode = Number(Plasmoid.configuration.symbolDisplayMode);
+        return mode >= 0 && mode <= 2 ? mode : 0;
+    }
     // Polling interval, shown by the market-status tooltip so the refresh rate is visible.
     readonly property int refreshIntervalMinutes: Plasmoid.configuration.refreshInterval
 
@@ -50,6 +70,34 @@ PlasmoidItem {
         var longName = meta.longName ? String(meta.longName).trim() : "";
         var name = /\s{2,}/.test(shortName) && longName !== "" ? longName : (shortName || longName);
         return name.replace(/\s+/g, " ").trim() || fallback;
+    }
+
+    // What the widget shows for a ticker. The stored symbol always stays the full Yahoo
+    // one: it is the key for quote requests, portfolio lots and the selected row.
+    function displayTicker(ticker) {
+        var clean = Exchanges.upper(ticker);
+        return root.symbolDisplayMode === 0 ? clean : Exchanges.baseSymbol(clean);
+    }
+
+    // Short exchange label for the badge, or "" when badges are off, the symbol has no
+    // exchange suffix, or no exchange is known. A plain US ticker has no suffix to
+    // replace, so it does not need a badge.
+    function exchangeBadge(ticker, exchange) {
+        if (root.symbolDisplayMode !== 2 || !Exchanges.hasSuffix(ticker)) return "";
+        var label = String(exchange === undefined || exchange === null ? "" : exchange).trim();
+        return label !== "" ? label : Exchanges.shortLabel(ticker, "", "");
+    }
+
+    // Exchange stored in the list row for `ticker`. Reading tooltipRevision makes the
+    // caller re-evaluate when a quote updates the model.
+    function exchangeForTicker(ticker) {
+        root.tooltipRevision;
+        var clean = Exchanges.upper(ticker);
+        for (var i = 0; i < stockModel.count; i++) {
+            var row = stockModel.get(i);
+            if (row.ticker === clean) return row.exchange || Exchanges.shortLabel(clean, "", "");
+        }
+        return Exchanges.shortLabel(clean, "", "");
     }
 
     // Name and ticker together: "Company Name (TICK)", or "TICK (Company Name)" when
@@ -104,6 +152,10 @@ PlasmoidItem {
     readonly property string tagClosed: i18nc("@item:panel stock market session tag", "CLOSED")
     // Internal Properties for Single View
     property string singleCompanyName: root.loadingText
+    // Exchange of the single-view symbol: short label (BVB) and Yahoo's full name
+    // (Bucharest Stock Exchange). Kept apart from the ticker for display only.
+    property string singleExchange: ""
+    property string singleExchangeFull: ""
     property string currentPrice: "---"
     property double currentRawPrice: 0
     // Timestamp of the quote (seconds since epoch), shown by the market-status tooltip so
@@ -144,6 +196,12 @@ PlasmoidItem {
     property string panelCurrentPercent: "+0.00%"
     property bool panelCurrentIsPositive: true
     readonly property string panelSymbol: root.isMultiMode ? root.panelTicker : root.singleTicker
+    // Exchange badge next to the panel ticker. The panel is narrow, so the badge is a
+    // short label and is omitted in a vertical panel.
+    readonly property string panelExchange: root.isVerticalPanel ? ""
+        : root.exchangeBadge(root.panelSymbol,
+                             root.isMultiMode ? root.exchangeForTicker(root.panelTicker)
+                                              : root.singleExchange)
 
     // --- THEME ---
     // The background has two independent choices: a preset that applies to both the
@@ -1089,8 +1147,14 @@ PlasmoidItem {
             }
         }
         var chartFromCache = false;
+        // A row that has not been quoted yet has no exchange metadata; fall back to the
+        // suffix so the badge appears immediately.
+        root.singleExchange = Exchanges.shortLabel(clean, "", "");
+        root.singleExchangeFull = root.singleExchange;
         if (row) {
             root.singleCompanyName = row.name;
+            root.singleExchange = row.exchange || root.singleExchange;
+            root.singleExchangeFull = row.exchangeFull || root.singleExchange;
             root.currentRawPrice = row.currentRaw;
             root.currentPrice = row.price;
             root.currencySym = row.currencySym;
@@ -1632,6 +1696,8 @@ PlasmoidItem {
         root.cachedQuotesTime = singleTime;
         root.showingCachedData = true;
         root.singleCompanyName = s.name || root.singleTicker;
+        root.singleExchange = s.exchange || Exchanges.shortLabel(root.singleTicker, "", "");
+        root.singleExchangeFull = s.exchangeFull || root.singleExchange;
         root.currentPrice = s.price;
         root.priceChange = s.change || "";
         root.percentChange = s.pct || "";
@@ -1684,6 +1750,8 @@ PlasmoidItem {
                     "prevClose": Number(c.prevClose) || 0,
                     "currencySym": c.currencySym || "",
                     "currency": c.currency || "",
+                    "exchange": c.exchange || Exchanges.shortLabel(c.ticker, "", ""),
+                    "exchangeFull": c.exchangeFull || "",
                     "quoteTime": Number(c.quoteTime) || 0,
                     "cached": true
                 });
@@ -1709,6 +1777,8 @@ PlasmoidItem {
             var row = stockModel.get(i);
             if (row.ticker !== ticker || row.price === "---") continue;
             root.singleCompanyName = row.name || ticker;
+            root.singleExchange = row.exchange || Exchanges.shortLabel(ticker, "", "");
+            root.singleExchangeFull = row.exchangeFull || root.singleExchange;
             root.currentRawPrice = Number(row.currentRaw) || 0;
             root.currentPrice = row.price;
             root.currencySym = row.currencySym || "";
@@ -1753,6 +1823,7 @@ PlasmoidItem {
                 "isPos": row.isPos,
                 "currentRaw": row.currentRaw, "prevClose": row.prevClose,
                 "currencySym": row.currencySym, "currency": row.currency,
+                "exchange": row.exchange, "exchangeFull": row.exchangeFull,
                 "quoteTime": row.quoteTime
             });
         }
@@ -1780,6 +1851,8 @@ PlasmoidItem {
                 "prevClose": root.previousClose,
                 "currencySym": root.currencySym,
                 "currency": root.quoteCurrency,
+                "exchange": root.singleExchange,
+                "exchangeFull": root.singleExchangeFull,
                 "quoteTime": root.quoteTimestamp,
                 // The change and percentage belong to the range that was fetched; a
                 // different range after a restart must not reuse them.
@@ -1889,6 +1962,8 @@ PlasmoidItem {
                 "currentRaw": 0.0,
                 "currencySym": "",
                 "currency": "",
+                "exchange": Exchanges.shortLabel(cleanSymbol, "", ""),
+                "exchangeFull": "",
                 "cached": false
             });
         });
@@ -2202,6 +2277,10 @@ PlasmoidItem {
             var result = json.chart.result[0];
             var meta = result.meta;
             root.setMarketSession(symbol, meta);
+            if (!root.isMultiMode && symbol === root.singleTicker) {
+                root.singleExchange = Exchanges.shortLabel(symbol, meta.exchangeName, meta.fullExchangeName);
+                root.singleExchangeFull = Exchanges.fullLabel(symbol, meta.exchangeName, meta.fullExchangeName);
+            }
             var current = meta.regularMarketPrice;
             var curSym = getCurrencySymbol(meta.currency);
             var prev;
@@ -2238,6 +2317,8 @@ PlasmoidItem {
             var timestamps = result.timestamp;
 
             root.singleCompanyName = root.companyName(meta, fallbackSymbol || root.singleTicker);
+            root.singleExchange = Exchanges.shortLabel(symbol, meta.exchangeName, meta.fullExchangeName);
+            root.singleExchangeFull = Exchanges.fullLabel(symbol, meta.exchangeName, meta.fullExchangeName);
             root.currencySym = getCurrencySymbol(meta.currency);
             root.quoteCurrency = meta.currency || "";
             root.currentRawPrice = meta.regularMarketPrice;
@@ -2388,6 +2469,8 @@ PlasmoidItem {
                 || (meta.currentTradingPeriod.regular && sessionStart === meta.currentTradingPeriod.regular.start)
                 || (meta.currentTradingPeriod.pre && sessionStart === meta.currentTradingPeriod.pre.start);
 
+            var exchange = Exchanges.shortLabel(symbol, meta.exchangeName, meta.fullExchangeName);
+            var exchangeFull = Exchanges.fullLabel(symbol, meta.exchangeName, meta.fullExchangeName);
             var itemData = {
                 "ticker": symbol,
                 "name": root.companyName(meta, symbol),
@@ -2408,6 +2491,8 @@ PlasmoidItem {
                 "currentRaw": current,
                 "currencySym": curSym,
                 "currency": meta.currency || "",
+                "exchange": exchange,
+                "exchangeFull": exchangeFull,
                 "cached": false
             };
 
@@ -2416,6 +2501,8 @@ PlasmoidItem {
                 root.panelCurrentPercent = itemData.pct;
                 root.panelCurrentIsPositive = itemData.isPos;
                 root.panelCurrentIsCached = false;
+                root.singleExchange = itemData.exchange;
+                root.singleExchangeFull = itemData.exchangeFull;
             }
 
             var found = false;
@@ -2481,6 +2568,10 @@ PlasmoidItem {
             quotesCacheTimer.stop();
             root.singleDataRange = "";
             root.singleDataTicker = "";
+            // Drop the previous symbol's exchange badge; the suffix fallback is enough
+            // until the new quote supplies the real exchange name.
+            root.singleExchange = Exchanges.shortLabel(root.singleTicker, "", "");
+            root.singleExchangeFull = root.singleExchange;
             // A cached single-view value belongs to the previous ticker; carrying it
             // over would show the old symbol's price under the new one if the network
             // is still down.
@@ -2590,7 +2681,9 @@ PlasmoidItem {
 
     readonly property string tooltipTitle: {
         if (!root.isMultiMode) {
-            var title = root.nameAndTicker(root.singleCompanyName, root.singleTicker);
+            var title = root.nameAndTicker(root.singleCompanyName, root.displayTicker(root.singleTicker));
+            var badge = root.exchangeBadge(root.singleTicker, root.singleExchange);
+            if (badge !== "") title += " · " + badge;
             return title !== "" ? title : i18n("Plasma Stock Monitor");
         }
         var n = stockModel.count;
@@ -2683,8 +2776,10 @@ PlasmoidItem {
                              + (row.ticker === root.panelTicker ? "•" : "") + "</td>";
                 var closedMark = (root.showExtendedHours && root.isMarketClosedFor(row.ticker))
                                  ? " " + muted(i18nc("@item:market status", "closed")) : "";
+                var badge = root.exchangeBadge(row.ticker, row.exchange);
                 var tickerCell = "<td style=\"" + tickerStyle + "\"><b>"
-                                 + root.htmlEscape(row.ticker) + "</b>" + closedMark + "</td>";
+                                 + root.htmlEscape(root.displayTicker(row.ticker)) + "</b>"
+                                 + (badge !== "" ? " " + muted(badge) : "") + closedMark + "</td>";
                 if (row.price === "---" && !ext) {
                     rows.push("<tr>" + marker + tickerCell
                               + "<td colspan=\"2\" align=\"right\" style=\"padding-top:1px; padding-bottom:1px;\">"
@@ -2984,13 +3079,16 @@ PlasmoidItem {
         property real widestBadge: 0
         Text { id: probeTicker; visible: false; font.pixelSize: 9; font.weight: Font.Bold; renderType: Text.NativeRendering }
         Text { id: probeTag; visible: false; font.pixelSize: 8; font.weight: Font.Bold; renderType: Text.NativeRendering }
+        Text { id: probeExchange; visible: false; font.pixelSize: 7; font.weight: Font.Bold; renderType: Text.NativeRendering }
         Text { id: probePrice; visible: false; font.pixelSize: 11; font.weight: Font.Bold; renderType: Text.NativeRendering }
         Text { id: probeBadge; visible: false; font.pixelSize: 10; font.weight: Font.Black; renderType: Text.NativeRendering }
 
         function measureWidest() {
-            var tickers = [], prices = [], pcts = [];
-            var collect = function(ticker, price, pct) {
-                tickers.push(String(ticker || "").toUpperCase());
+            var tickers = [], exchanges = [], prices = [], pcts = [];
+            var collect = function(ticker, price, pct, exchange) {
+                tickers.push(root.displayTicker(ticker));
+                var badge = root.exchangeBadge(ticker, exchange);
+                exchanges.push(badge !== "" ? "· " + badge : "");
                 prices.push(String(price || ""));
                 pcts.push(String(pct || ""));
                 var e = root.extendedQuote(ticker);
@@ -2999,10 +3097,11 @@ PlasmoidItem {
             if (root.isMultiMode) {
                 for (var i = 0; i < stockModel.count; i++) {
                     var row = stockModel.get(i);
-                    collect(row.ticker, row.price, row.pct);
+                    collect(row.ticker, row.price, row.pct, row.exchange);
                 }
             } else {
-                collect(root.panelSymbol, root.panelCurrentPrice, root.panelCurrentPercent);
+                collect(root.panelSymbol, root.panelCurrentPrice, root.panelCurrentPercent,
+                        root.singleExchange);
             }
             // Width of the widest of `list` when drawn by `probe`.
             // Each piece is rounded up to whole pixels, as the layout does for every item;
@@ -3017,7 +3116,8 @@ PlasmoidItem {
             };
             var widthOf = function(probe, text) { probe.text = text; return Math.ceil(probe.implicitWidth); };
 
-            // First line: ticker, arrow and, if extended hours are shown, the session tag.
+            // First line: ticker, exchange badge, arrow and, if extended hours are shown,
+            // the session tag.
             var arrowW = Math.max(widthOf(probeTag, "▲"), widthOf(probeTag, "▼"));
             // Measured from the same (translated) tags the panel shows, so a longer
             // translation still fits in the reserved width.
@@ -3026,7 +3126,9 @@ PlasmoidItem {
                                   widthOf(probeTag, root.tagPreMarket),
                                   widthOf(probeTag, root.tagClosed))
                        : 0;
-            var line1 = widest(tickers, probeTicker) + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
+            var exchangeW = root.isVerticalPanel ? 0 : widest(exchanges, probeExchange);
+            var line1 = widest(tickers, probeTicker) + (exchangeW > 0 ? 4 + exchangeW : 0)
+                        + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
 
             // Second line: price and change badge (or the wider of the two when they alternate).
             var priceW = widest(prices, probePrice);
@@ -3037,12 +3139,14 @@ PlasmoidItem {
 
             // Width of the values on screen right now, so an orientation change cannot
             // leave the indicator narrower than its own content.
-            var currentTicker = (root.isMultiMode ? root.panelTicker : root.singleTicker).toUpperCase();
+            var currentTicker = root.displayTicker(root.isMultiMode ? root.panelTicker : root.singleTicker);
             var showCurrentTag = root.showExtendedHours
                                  && (compactRoot.marketClosed || compactRoot.ext !== undefined);
             var currentTagW = showCurrentTag ? tagW : 0;
-            var currentLine1 = widthOf(probeTicker, currentTicker) + 4 + arrowW
-                               + (currentTagW > 0 ? 4 + currentTagW : 0);
+            var currentLine1 = widthOf(probeTicker, currentTicker)
+                               + (root.panelExchange !== ""
+                                  ? 4 + widthOf(probeExchange, "· " + root.panelExchange) : 0)
+                               + 4 + arrowW + (currentTagW > 0 ? 4 + currentTagW : 0);
             var currentPriceW = widthOf(probePrice, compactRoot.shownPrice);
             var currentBadgeW = showBadge
                                 ? widthOf(probeBadge, compactRoot.shownPercent) + (Kirigami.Units.smallSpacing * 2)
@@ -3086,6 +3190,9 @@ PlasmoidItem {
             function onHideChangePercentageChanged() { remeasureTimer.restart(); }
             function onPanelAlternateChanged() { remeasureTimer.restart(); }
             function onIsVerticalPanelChanged() { remeasureTimer.restart(); }
+            function onSymbolDisplayModeChanged() { remeasureTimer.restart(); }
+            function onPanelExchangeChanged() { remeasureTimer.restart(); }
+            function onSingleExchangeChanged() { remeasureTimer.restart(); }
         }
 
         RowLayout {
@@ -3111,7 +3218,7 @@ PlasmoidItem {
                     spacing: 4
                     Layout.fillWidth: root.isVerticalPanel
                     Text {
-                        text: (root.isMultiMode ? root.panelTicker : root.singleTicker).toUpperCase()
+                        text: root.displayTicker(root.isMultiMode ? root.panelTicker : root.singleTicker)
                         color: root.panelTextColor
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -3121,6 +3228,18 @@ PlasmoidItem {
                         Layout.fillWidth: root.isVerticalPanel
                         horizontalAlignment: root.isVerticalPanel ? Text.AlignHCenter : Text.AlignLeft
                         elide: Text.ElideRight
+                    }
+                    // Short exchange label next to the ticker. Hidden in a vertical panel
+                    // and whenever the symbol has no exchange suffix to replace.
+                    Text {
+                        visible: root.panelExchange !== ""
+                        text: "· " + root.panelExchange
+                        color: root.panelTextColor
+                        font.pixelSize: 7
+                        font.weight: Font.Bold
+                        renderType: Text.NativeRendering
+                        opacity: 0.6
+                        Layout.alignment: Qt.AlignBottom
                     }
                     // In a vertical panel only the ticker and the price fit in the panel
                     // thickness; the colour already shows the direction and the tooltip
@@ -3238,6 +3357,9 @@ PlasmoidItem {
 
         Item {
             id: fullRoot
+            // Never paint card contents outside the applet background when a host gives
+            // the view less than its minimum (for example a hand-resized preview window).
+            clip: true
 
             // Desktop only: the panel uses compactRepresentation, whose size is unchanged.
             // Two columns only in multi mode with the side-by-side list.
@@ -3253,17 +3375,73 @@ PlasmoidItem {
             readonly property real leftColumnWidth: Math.max(singleColumn.minimumContentWidth,
                 Math.min(root.twoColumnLeftWidth, maxLeftColumnWidth))
 
-            Layout.minimumWidth: twoColumns
-                ? singleColumn.minimumContentWidth + dividerWidth + listColumn.minimumContentWidth
-                : (root.isMultiMode ? listColumn.minimumContentWidth : singleColumn.minimumContentWidth)
-            Layout.minimumHeight: twoColumns
-                ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
-                : (root.isMultiMode ? listColumn.minimumContentHeight : singleColumn.minimumContentHeight)
+            // The minimum depends on root.isMultiMode, so compute it from the new
+            // mode directly. Using a separate property here would still hold the old
+            // mode's value while the mode-change handler runs.
+            function modeMinimumWidth() {
+                return root.isMultiMode && root.showTwoList
+                    ? singleColumn.minimumContentWidth + dividerWidth + listColumn.minimumContentWidth
+                    : (root.isMultiMode ? listColumn.minimumContentWidth
+                                        : singleColumn.minimumContentWidth);
+            }
+            function modeMinimumHeight() {
+                return root.isMultiMode && root.showTwoList
+                    ? Math.max(singleColumn.minimumContentHeight, listColumn.minimumContentHeight)
+                    : (root.isMultiMode ? listColumn.minimumContentHeight
+                                        : singleColumn.minimumContentHeight);
+            }
+
+            Layout.minimumWidth: fullRoot.modeMinimumWidth()
+            Layout.minimumHeight: fullRoot.modeMinimumHeight()
             // Stable defaults for Plasma when there is no saved geometry yet (a new
             // activity or an empty virtual desktop). Without these, the preferred size
             // falls back to the minimum and the widget opens at its smallest size.
-            Layout.preferredWidth: twoColumns ? 960 : 600
-            Layout.preferredHeight: 520
+            //
+            // Plasma re-applies the preferred size when the mode changes, which made a
+            // single-stock widget jump to the wide/tall multi-list size. Keep the width
+            // and height the widget already has; the root item's minimum below makes the
+            // applet grow when the new mode genuinely needs more room (a graph minimum is
+            // larger than a list minimum), while two-column mode needs both columns.
+            // 600x520 (960 wide for two columns) is only the starting point for a new widget.
+            property real preferredWidth: 600
+            property real preferredHeight: 520
+            property bool sizeReady: false
+            Layout.preferredWidth: preferredWidth
+            Layout.preferredHeight: preferredHeight
+
+            // The applet container sizes the PlasmoidItem from its own Layout hints;
+            // fullRoot's hints only reach the full representation. Mirror them on root
+            // so a mode change can actually grow the applet to the new minimum.
+            function syncRootSizeHints() {
+                root.fullViewMinimumWidth = fullRoot.modeMinimumWidth();
+                root.fullViewMinimumHeight = fullRoot.modeMinimumHeight();
+                root.fullViewPreferredWidth = preferredWidth;
+                root.fullViewPreferredHeight = preferredHeight;
+            }
+
+            function keepCurrentSize() {
+                if (!sizeReady) return;
+                if (width > 0) preferredWidth = width;
+                if (height > 0) preferredHeight = height;
+                syncRootSizeHints();
+            }
+
+            Component.onCompleted: {
+                sizeReady = true;
+                preferredWidth = width > 0 ? width : (twoColumns ? 960 : 600);
+                preferredHeight = height > 0 ? height : 520;
+                syncRootSizeHints();
+                // The first layout may not have assigned the saved size yet; adopt it
+                // once it has, so a later mode switch keeps that size.
+                Qt.callLater(function() { fullRoot.keepCurrentSize(); });
+            }
+            onTwoColumnsChanged: fullRoot.keepCurrentSize()
+            // isMultiMode belongs to the applet root, not to fullRoot, so it needs a
+            // Connections handler rather than an onIsMultiModeChanged property handler.
+            Connections {
+                target: root
+                function onIsMultiModeChanged() { fullRoot.keepCurrentSize(); }
+            }
 
             RowLayout {
                 id: fullRow

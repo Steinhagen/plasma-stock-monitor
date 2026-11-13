@@ -857,6 +857,26 @@ msgid "Swap company name and ticker symbol"
 msgstr ""
 
 #: contents/ui/configSymbolsLists.qml
+msgid "Symbol display:"
+msgstr ""
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Yahoo Finance symbol, e.g. BRD.RO"
+msgstr ""
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Symbol only, e.g. BRD"
+msgstr ""
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Symbol and exchange, e.g. BRD · BVB"
+msgstr ""
+
+#: contents/ui/configSymbolsLists.qml
+msgid "The exchange badge is shown only where the Yahoo symbol has an exchange suffix, such as .RO or .DE. The full symbol and the exchange name stay visible in the tooltip."
+msgstr ""
+
+#: contents/ui/configSymbolsLists.qml
 msgid "Find symbols"
 msgstr ""
 

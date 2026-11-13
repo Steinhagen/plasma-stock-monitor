@@ -13,6 +13,7 @@ Item {
     property alias cfg_sortAlphabetically: sortSwitch.checked
     property alias cfg_showNameAndTicker: nameAndTickerSwitch.checked
     property alias cfg_swapNameAndTicker: swapNameSwitch.checked
+    property alias cfg_symbolDisplayMode: symbolDisplayCombo.currentIndex
 
     ListModel {
         id: resultsModel
@@ -128,6 +129,25 @@ Item {
                 text: nameAndTickerSwitch.checked
                       ? i18n("Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)")
                       : i18n("Swap company name and ticker symbol")
+            }
+
+            ComboBox {
+                id: symbolDisplayCombo
+                Kirigami.FormData.label: i18n("Symbol display:")
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                model: [
+                    i18n("Yahoo Finance symbol, e.g. BRD.RO"),
+                    i18n("Symbol only, e.g. BRD"),
+                    i18n("Symbol and exchange, e.g. BRD · BVB")
+                ]
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: i18n("The exchange badge is shown only where the Yahoo symbol has an exchange suffix, such as .RO or .DE. The full symbol and the exchange name stay visible in the tooltip.")
+                color: Kirigami.Theme.disabledTextColor
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
             }
 
             Item {

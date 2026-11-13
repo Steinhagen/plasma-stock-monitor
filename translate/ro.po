@@ -858,6 +858,26 @@ msgid "Swap company name and ticker symbol"
 msgstr "Inversează numele companiei și simbolul bursier"
 
 #: contents/ui/configSymbolsLists.qml
+msgid "Symbol display:"
+msgstr "Afișare simbol:"
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Yahoo Finance symbol, e.g. BRD.RO"
+msgstr "Simbol Yahoo Finance, ex. BRD.RO"
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Symbol only, e.g. BRD"
+msgstr "Doar simbolul, ex. BRD"
+
+#: contents/ui/configSymbolsLists.qml
+msgid "Symbol and exchange, e.g. BRD · BVB"
+msgstr "Simbol și bursă, ex. BRD · BVB"
+
+#: contents/ui/configSymbolsLists.qml
+msgid "The exchange badge is shown only where the Yahoo symbol has an exchange suffix, such as .RO or .DE. The full symbol and the exchange name stay visible in the tooltip."
+msgstr "Eticheta bursei apare doar acolo unde simbolul Yahoo are un sufix de bursă, cum ar fi .RO sau .DE. Simbolul complet și numele bursei rămân vizibile în balonul de ajutor."
+
+#: contents/ui/configSymbolsLists.qml
 msgid "Find symbols"
 msgstr "Caută simboluri"
 

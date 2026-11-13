@@ -190,6 +190,25 @@ Rectangle {
                 if (status === "post") return i18n("No after-hours quote");
                 return "";
             }
+            // Widths used to cap the name so the badge follows it without taking room
+            // from the price. TextMetrics is available as soon as the delegate is built,
+            // unlike the width of a Text created later in the layout.
+            TextMetrics {
+                id: listPriceMetrics
+                font.pixelSize: 14
+                text: model.price
+            }
+            TextMetrics {
+                id: listExchangeMetrics
+                font.pixelSize: 9
+                font.bold: true
+                text: rootItem.exchangeBadge(model.ticker, model.exchange)
+            }
+            TextMetrics {
+                id: listArrowMetrics
+                font.pixelSize: 10
+                text: "▲"
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -278,34 +297,84 @@ Rectangle {
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 2
 
-                        // Line 1: arrow, name (elided when too long), price.
+                        // Line 1: arrow, name with its exchange badge, a spacer and the
+                        // price. The badge follows the name instead of sitting at the
+                        // right edge; the spacer keeps the price right-aligned.
                         RowLayout {
+                            id: listLineRow
                             Layout.fillWidth: true
                             spacing: 4
+
+                            readonly property real badgeWidth: listExchangeBadge.visible
+                                ? Math.ceil(listExchangeMetrics.advanceWidth)
+                                  + Kirigami.Units.smallSpacing * 2 : 0
+                            // Room left for the name after the arrow, badge, price and
+                            // the gaps between them. None of these depends on the name
+                            // width, so capping the name here cannot loop.
+                            readonly property real nameMaxWidth: Math.max(0, width
+                                - Math.max(10, Math.ceil(listArrowMetrics.advanceWidth))
+                                - (Math.ceil(listPriceMetrics.advanceWidth) + 2)
+                                - (listExchangeBadge.visible ? badgeWidth + 4 : 0)
+                                - spacing * 3)
+
                             Text {
+                                id: listArrowText
                                 text: model.isPos ? "▲" : "▼"
                                 color: model.isPos ? rootItem.positiveColor : rootItem.negativeColor
                                 font.pixelSize: 10
                             }
-                            Text {
-                                id: listNameText
-                                FontMetrics { id: listNameMetrics; font: listNameText.font }
-                                text: rootItem.showNameAndTicker
-                                      ? rootItem.fitNameAndTicker(model.name, model.ticker, width, listNameMetrics)
-                                      : (rootItem.swapNameAndTicker ? model.name : model.ticker)
-                                // Width comes only from the space left beside the price, never
-                                // from the text, so choosing the wording by width cannot loop.
-                                Layout.minimumWidth: 0
-                                Layout.preferredWidth: 0
-                                color: rootItem.tickerColor
-                                opacity: rootItem.tickerOpacity / 100.0
-                                font.pixelSize: 14
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                // Keep a small gap so the name elides just before touching the price.
-                                Layout.rightMargin: 6
+                            Row {
+                                id: listNameGroup
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: 4
+                                Text {
+                                    id: listNameText
+                                    FontMetrics { id: listNameMetrics; font: listNameText.font }
+                                    text: rootItem.showNameAndTicker
+                                          ? rootItem.fitNameAndTicker(model.name, rootItem.displayTicker(model.ticker), width, listNameMetrics)
+                                          : (rootItem.swapNameAndTicker ? model.name : rootItem.displayTicker(model.ticker))
+                                    // The name keeps its natural width so the badge
+                                    // follows it, but never takes room from the price.
+                                    width: Math.min(implicitWidth, listLineRow.nameMaxWidth)
+                                    color: rootItem.tickerColor
+                                    opacity: rootItem.tickerOpacity / 100.0
+                                    font.pixelSize: 14
+                                    elide: Text.ElideRight
+                                }
+                                // Short exchange label, e.g. BVB for BRD.RO. Only shown in
+                                // the "symbol and exchange" mode and only when the Yahoo
+                                // ticker actually had an exchange suffix.
+                                Rectangle {
+                                    id: listExchangeBadge
+                                    readonly property string label: rootItem.exchangeBadge(model.ticker, model.exchange)
+                                    visible: label !== ""
+                                    width: listLineRow.badgeWidth
+                                    height: listExchangeText.implicitHeight + Kirigami.Units.smallSpacing / 2
+                                    y: (listNameGroup.height - height) / 2
+                                    radius: 3
+                                    color: Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g,
+                                                   rootItem.secondaryTextColor.b, 0.12)
+                                    border.width: 1
+                                    border.color: Qt.rgba(rootItem.secondaryTextColor.r, rootItem.secondaryTextColor.g,
+                                                          rootItem.secondaryTextColor.b, 0.35)
+
+                                    Text {
+                                        id: listExchangeText
+                                        anchors.centerIn: parent
+                                        text: listExchangeBadge.label
+                                        color: rootItem.secondaryTextColor
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        opacity: 0.85
+                                    }
+                                    HoverHandler { id: listExchangeHover }
+                                    ToolTip.visible: listExchangeHover.hovered
+                                    ToolTip.text: model.exchangeFull || model.exchange
+                                }
                             }
+                            Item { Layout.fillWidth: true }
                             Text {
+                                id: listPriceText
                                 text: model.price
                                 color: rootItem.priceColor
                                 opacity: rootItem.priceOpacity / 100.0
@@ -375,7 +444,8 @@ Rectangle {
                                         if (rowRoot.rowClosed) return i18n("Market closed");
                                         return rowRoot.rowNoQuote;
                                     }
-                                    var name = rootItem.swapNameAndTicker ? model.ticker : model.name;
+                                    var name = rootItem.swapNameAndTicker
+                                               ? rootItem.displayTicker(model.ticker) : model.name;
                                     if (rowRoot.rowClosed) return i18n("Market closed") + " · " + name;
                                     if (rowRoot.rowNoQuote !== "") return rowRoot.rowNoQuote + " · " + name;
                                     return name;

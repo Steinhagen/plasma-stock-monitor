@@ -32,6 +32,7 @@ var SETTINGS_KEYS = [
     "sortAlphabetically",
     "swapNameAndTicker",
     "showNameAndTicker",
+    "symbolDisplayMode",
     "refreshInterval",
     "chartRange",
     "chartViewRange",
@@ -123,7 +124,8 @@ var INT_RANGES = {
     alternateInterval: [3, 3600],
     panelWidth: [0, 1000],
     newsCount: [5, 50],
-    newsRefreshMinutes: [10, 240]
+    newsRefreshMinutes: [10, 240],
+    symbolDisplayMode: [0, 2]
 };
 
 var COLOR_KEYS = {

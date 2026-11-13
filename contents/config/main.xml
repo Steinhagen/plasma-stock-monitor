@@ -76,6 +76,14 @@
             <label>Show the company name together with the ticker symbol</label>
             <default>true</default>
         </entry>
+        <!-- 0 = Yahoo Finance symbol with its exchange suffix, 1 = base symbol only,
+             2 = base symbol plus a short exchange badge. -->
+        <entry name="symbolDisplayMode" type="Int">
+            <label>Symbol display in the widget (0 = Yahoo symbol, 1 = symbol only, 2 = symbol with exchange badge)</label>
+            <default>0</default>
+            <min>0</min>
+            <max>2</max>
+        </entry>
         <entry name="refreshInterval" type="Int">
             <label>Refresh Interval (minutes)</label>
             <default>5</default>
