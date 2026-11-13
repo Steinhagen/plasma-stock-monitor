@@ -241,6 +241,9 @@ Rectangle {
                 ColumnLayout {
                     id: headerNameColumn
                     spacing: 2
+                    // Never let a stale or too-wide name paint over the status and the
+                    // Chart/News icons; the elision keeps it inside in normal use.
+                    clip: true
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                     // Take the space left of the status, so a long "Name (TICK)"
                     // is elided instead of pushing the status out of the card.
@@ -255,7 +258,15 @@ Rectangle {
                         readonly property real badgeWidth: singleExchangeBadge.visible
                             ? Math.ceil(singleExchangeMetrics.advanceWidth)
                               + Kirigami.Units.smallSpacing * 2 : 0
-                        readonly property real nameMaxWidth: Math.max(0, width
+                        // Derive the room from the card, not from this row's own width. A
+                        // width read back from the layout feeds the elided text into the
+                        // row's implicit width; when the status line appears the row can
+                        // then no longer shrink, so the full name is painted over the
+                        // status and the Chart/News icons. Reserving the status row here
+                        // keeps the calculation one-way.
+                        readonly property real nameMaxWidth: Math.max(0, contentColumn.width
+                            - (headerStatusRow.visible ? headerStatusRow.implicitWidth
+                               + headerStatusRow.Layout.leftMargin : 0)
                             - Math.max(10, Math.ceil(singleArrowMetrics.advanceWidth))
                             - (singleExchangeBadge.visible ? badgeWidth + 4 : 0)
                             - spacing * 2)
@@ -269,6 +280,10 @@ Rectangle {
 
                         Row {
                             id: singleNameGroup
+                            // The name already carries its own elided width; let the
+                            // layout shrink the group to it instead of treating the full
+                            // company name as an unbreakable minimum.
+                            Layout.minimumWidth: 0
                             Layout.alignment: Qt.AlignVCenter
                             spacing: 4
 
