@@ -5,8 +5,8 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Qt.labs.platform as QLP
 import org.kde.kirigami as Kirigami
-import "backup.js" as Backup
-import "configWindow.js" as ConfigWindow
+import "../backup.js" as Backup
+import "window.js" as ConfigWindow
 
 Item {
     id: page

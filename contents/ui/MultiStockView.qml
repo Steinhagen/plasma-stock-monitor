@@ -330,8 +330,10 @@ Rectangle {
                                 Text {
                                     id: listNameText
                                     FontMetrics { id: listNameMetrics; font: listNameText.font }
+                                    // Use the row width available to the name, not this Text.width:
+                                    // width depends on implicitWidth, which depends on the text.
                                     text: rootItem.showNameAndTicker
-                                          ? rootItem.fitNameAndTicker(model.name, rootItem.displayTicker(model.ticker), width, listNameMetrics)
+                                          ? rootItem.fitNameAndTicker(model.name, rootItem.displayTicker(model.ticker), listLineRow.nameMaxWidth, listNameMetrics)
                                           : (rootItem.swapNameAndTicker ? model.name : rootItem.displayTicker(model.ticker))
                                     // The name keeps its natural width so the badge
                                     // follows it, but never takes room from the price.

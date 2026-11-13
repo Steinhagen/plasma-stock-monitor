@@ -275,8 +275,10 @@ Rectangle {
                             Text {
                                 id: singleNameText
                                 FontMetrics { id: singleNameMetrics; font: singleNameText.font }
+                                // Use the header width available to the name, not this Text.width:
+                                // width depends on implicitWidth, which depends on the text.
                                 text: rootItem.showNameAndTicker
-                                      ? rootItem.fitNameAndTicker(rootItem.singleCompanyName, rootItem.displayTicker(rootItem.singleTicker), width, singleNameMetrics)
+                                      ? rootItem.fitNameAndTicker(rootItem.singleCompanyName, rootItem.displayTicker(rootItem.singleTicker), singleHeaderNameRow.nameMaxWidth, singleNameMetrics)
                                       : (rootItem.swapNameAndTicker ? rootItem.singleCompanyName : rootItem.displayTicker(rootItem.singleTicker))
                                 // The name keeps its natural width so the badge follows
                                 // it, but never takes room from the status on the right.

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
-import "configWindow.js" as ConfigWindow
+import "window.js" as ConfigWindow
 
 Item {
     id: page

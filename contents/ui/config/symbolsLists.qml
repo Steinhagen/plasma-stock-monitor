@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
-import "configWindow.js" as ConfigWindow
+import "window.js" as ConfigWindow
 
 Item {
     id: page
@@ -152,6 +152,10 @@ Item {
 
             Label {
                 Layout.fillWidth: true
+                // A long help text must not widen the FormLayout column: preferred 0
+                // lets it take the column width set by the controls and wrap there.
+                Layout.preferredWidth: 0
+                Layout.maximumWidth: Math.max(0, page.width - 40 - symbolDisplayCombo.x)
                 text: i18n("The exchange badge is shown only where the Yahoo symbol has an exchange suffix, such as .RO or .DE. The full symbol and the exchange name stay visible in the tooltip.")
                 color: Kirigami.Theme.disabledTextColor
                 font.pixelSize: 10

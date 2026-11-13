@@ -5,41 +5,41 @@ ConfigModel {
     ConfigCategory {
         name: i18n("General")
         icon: "configure"
-        source: "configGeneral.qml"
+        source: "config/general.qml"
     }
     ConfigCategory {
         name: i18n("Symbols & Lists")
         icon: "view-list-text"
-        source: "configSymbolsLists.qml"
+        source: "config/symbolsLists.qml"
     }
     ConfigCategory {
         name: i18n("Panel view")
         icon: "panel-fit-width"
-        source: "configPanel.qml"
+        source: "config/panelView.qml"
     }
     ConfigCategory {
         name: i18n("Mouse actions")
         icon: "input-mouse"
-        source: "configMouse.qml"
+        source: "config/mouseActions.qml"
     }
     ConfigCategory {
         name: i18n("Chart & News")
         icon: "office-chart-line"
-        source: "configChart.qml"
+        source: "config/chartNews.qml"
     }
     ConfigCategory {
         name: i18n("Portfolio Tracking")
         icon: "view-financial-account-investment"
-        source: "configPortfolio.qml"
+        source: "config/portfolio.qml"
     }
     ConfigCategory {
         name: i18n("Appearance")
         icon: "preferences-desktop-color"
-        source: "configAppearance.qml"
+        source: "config/appearance.qml"
     }
     ConfigCategory {
         name: i18n("Import / Export")
         icon: "document-swap"
-        source: "configBackup.qml"
+        source: "config/importExport.qml"
     }
 }

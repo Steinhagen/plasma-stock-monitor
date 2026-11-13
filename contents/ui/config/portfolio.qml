@@ -3,8 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
-import "currencies.js" as Currency
-import "configWindow.js" as ConfigWindow
+import "../currencies.js" as Currency
+import "window.js" as ConfigWindow
 
 Item {
     id: page

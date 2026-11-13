@@ -49,877 +49,882 @@ msgstr "Aspect"
 msgid "Import / Export"
 msgstr "Import / Export"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/CompactPanel.qml
+msgctxt "@item:panel stock data state"
+msgid "OFF"
+msgstr "OFF"
+
+#: contents/ui/config/appearance.qml
 msgid "The widget follows the system Plasma theme, including its background and colors."
 msgstr "Widgetul urmează tema Plasma a sistemului, inclusiv fundalul și culorile acesteia."
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "The widget draws its own background and rounded cards. Choose its colors below."
 msgstr "Widgetul își desenează propriul fundal și cardurile rotunjite. Alege culorile mai jos."
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Theme"
 msgstr "Temă"
 
-#: contents/ui/configAppearance.qml contents/ui/configMouse.qml
+#: contents/ui/config/appearance.qml contents/ui/config/mouseActions.qml
 msgid "Preset:"
 msgstr "Presetare:"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Application"
 msgstr "Aplicație"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Plasma"
 msgstr "Plasma"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Colors:"
 msgstr "Culori:"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Light"
 msgstr "Luminoasă"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Dark"
 msgstr "Întunecată"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "System"
 msgstr "Sistem"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Colors apply only to the Application preset. Plasma always uses the system colors."
 msgstr "Culorile se aplică doar presetului Aplicație. Plasma folosește întotdeauna culorile sistemului."
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "The panel indicator stays transparent and uses the panel colors, whichever theme is selected."
 msgstr "Indicatorul din panou rămâne transparent și folosește culorile panoului, indiferent de tema aleasă."
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Positive Color (Hex):"
 msgstr "Culoare pozitivă (hex):"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Negative Color (Hex):"
 msgstr "Culoare negativă (hex):"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Background Opacity:"
 msgstr "Opacitate fundal:"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Ticker Symbol Text"
 msgstr "Textul simbolului bursier"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Color (Hex):"
 msgstr "Culoare (hex):"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Opacity:"
 msgstr "Opacitate:"
 
-#: contents/ui/configAppearance.qml
+#: contents/ui/config/appearance.qml
 msgid "Stock Price Text"
 msgstr "Textul prețului acțiunii"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/chartNews.qml
+msgid "Chart style:"
+msgstr "Stil grafic:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Reference line (open)"
+msgstr "Linie de referință (deschidere)"
+
+#: contents/ui/config/chartNews.qml
+msgid "Candles + volume"
+msgstr "Candele + volum"
+
+#: contents/ui/config/chartNews.qml
+msgid "Line style:"
+msgstr "Stil linie:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Smooth"
+msgstr "Netedă"
+
+#: contents/ui/config/chartNews.qml
+msgid "Straight"
+msgstr "Dreaptă"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show chart style buttons"
+msgstr "Afișează butoanele de stil al graficului"
+
+#: contents/ui/config/chartNews.qml
+msgid "Range Selection:"
+msgstr "Selectare interval:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show the range buttons in the chart"
+msgstr "Afișează butoanele de interval în grafic"
+
+#: contents/ui/config/chartNews.qml
+msgid "Data Range:"
+msgstr "Interval de date:"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "1D"
+msgstr "1 zi"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "5D"
+msgstr "5 zile"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "1M"
+msgstr "1 lună"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "6M"
+msgstr "6 luni"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "YTD"
+msgstr "YTD"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "1Y"
+msgstr "1 an"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "5Y"
+msgstr "5 ani"
+
+#: contents/ui/config/chartNews.qml contents/ui/main.qml
+msgid "Max"
+msgstr "Max"
+
+#: contents/ui/config/chartNews.qml
+msgid "Hover:"
+msgstr "La trecerea cu mouse-ul:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show values when hovering over the chart"
+msgstr "Afișează valorile când treci cu mouse-ul peste grafic"
+
+#: contents/ui/config/chartNews.qml
+msgid "Price scale:"
+msgstr "Scară de preț:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show price values on the right of the chart"
+msgstr "Afișează valorile prețului în dreapta graficului"
+
+#: contents/ui/config/chartNews.qml
+msgid "Time scale:"
+msgstr "Scară de timp:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show dates and times under the chart"
+msgstr "Afișează datele și orele sub grafic"
+
+#: contents/ui/config/chartNews.qml
+msgid "News"
+msgstr "Știri"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show news headlines in the single-stock view"
+msgstr "Afișează titlurile știrilor în vizualizarea unei singure acțiuni"
+
+#: contents/ui/config/chartNews.qml
+msgid "News sources:"
+msgstr "Surse de știri:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Yahoo Finance"
+msgstr "Yahoo Finance"
+
+#: contents/ui/config/chartNews.qml
+msgid "BVB (Romanian symbols)"
+msgstr "BVB (simboluri românești)"
+
+#: contents/ui/config/chartNews.qml
+msgid "Select at least one news source."
+msgstr "Selectați cel puțin o sursă de știri."
+
+#: contents/ui/config/chartNews.qml
+msgid "Headlines from the sources selected above. Yahoo Finance covers general news; BVB provides the issuer's announcements for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
+msgstr "Titluri din sursele selectate mai sus. Yahoo Finance acoperă știrile generale; BVB oferă comunicatele emitentului pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
+
+#: contents/ui/config/chartNews.qml
+msgid "Headlines per source (5–50):"
+msgstr "Titluri per sursă (5–50):"
+
+#: contents/ui/config/chartNews.qml
+msgid "Update every (minutes):"
+msgstr "Actualizează la fiecare (minute):"
+
+#: contents/ui/config/general.qml
+msgid "Refresh Interval (minutes):"
+msgstr "Interval de reîmprospătare (minute):"
+
+#: contents/ui/config/general.qml
+msgid "Active Hours:"
+msgstr "Ore active:"
+
+#: contents/ui/config/general.qml
+msgid "Only refresh data during market hours"
+msgstr "Reîmprospătează datele doar în timpul orelor de tranzacționare"
+
+#: contents/ui/config/general.qml
+msgid "Weekend Refresh:"
+msgstr "Reîmprospătare în weekend:"
+
+#: contents/ui/config/general.qml
+msgid "Do not refresh data on weekends (Sat,Sun)"
+msgstr "Nu reîmprospăta datele în weekend (sâm., dum.)"
+
+#: contents/ui/config/general.qml
+msgid "Market Open:"
+msgstr "Deschidere piață:"
+
+#: contents/ui/config/general.qml
+msgid "Market Close:"
+msgstr "Închidere piață:"
+
+#: contents/ui/config/general.qml
+msgid "Update Timestamps:"
+msgstr "Marcaje de actualizare:"
+
+#: contents/ui/config/general.qml
+msgid "Hide update timestamps"
+msgstr "Ascunde marcajele de timp ale actualizării"
+
+#: contents/ui/config/general.qml
+msgid "Value Formatting:"
+msgstr "Formatarea valorilor:"
+
+#: contents/ui/config/general.qml
+msgid "Format stock price with commas (e.g. 1,000.00)"
+msgstr "Formatează prețul acțiunii cu virgule (de ex. 1,000.00)"
+
+#: contents/ui/config/general.qml
+msgid "Remove decimals from stock price"
+msgstr "Elimină zecimalele din prețul acțiunii"
+
+#: contents/ui/config/general.qml
+msgid "Extended Hours:"
+msgstr "Program extins:"
+
+#: contents/ui/config/general.qml
+msgid "Show pre-market and after-hours values and market-closed status"
+msgstr "Afișează valorile înaintea deschiderii și după închidere, plus starea pieței"
+
+#: contents/ui/config/general.qml
+msgid "When Closed:"
+msgstr "Când piața este închisă:"
+
+#: contents/ui/config/general.qml
+msgid "Keep showing the last pre-market/after-hours quote"
+msgstr "Continuă să afișezi ultima cotație înaintea deschiderii / după închidere"
+
+#: contents/ui/config/importExport.qml
 msgid "The selected file is empty."
 msgstr "Fișierul selectat este gol."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The selected file is not valid JSON."
 msgstr "Fișierul selectat nu conține JSON valid."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The selected file is not a Plasma Stock Monitor backup."
 msgstr "Fișierul selectat nu este o copie de siguranță a aplicației Monitor de acțiuni Plasma."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "This backup was created by a newer version of the widget."
 msgstr "Această copie de siguranță a fost creată de o versiune mai nouă a widgetului."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The portfolio data in this backup is invalid."
 msgstr "Datele portofoliului din această copie de siguranță nu sunt valide."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Portfolio entry %1 in this backup is invalid."
 msgstr "Intrarea %1 din portofoliu din această copie de siguranță nu este validă."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The backup contains an invalid value for \"%1\"."
 msgstr "Copia de siguranță conține o valoare invalidă pentru „%1”."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The value for \"%1\" is outside the allowed range."
 msgstr "Valoarea pentru „%1” este în afara intervalului permis."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The backup could not be imported."
 msgstr "Copia de siguranță nu a putut fi importată."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Writing %1..."
 msgstr "Se scrie %1..."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Reading %1..."
 msgstr "Se citește %1..."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "This backup does not contain portfolio or watchlist data."
 msgstr "Această copie de siguranță nu conține date despre portofoliu sau lista de urmărire."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "This backup does not contain application settings."
 msgstr "Această copie de siguranță nu conține setările aplicației."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "This backup does not contain any data or settings."
 msgstr "Această copie de siguranță nu conține date sau setări."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Imported from %1. Click Apply or OK to save the changes."
 msgstr "Importat din %1. Apasă Aplică sau OK pentru a salva modificările."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The file could not be read."
 msgstr "Fișierul nu a putut fi citit."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The file could not be saved."
 msgstr "Fișierul nu a putut fi salvat."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "The file operation timed out."
 msgstr "Operațiunea asupra fișierului a expirat."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Details: %1"
 msgstr "Detalii: %1"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Save your portfolio, watchlist and settings to a JSON file, or restore them from a backup."
 msgstr "Salvează portofoliul, lista de urmărire și setările într-un fișier JSON sau restaurează-le dintr-o copie de siguranță."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Content:"
 msgstr "Conținut:"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Portfolio and watchlist"
 msgstr "Portofoliu și listă de urmărire"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Application settings"
 msgstr "Setările aplicației"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Everything (portfolio and settings)"
 msgstr "Tot (portofoliu și setări)"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Holdings, purchase lots, portfolio currency and the ticker list."
 msgstr "Dețineri, loturi de achiziție, moneda portofoliului și lista de simboluri."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Refresh, market hours, appearance, panel and display preferences."
 msgstr "Reîmprospătare, ore de tranzacționare, aspect, panou și preferințe de afișare."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "A full backup of the portfolio, watchlist and all settings."
 msgstr "O copie de siguranță completă a portofoliului, listei de urmărire și tuturor setărilor."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Backup:"
 msgstr "Copie de siguranță:"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Export to File..."
 msgstr "Exportă în fișier..."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Import from File..."
 msgstr "Importă din fișier..."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "File import and export are not available because the Plasma5Support module is missing on this system."
 msgstr "Importul și exportul în fișier nu sunt disponibile deoarece modulul Plasma5Support lipsește pe acest sistem."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Backups are plain JSON files. Cached exchange rates are not included because they are downloaded again automatically."
 msgstr "Copiile de siguranță sunt fișiere JSON simple. Cursurile de schimb memorate nu sunt incluse, deoarece sunt descărcate din nou automat."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Exported to %1."
 msgstr "Exportat în %1."
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Export Settings"
 msgstr "Exportă setările"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgctxt "file filter"
 msgid "JSON backup files (*.json)"
 msgstr "Fișiere de siguranță JSON (*.json)"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgctxt "file filter"
 msgid "All files (*)"
 msgstr "Toate fișierele (*)"
 
-#: contents/ui/configBackup.qml
+#: contents/ui/config/importExport.qml
 msgid "Import Settings"
 msgstr "Importă setările"
 
-#: contents/ui/configChart.qml
-msgid "Chart style:"
-msgstr "Stil grafic:"
-
-#: contents/ui/configChart.qml
-msgid "Reference line (open)"
-msgstr "Linie de referință (deschidere)"
-
-#: contents/ui/configChart.qml
-msgid "Candles + volume"
-msgstr "Candele + volum"
-
-#: contents/ui/configChart.qml
-msgid "Line style:"
-msgstr "Stil linie:"
-
-#: contents/ui/configChart.qml
-msgid "Smooth"
-msgstr "Netedă"
-
-#: contents/ui/configChart.qml
-msgid "Straight"
-msgstr "Dreaptă"
-
-#: contents/ui/configChart.qml
-msgid "Show chart style buttons"
-msgstr "Afișează butoanele de stil al graficului"
-
-#: contents/ui/configChart.qml
-msgid "Range Selection:"
-msgstr "Selectare interval:"
-
-#: contents/ui/configChart.qml
-msgid "Show the range buttons in the chart"
-msgstr "Afișează butoanele de interval în grafic"
-
-#: contents/ui/configChart.qml
-msgid "Data Range:"
-msgstr "Interval de date:"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "1D"
-msgstr "1 zi"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "5D"
-msgstr "5 zile"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "1M"
-msgstr "1 lună"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "6M"
-msgstr "6 luni"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "YTD"
-msgstr "YTD"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "1Y"
-msgstr "1 an"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "5Y"
-msgstr "5 ani"
-
-#: contents/ui/configChart.qml contents/ui/main.qml
-msgid "Max"
-msgstr "Max"
-
-#: contents/ui/configChart.qml
-msgid "Hover:"
-msgstr "La trecerea cu mouse-ul:"
-
-#: contents/ui/configChart.qml
-msgid "Show values when hovering over the chart"
-msgstr "Afișează valorile când treci cu mouse-ul peste grafic"
-
-#: contents/ui/configChart.qml
-msgid "Price scale:"
-msgstr "Scară de preț:"
-
-#: contents/ui/configChart.qml
-msgid "Show price values on the right of the chart"
-msgstr "Afișează valorile prețului în dreapta graficului"
-
-#: contents/ui/configChart.qml
-msgid "Time scale:"
-msgstr "Scară de timp:"
-
-#: contents/ui/configChart.qml
-msgid "Show dates and times under the chart"
-msgstr "Afișează datele și orele sub grafic"
-
-#: contents/ui/configChart.qml
-msgid "News"
-msgstr "Știri"
-
-#: contents/ui/configChart.qml
-msgid "Show news headlines in the single-stock view"
-msgstr "Afișează titlurile știrilor în vizualizarea unei singure acțiuni"
-
-#: contents/ui/configChart.qml
-msgid "News sources:"
-msgstr "Surse de știri:"
-
-#: contents/ui/configChart.qml
-msgid "Yahoo Finance"
-msgstr "Yahoo Finance"
-
-#: contents/ui/configChart.qml
-msgid "BVB (Romanian symbols)"
-msgstr "BVB (simboluri românești)"
-
-#: contents/ui/configChart.qml
-msgid "Select at least one news source."
-msgstr "Selectați cel puțin o sursă de știri."
-
-#: contents/ui/configChart.qml
-msgid "Headlines from the sources selected above. Yahoo Finance covers general news; BVB provides the issuer's announcements for symbols ending in .RO. Switch with the icons next to the market status. Not available in the list-only view."
-msgstr "Titluri din sursele selectate mai sus. Yahoo Finance acoperă știrile generale; BVB oferă comunicatele emitentului pentru simbolurile care se termină în .RO. Comută cu pictogramele de lângă starea pieței. Indisponibil în vizualizarea doar cu listă."
-
-#: contents/ui/configChart.qml
-msgid "Headlines per source (5–50):"
-msgstr "Titluri per sursă (5–50):"
-
-#: contents/ui/configChart.qml
-msgid "Update every (minutes):"
-msgstr "Actualizează la fiecare (minute):"
-
-#: contents/ui/configGeneral.qml
-msgid "Refresh Interval (minutes):"
-msgstr "Interval de reîmprospătare (minute):"
-
-#: contents/ui/configGeneral.qml
-msgid "Active Hours:"
-msgstr "Ore active:"
-
-#: contents/ui/configGeneral.qml
-msgid "Only refresh data during market hours"
-msgstr "Reîmprospătează datele doar în timpul orelor de tranzacționare"
-
-#: contents/ui/configGeneral.qml
-msgid "Weekend Refresh:"
-msgstr "Reîmprospătare în weekend:"
-
-#: contents/ui/configGeneral.qml
-msgid "Do not refresh data on weekends (Sat,Sun)"
-msgstr "Nu reîmprospăta datele în weekend (sâm., dum.)"
-
-#: contents/ui/configGeneral.qml
-msgid "Market Open:"
-msgstr "Deschidere piață:"
-
-#: contents/ui/configGeneral.qml
-msgid "Market Close:"
-msgstr "Închidere piață:"
-
-#: contents/ui/configGeneral.qml
-msgid "Update Timestamps:"
-msgstr "Marcaje de actualizare:"
-
-#: contents/ui/configGeneral.qml
-msgid "Hide update timestamps"
-msgstr "Ascunde marcajele de timp ale actualizării"
-
-#: contents/ui/configGeneral.qml
-msgid "Value Formatting:"
-msgstr "Formatarea valorilor:"
-
-#: contents/ui/configGeneral.qml
-msgid "Format stock price with commas (e.g. 1,000.00)"
-msgstr "Formatează prețul acțiunii cu virgule (de ex. 1,000.00)"
-
-#: contents/ui/configGeneral.qml
-msgid "Remove decimals from stock price"
-msgstr "Elimină zecimalele din prețul acțiunii"
-
-#: contents/ui/configGeneral.qml
-msgid "Extended Hours:"
-msgstr "Program extins:"
-
-#: contents/ui/configGeneral.qml
-msgid "Show pre-market and after-hours values and market-closed status"
-msgstr "Afișează valorile înaintea deschiderii și după închidere, plus starea pieței"
-
-#: contents/ui/configGeneral.qml
-msgid "When Closed:"
-msgstr "Când piața este închisă:"
-
-#: contents/ui/configGeneral.qml
-msgid "Keep showing the last pre-market/after-hours quote"
-msgstr "Continuă să afișezi ultima cotație înaintea deschiderii / după închidere"
-
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Standard"
 msgstr "Standard"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Minimal"
 msgstr "Minimal"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Custom"
 msgstr "Personalizat"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "List row, left click:"
 msgstr "Rând din listă, click stânga:"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Select for panel and chart"
 msgstr "Selectează pentru panou și grafic"
 
-#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/config/mouseActions.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
 msgid "Open on Yahoo Finance"
 msgstr "Deschide pe Yahoo Finance"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Middle click:"
 msgstr "Click mijloc:"
 
-#: contents/ui/configMouse.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
+#: contents/ui/config/mouseActions.qml contents/ui/MultiStockView.qml contents/ui/SingleStockView.qml
 msgid "Refresh"
 msgstr "Reîmprospătează"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Do nothing"
 msgstr "Nu face nimic"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Double click:"
 msgstr "Dublu click:"
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Middle click applies to the panel indicator, watchlist rows and the chart."
 msgstr "Click-ul mijlociu se aplică indicatorului din panou, rândurilor din listă și graficului."
 
-#: contents/ui/configMouse.qml
+#: contents/ui/config/mouseActions.qml
 msgid "Right click always opens the context menu. Wheel behaviour is unchanged."
 msgstr "Click dreapta deschide întotdeauna meniul contextual. Comportamentul rotiței rămâne neschimbat."
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Price and percentage:"
 msgstr "Preț și procent:"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Alternate them in the same spot"
 msgstr "Alternează-le în același loc"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Switch every (seconds):"
 msgstr "Schimbă la fiecare (secunde):"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Stock Change Percentage:"
 msgstr "Procentul variației:"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Hide stock change percentage"
 msgstr "Ascunde procentul variației acțiunii"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Cycle panel stock:"
 msgstr "Rotirea acțiunii în panou:"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Automatically cycle through the stocks"
 msgstr "Rotește automat acțiunile"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Cycle every (seconds):"
 msgstr "Rotește la fiecare (secunde):"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Panel width:"
 msgstr "Lățime panou:"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Keep the panel indicator at a fixed width"
 msgstr "Menține indicatorul din panou la o lățime fixă"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Width (pixels):"
 msgstr "Lățime (pixeli):"
 
-#: contents/ui/configPanel.qml
+#: contents/ui/config/panelView.qml
 msgid "Fit the widest value"
 msgstr "Cea mai lată valoare"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Enter a ticker and a number of shares greater than zero."
 msgstr "Introdu un simbol și un număr de acțiuni mai mare decât zero."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Some quotes are unavailable."
 msgstr "Unele cotații nu sunt disponibile."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Settings for the whole portfolio"
 msgstr "Setări pentru întregul portofoliu"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Applies to every symbol and lot; it does not depend on the selected lot."
 msgstr "Se aplică tuturor simbolurilor și loturilor; nu depinde de lotul selectat."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Show gain/loss in the widget"
 msgstr "Arată câștigul/pierderea în widget"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Shows the gain/loss summary on the widget's main panel. The lot table always shows values and gains."
 msgstr "Afișează rezumatul câștigului/pierderii în panoul principal al widgetului. Tabelul cu loturi arată întotdeauna valorile și câștigurile."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Base currency"
 msgstr "Moneda de bază"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "About portfolio tracking"
 msgstr "Despre urmărirea portofoliului"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Invested"
 msgstr "Investit"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Current value"
 msgstr "Valoare curentă"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Total gain"
 msgstr "Câștig total"
 
-#: contents/ui/configPortfolio.qml contents/ui/main.qml
+#: contents/ui/config/portfolio.qml contents/ui/main.qml
 msgid "Today"
 msgstr "Astăzi"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Lots"
 msgstr "Loturi"
 
-#: contents/ui/configPortfolio.qml contents/ui/PositionLine.qml
+#: contents/ui/config/portfolio.qml contents/ui/PositionLine.qml
 msgid "%1 lot"
 msgid_plural "%1 lots"
 msgstr[0] "%1 lot"
 msgstr[1] "%1 loturi"
 msgstr[2] "%1 de loturi"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "%1 share"
 msgid_plural "%1 shares"
 msgstr[0] "%1 acțiune"
 msgstr[1] "%1 acțiuni"
 msgstr[2] "%1 de acțiuni"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Add Lot"
 msgstr "Adaugă lot"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Refresh quotes"
 msgstr "Reîmprospătează cotațiile"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Search symbol or details…"
 msgstr "Caută simbol sau detalii…"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Symbol"
 msgstr "Simbol"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Click to sort"
 msgstr "Click pentru sortare"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Shares"
 msgstr "Acțiuni"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Average cost"
 msgstr "Cost mediu"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Currency"
 msgstr "Monedă"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Date"
 msgstr "Data"
 
-#: contents/ui/configPortfolio.qml contents/ui/PositionLine.qml
+#: contents/ui/config/portfolio.qml contents/ui/PositionLine.qml
 msgid "Value"
 msgstr "Valoare"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Gain"
 msgstr "Câștig"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Options"
 msgstr "Opțiuni"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Gain per share: %1"
 msgstr "Câștig pe acțiune: %1"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Quote unavailable."
 msgstr "Cotație indisponibilă."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Lot actions"
 msgstr "Acțiuni lot"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Edit"
 msgstr "Editează"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Remove"
 msgstr "Elimină"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "No holdings added yet."
 msgstr "Nu ai adăugat încă nicio deținere."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "No lots match the search."
 msgstr "Niciun lot nu corespunde căutării."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Use the Import / Export page to back up or restore the portfolio and watchlist."
 msgstr "Folosește pagina Import / Export pentru a salva sau restaura portofoliul și lista de urmărire."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Edit Lot"
 msgstr "Editează lotul"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Ticker:"
 msgstr "Simbol:"
 
-#: contents/ui/configPortfolio.qml contents/ui/configSymbolsLists.qml
+#: contents/ui/config/portfolio.qml contents/ui/config/symbolsLists.qml
 msgid "e.g., AAPL"
 msgstr "de ex., AAPL"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Shares:"
 msgstr "Număr de acțiuni:"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Average Cost:"
 msgstr "Cost mediu:"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Currency:"
 msgstr "Monedă:"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Purchase Date:"
 msgstr "Data achiziției:"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Details (optional):"
 msgstr "Detalii (opțional):"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "e.g., E*TRADE - 8122"
 msgstr "de ex., E*TRADE - 8122"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Cancel"
 msgstr "Anulează"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Save Lot"
 msgstr "Salvează lotul"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Each purchase is its own lot — buying more of the same ticker at a different price adds a new lot instead of overwriting the old one."
 msgstr "Fiecare achiziție este un lot separat — dacă mai cumperi același simbol la un alt preț, se adaugă un lot nou în loc să fie suprascris cel vechi."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "The average cost is in the lot's currency (USD by default). Exchange rates for all currencies are downloaded once a day and used to show portfolio totals in the portfolio currency. For markets quoted in pence or cents (e.g. London), enter the cost in the major currency (GBP, ZAR)."
 msgstr "Costul mediu este în moneda lotului (implicit USD). Cursurile de schimb pentru toate monedele sunt descărcate o dată pe zi și sunt folosite pentru a afișa totalurile portofoliului în moneda portofoliului. Pentru piețele cotate în penny sau cenți (de ex. Londra), introdu costul în moneda principală (GBP, ZAR)."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Exchange rates are downloaded once a day."
 msgstr "Cursurile de schimb sunt descărcate o dată pe zi."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Exchange rates: not downloaded yet."
 msgstr "Cursuri de schimb: încă nedescărcate."
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Exchange rates: updated %1"
 msgstr "Cursuri de schimb: actualizate la %1"
 
-#: contents/ui/configPortfolio.qml
+#: contents/ui/config/portfolio.qml
 msgid "Close"
 msgstr "Închide"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Enter a search term."
 msgstr "Introdu un termen de căutare."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Searching..."
 msgstr "Se caută..."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "No symbols found."
 msgstr "Nu s-au găsit simboluri."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Suggestions:"
 msgstr "Sugestii:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Error parsing search results."
 msgstr "Eroare la interpretarea rezultatelor căutării."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Search failed (HTTP %1)."
 msgstr "Căutarea a eșuat (HTTP %1)."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Lists"
 msgstr "Liste"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Display Mode:"
 msgstr "Mod de afișare:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Show Multi-Stock List"
 msgstr "Afișează lista cu mai multe acțiuni"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Two List:"
 msgstr "Două liste:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "single-stock on left side and multi-stock on right side"
 msgstr "o singură acțiune în stânga și lista cu mai multe acțiuni în dreapta"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Single Ticker:"
 msgstr "Simbol bursier:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Ticker List:"
 msgstr "Listă de simboluri:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Sorting:"
 msgstr "Sortare:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Sort stocks alphabetically"
 msgstr "Sortează acțiunile alfabetic"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Names:"
 msgstr "Nume:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Show company name and ticker together, e.g. Apple Inc. (AAPL)"
 msgstr "Afișează numele companiei împreună cu simbolul, de ex. Apple Inc. (AAPL)"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Swap the order: ticker symbol first, e.g. AAPL (Apple Inc.)"
 msgstr "Inversează ordinea: mai întâi simbolul, de ex. AAPL (Apple Inc.)"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Swap company name and ticker symbol"
 msgstr "Inversează numele companiei și simbolul bursier"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Symbol display:"
 msgstr "Afișare simbol:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Yahoo Finance symbol, e.g. BRD.RO"
 msgstr "Simbol Yahoo Finance, ex. BRD.RO"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Symbol only, e.g. BRD"
 msgstr "Doar simbolul, ex. BRD"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Symbol and exchange, e.g. BRD · BVB"
 msgstr "Simbol și bursă, ex. BRD · BVB"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "The exchange badge is shown only where the Yahoo symbol has an exchange suffix, such as .RO or .DE. The full symbol and the exchange name stay visible in the tooltip."
 msgstr "Eticheta bursei apare doar acolo unde simbolul Yahoo are un sufix de bursă, cum ar fi .RO sau .DE. Simbolul complet și numele bursei rămân vizibile în balonul de ajutor."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Find symbols"
 msgstr "Caută simboluri"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Search:"
 msgstr "Caută:"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "e.g. Tesla, AAPL..."
 msgstr "de ex. Tesla, AAPL..."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Search"
 msgstr "Caută"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Type to find symbols and click Search."
 msgstr "Scrie pentru a găsi simboluri, apoi apasă Caută."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgctxt "@action:button abbreviation for single stock"
 msgid "SS"
 msgstr "SS"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Add to Single Stock"
 msgstr "Adaugă ca acțiune unică"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Set %1 as Single Stock."
 msgstr "Am setat %1 ca acțiune unică."
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgctxt "@action:button abbreviation for multi stock list"
 msgid "MSL"
 msgstr "MSL"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Add to Multi Stock List"
 msgstr "Adaugă la lista cu mai multe acțiuni"
 
-#: contents/ui/configSymbolsLists.qml
+#: contents/ui/config/symbolsLists.qml
 msgid "Added %1 to Multi Stock List."
 msgstr "Am adăugat %1 la lista cu mai multe acțiuni."
 
@@ -947,42 +952,13 @@ msgctxt "@item:chart previous close"
 msgid "Previous close"
 msgstr "Închidere anterioară"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml contents/ui/TooltipContent.qml
 msgid "Cached data from %1"
 msgstr "Date din cache: %1"
 
 #: contents/ui/main.qml
 msgid "Updated: %1 • Next: %2"
 msgstr "Actualizat: %1 • Următorul: %2"
-
-#: contents/ui/main.qml
-msgctxt "@item:news age"
-msgid "just now"
-msgstr "chiar acum"
-
-#: contents/ui/main.qml
-msgctxt "@item:news age"
-msgid "%1 min ago"
-msgid_plural "%1 min ago"
-msgstr[0] "acum %1 min"
-msgstr[1] "acum %1 min"
-msgstr[2] "acum %1 min"
-
-#: contents/ui/main.qml
-msgctxt "@item:news age"
-msgid "%1 h ago"
-msgid_plural "%1 h ago"
-msgstr[0] "acum %1 h"
-msgstr[1] "acum %1 h"
-msgstr[2] "acum %1 h"
-
-#: contents/ui/main.qml
-msgctxt "@item:news age"
-msgid "%1 d ago"
-msgid_plural "%1 d ago"
-msgstr[0] "acum %1 zi"
-msgstr[1] "acum %1 zile"
-msgstr[2] "acum %1 de zile"
 
 #: contents/ui/main.qml
 msgctxt "@item:chart range"
@@ -996,81 +972,6 @@ msgstr "Înaintea deschiderii"
 #: contents/ui/main.qml
 msgid "After-Hours"
 msgstr "După închidere"
-
-#: contents/ui/main.qml
-msgid "Plasma Stock Monitor"
-msgstr "Monitor de acțiuni Plasma"
-
-#: contents/ui/main.qml
-msgid "%1 stock"
-msgid_plural "%1 stocks"
-msgstr[0] "%1 acțiune"
-msgstr[1] "%1 acțiuni"
-msgstr[2] "%1 de acțiuni"
-
-#: contents/ui/main.qml
-msgctxt "@info:tooltip"
-msgid "%1 · %2 · cached data from %3"
-msgstr "%1 · %2 · date din cache: %3"
-
-#: contents/ui/main.qml
-msgctxt "@info:tooltip"
-msgid "%1 · %2 · updated %3"
-msgstr "%1 · %2 · actualizat la %3"
-
-#: contents/ui/main.qml
-msgctxt "@info:tooltip"
-msgid "%1 · %2"
-msgstr "%1 · %2"
-
-#: contents/ui/main.qml
-msgid "… and %1 more"
-msgstr "… și încă %1"
-
-#: contents/ui/main.qml contents/ui/MultiStockView.qml
-msgctxt "@item:market status"
-msgid "closed"
-msgstr "închisă"
-
-#: contents/ui/main.qml
-msgid "loading…"
-msgstr "se încarcă…"
-
-#: contents/ui/main.qml
-msgid "Loading…"
-msgstr "Se încarcă…"
-
-#: contents/ui/main.qml
-msgid "Session"
-msgstr "Sesiune"
-
-#: contents/ui/main.qml contents/ui/MultiStockView.qml
-msgid "Market closed"
-msgstr "Piața este închisă"
-
-#: contents/ui/main.qml
-msgid "Position"
-msgstr "Poziție"
-
-#: contents/ui/main.qml
-msgid "%1 share · avg %2"
-msgid_plural "%1 shares · avg %2"
-msgstr[0] "%1 acțiune · mediu %2"
-msgstr[1] "%1 acțiuni · mediu %2"
-msgstr[2] "%1 de acțiuni · mediu %2"
-
-#: contents/ui/main.qml contents/ui/PositionLine.qml
-msgid "P/L"
-msgstr "P/L"
-
-#: contents/ui/main.qml
-msgid "Updated"
-msgstr "Actualizat"
-
-#: contents/ui/main.qml
-msgctxt "@item:panel stock data state"
-msgid "OFF"
-msgstr "OFF"
 
 #: contents/ui/MultiStockView.qml
 msgid "%1 position"
@@ -1101,6 +1002,11 @@ msgstr "Fără cotație după închidere"
 msgid "Set as panel stock"
 msgstr "Setează ca simbol în panou"
 
+#: contents/ui/MultiStockView.qml contents/ui/TooltipContent.qml
+msgctxt "@item:market status"
+msgid "closed"
+msgstr "închisă"
+
 #: contents/ui/MultiStockView.qml
 msgctxt "@item:short stock market session"
 msgid "Pre"
@@ -1111,6 +1017,39 @@ msgctxt "@item:short stock market session"
 msgid "After"
 msgstr "După"
 
+#: contents/ui/MultiStockView.qml contents/ui/TooltipContent.qml
+msgid "Market closed"
+msgstr "Piața este închisă"
+
+#: contents/ui/NewsController.qml
+msgctxt "@item:news age"
+msgid "just now"
+msgstr "chiar acum"
+
+#: contents/ui/NewsController.qml
+msgctxt "@item:news age"
+msgid "%1 min ago"
+msgid_plural "%1 min ago"
+msgstr[0] "acum %1 min"
+msgstr[1] "acum %1 min"
+msgstr[2] "acum %1 min"
+
+#: contents/ui/NewsController.qml
+msgctxt "@item:news age"
+msgid "%1 h ago"
+msgid_plural "%1 h ago"
+msgstr[0] "acum %1 h"
+msgstr[1] "acum %1 h"
+msgstr[2] "acum %1 h"
+
+#: contents/ui/NewsController.qml
+msgctxt "@item:news age"
+msgid "%1 d ago"
+msgid_plural "%1 d ago"
+msgstr[0] "acum %1 zi"
+msgstr[1] "acum %1 zile"
+msgstr[2] "acum %1 de zile"
+
 #: contents/ui/PositionLine.qml
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
@@ -1118,6 +1057,10 @@ msgstr "%1 (%2)"
 #: contents/ui/PositionLine.qml
 msgid "%1 @ %2"
 msgstr "%1 la %2"
+
+#: contents/ui/PositionLine.qml contents/ui/TooltipContent.qml
+msgid "P/L"
+msgstr "P/L"
 
 #: contents/ui/SingleStockView.qml
 msgctxt "@item:news source"
@@ -1241,6 +1184,63 @@ msgstr "Mai multe pe Yahoo Finance"
 #: contents/ui/SingleStockView.qml
 msgid "Open on BVB"
 msgstr "Deschide pe BVB"
+
+#: contents/ui/TooltipContent.qml
+msgid "Plasma Stock Monitor"
+msgstr "Monitor de acțiuni Plasma"
+
+#: contents/ui/TooltipContent.qml
+msgid "%1 stock"
+msgid_plural "%1 stocks"
+msgstr[0] "%1 acțiune"
+msgstr[1] "%1 acțiuni"
+msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/TooltipContent.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · cached data from %3"
+msgstr "%1 · %2 · date din cache: %3"
+
+#: contents/ui/TooltipContent.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2 · updated %3"
+msgstr "%1 · %2 · actualizat la %3"
+
+#: contents/ui/TooltipContent.qml
+msgctxt "@info:tooltip"
+msgid "%1 · %2"
+msgstr "%1 · %2"
+
+#: contents/ui/TooltipContent.qml
+msgid "… and %1 more"
+msgstr "… și încă %1"
+
+#: contents/ui/TooltipContent.qml
+msgid "loading…"
+msgstr "se încarcă…"
+
+#: contents/ui/TooltipContent.qml
+msgid "Loading…"
+msgstr "Se încarcă…"
+
+#: contents/ui/TooltipContent.qml
+msgid "Session"
+msgstr "Sesiune"
+
+#: contents/ui/TooltipContent.qml
+msgid "Position"
+msgstr "Poziție"
+
+#: contents/ui/TooltipContent.qml
+msgid "%1 share · avg %2"
+msgid_plural "%1 shares · avg %2"
+msgstr[0] "%1 acțiune · mediu %2"
+msgstr[1] "%1 acțiuni · mediu %2"
+msgstr[2] "%1 de acțiuni · mediu %2"
+
+#: contents/ui/TooltipContent.qml
+msgid "Updated"
+msgstr "Actualizat"
 
 #~ msgid "Symbols & lists"
 #~ msgstr "Simboluri și liste"
