@@ -216,7 +216,7 @@ MouseArea {
         function onModelReset() { remeasureTimer.restart(); }
     }
     Connections {
-        target: root
+        target: applet
         function onExtendedDataChanged() { remeasureTimer.restart(); }
         function onPanelCurrentPriceChanged() { remeasureTimer.restart(); }
         function onPanelCurrentPercentChanged() { remeasureTimer.restart(); }

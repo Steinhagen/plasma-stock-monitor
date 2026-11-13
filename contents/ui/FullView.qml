@@ -88,7 +88,7 @@ Item {
     // isMultiMode belongs to the applet root, not to fullRoot, so it needs a
     // Connections handler rather than an onIsMultiModeChanged property handler.
     Connections {
-        target: root
+        target: applet
         function onIsMultiModeChanged() { fullRoot.keepCurrentSize(); }
     }
 
@@ -106,7 +106,7 @@ Item {
             Layout.fillHeight: true
             Layout.minimumWidth: singleColumn.minimumContentWidth
             Layout.minimumHeight: singleColumn.minimumContentHeight
-            rootItem: root
+            rootItem: applet
         }
 
         Item {
@@ -165,7 +165,7 @@ Item {
             Layout.fillHeight: true
             Layout.minimumWidth: listColumn.minimumContentWidth
             Layout.minimumHeight: listColumn.minimumContentHeight
-            rootItem: root
+            rootItem: applet
             listModel: stockList
         }
     }

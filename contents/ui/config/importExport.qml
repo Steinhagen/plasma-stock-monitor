@@ -390,7 +390,7 @@ Item {
 
     Loader {
         id: ioLoader
-        source: "BackupIO.qml"
+        source: "../BackupIO.qml"
         asynchronous: false
     }
 

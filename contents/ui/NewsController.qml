@@ -13,8 +13,6 @@ Item {
     readonly property var entry: newsCache[newsKey(applet.singleTicker)] || null
     readonly property var items: entry ? entry.items : []
 
-                                          && applet.singleTicker.trim() !== ""
-
     function newsKey(symbol) {
         return String(symbol || "").trim().toUpperCase();
     }

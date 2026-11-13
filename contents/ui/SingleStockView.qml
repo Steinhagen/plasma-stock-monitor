@@ -1071,7 +1071,19 @@ Rectangle {
                     model: singleStockRoot.newsFilteredItems
                     // Shown whenever the headlines overflow (not only while scrolling), so
                     // the user can tell there is more below the visible rows.
-                    readonly property bool overflows: contentHeight > height + 1
+                    //
+                    // Do not bind this to contentHeight: a wrapped headline is taller when
+                    // the rows are narrower, so overflow -> rowWidth -> contentHeight ->
+                    // overflow is a binding loop. Track it imperatively instead. It settles
+                    // because widening the rows can only make the content shorter.
+                    property bool overflows: false
+                    function refreshOverflow() {
+                        if (height <= 0) return;
+                        if (!overflows && contentHeight > height + 1) overflows = true;
+                        else if (overflows && contentHeight <= height) overflows = false;
+                    }
+                    onContentHeightChanged: refreshOverflow()
+                    onHeightChanged: refreshOverflow()
                     // Rows and footer end left of the scrollbar, so it never covers a
                     // separator, the hover tint or the text.
                     readonly property real rowWidth: width - (overflows ? newsScrollBar.width + 4 : 0)
