@@ -27,14 +27,23 @@ PlasmoidItem {
     // full-view component. The full view updates these when its mode or minimum changes,
     // so switching from a minimum-sized list to the graph can grow the applet to the
     // graph's minimum instead of leaving the chart clipped inside a smaller card.
+    // In a panel the compact representation owns the size: forcing the full-view
+    // minimum here widened the panel applet to the graph's minimum and left the compact
+    // contents stranded at its left edge. Mirror the compact item's implicit size
+    // instead; the full-view hints apply only outside a panel.
+    readonly property var panelItem: root.compactRepresentationItem
+    readonly property real panelItemWidth: root.panelItem ? root.panelItem.implicitWidth : -1
+    readonly property real panelItemHeight: root.panelItem ? root.panelItem.implicitHeight : -1
     property real fullViewMinimumWidth: 322
     property real fullViewMinimumHeight: 360
     property real fullViewPreferredWidth: 600
     property real fullViewPreferredHeight: 520
-    Layout.minimumWidth: root.fullViewMinimumWidth
-    Layout.minimumHeight: root.fullViewMinimumHeight
-    Layout.preferredWidth: root.fullViewPreferredWidth
-    Layout.preferredHeight: root.fullViewPreferredHeight
+    Layout.minimumWidth: !root.inPanel ? root.fullViewMinimumWidth
+                        : (root.isVerticalPanel ? 0 : root.panelItemWidth)
+    Layout.minimumHeight: !root.inPanel ? root.fullViewMinimumHeight
+                         : (root.isVerticalPanel ? root.panelItemHeight : 0)
+    Layout.preferredWidth: !root.inPanel ? root.fullViewPreferredWidth : root.panelItemWidth
+    Layout.preferredHeight: !root.inPanel ? root.fullViewPreferredHeight : root.panelItemHeight
 
     property string singleTicker: Plasmoid.configuration.ticker
     property bool isMultiMode: Plasmoid.configuration.isMultiMode
