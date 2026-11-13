@@ -19,6 +19,7 @@ Item {
     property alias cfg_showChartStyleButtons: chartStyleButtonsSwitch.checked
     property alias cfg_showChartRangeButtons: chartRangeButtonsSwitch.checked
     property alias cfg_showChartVolume: volumeSwitch.checked
+    property alias cfg_showAnalystTargets: analystTargetsSwitch.checked
     property alias cfg_showChartHover: hoverSwitch.checked
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
@@ -115,6 +116,12 @@ Item {
                 id: volumeSwitch
                 Kirigami.FormData.label: i18n("Volume:")
                 text: i18n("Show trading volume under the chart")
+            }
+
+            CheckBox {
+                id: analystTargetsSwitch
+                Kirigami.FormData.label: i18n("Analyst targets:")
+                text: i18n("Show analyst price-target changes under the chart")
             }
 
             Item {

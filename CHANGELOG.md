@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   available for both the reference-line and candlestick styles. It covers only
   the regular session: Yahoo reports no usable pre-market or after-hours volume,
   so those zones stay empty.
+- Optional **analyst price-target markers**, off by default. They appear just above the
+  chart's existing price/volume separator line: green triangles for raises, red
+  for lowers, and neutral markers for maintained or newly announced targets.
+  Clicking a marker lists the firms, ratings and the previous and new target.
+  Data comes from Yahoo Finance and is cached per symbol.
 - A **Symbol display** setting on the **Symbols & Lists** page: show the full
   Yahoo Finance symbol (`BRD.RO`, the default), the base symbol only (`BRD`), or
   the base symbol with a short exchange badge (`BRD · BVB`). The compact symbol

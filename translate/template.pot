@@ -236,6 +236,14 @@ msgid "Show trading volume under the chart"
 msgstr ""
 
 #: contents/ui/config/chartNews.qml
+msgid "Analyst targets:"
+msgstr ""
+
+#: contents/ui/config/chartNews.qml
+msgid "Show analyst price-target changes under the chart"
+msgstr ""
+
+#: contents/ui/config/chartNews.qml
 msgid "News"
 msgstr ""
 
@@ -1188,6 +1196,64 @@ msgstr ""
 msgid "Open on BVB"
 msgstr ""
 
+#: contents/ui/SingleStockView.qml
+msgid "Raised target from %1 to %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "New target %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Lowered target from %1 to %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Maintained target at %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Rating: %1 → %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Rating: %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 analyst action"
+msgid_plural "%1 analyst actions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Consensus %1"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "range %1 – %2"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 analyst"
+msgid_plural "%1 analysts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/SingleStockView.qml
+msgid "Analyst price targets"
+msgstr ""
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 action"
+msgid_plural "%1 actions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/SingleStockView.qml contents/ui/TooltipContent.qml
+msgid "… and %1 more"
+msgstr ""
+
 #: contents/ui/TooltipContent.qml
 msgid "Plasma Stock Monitor"
 msgstr ""
@@ -1211,10 +1277,6 @@ msgstr ""
 #: contents/ui/TooltipContent.qml
 msgctxt "@info:tooltip"
 msgid "%1 · %2"
-msgstr ""
-
-#: contents/ui/TooltipContent.qml
-msgid "… and %1 more"
 msgstr ""
 
 #: contents/ui/TooltipContent.qml

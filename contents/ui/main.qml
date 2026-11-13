@@ -286,6 +286,8 @@ PlasmoidItem {
     property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
     // Volume is opt-in and is drawn for both chart styles.
     property bool showChartVolume: Plasmoid.configuration.showChartVolume
+    // Analyst price-target markers under the chart, also opt-in.
+    property bool showAnalystTargets: Plasmoid.configuration.showAnalystTargets
     property bool showChartHover: Plasmoid.configuration.showChartHover
     // Latest news headlines for the single-stock view (the Chart/News icons in its header).
     property bool showNews: Plasmoid.configuration.showNews
@@ -600,6 +602,29 @@ PlasmoidItem {
     function openNewsLink(url) { newsController.openNewsLink(url); }
     function openYahooNews(symbol) { newsController.openYahooNews(symbol); }
     function openBvbNews(symbol) { newsController.openBvbNews(symbol); }
+
+    // --- ANALYST PRICE TARGETS ---
+    // Fetched only when the option is on, for the shown symbol. The controller keeps
+    // one cached reply per ticker; the chart reads the items and draws the markers.
+    AnalystController {
+        id: analystController
+        applet: root
+    }
+    readonly property var analystItems: analystController ? analystController.items : []
+    readonly property var analystSummary: analystController ? analystController.summary : null
+    function requestAnalystTargets(force) {
+        if (analystController) analystController.request(root.singleTicker, force);
+    }
+    onShowAnalystTargetsChanged: {
+        if (root.showAnalystTargets) root.requestAnalystTargets(false);
+    }
+    Timer {
+        interval: 6 * 60 * 60 * 1000
+        running: root.showAnalystTargets && root.singleTicker.trim() !== ""
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.requestAnalystTargets(false)
+    }
 
     onShowNewsChanged: {
         if (!root.showNews) root.singleViewPane = "chart";
@@ -1959,6 +1984,7 @@ PlasmoidItem {
             root.refreshData();
         }
         if (root.newsPaneShown) root.requestNews(root.singleTicker, false);
+        if (root.showAnalystTargets) Qt.callLater(function() { root.requestAnalystTargets(false); });
     }
     onIsMultiModeChanged: {
         root.clearStockRows();

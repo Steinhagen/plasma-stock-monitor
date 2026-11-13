@@ -120,6 +120,10 @@
             <label>Show trading volume under the chart</label>
             <default>false</default>
         </entry>
+        <entry name="showAnalystTargets" type="Bool">
+            <label>Show analyst price-target changes under the chart</label>
+            <default>false</default>
+        </entry>
 
         <entry name="showChartHover" type="Bool">
             <label>Show values when hovering over the chart</label>

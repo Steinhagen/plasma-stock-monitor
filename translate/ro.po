@@ -235,6 +235,14 @@ msgid "Show trading volume under the chart"
 msgstr "Afișează volumul tranzacționat sub grafic"
 
 #: contents/ui/config/chartNews.qml
+msgid "Analyst targets:"
+msgstr "Ținte analiști:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show analyst price-target changes under the chart"
+msgstr "Afișează modificările țintelor de preț ale analiștilor sub grafic"
+
+#: contents/ui/config/chartNews.qml
 msgid "News"
 msgstr "Știri"
 
@@ -1193,6 +1201,67 @@ msgstr "Mai multe pe Yahoo Finance"
 msgid "Open on BVB"
 msgstr "Deschide pe BVB"
 
+#: contents/ui/SingleStockView.qml
+msgid "Raised target from %1 to %2"
+msgstr "Țintă ridicată de la %1 la %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "New target %1"
+msgstr "Țintă nouă: %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "Lowered target from %1 to %2"
+msgstr "Țintă redusă de la %1 la %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "Maintained target at %1"
+msgstr "Țintă menținută la %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "Rating: %1 → %2"
+msgstr "Rating: %1 → %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "Rating: %1"
+msgstr "Rating: %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 analyst action"
+msgid_plural "%1 analyst actions"
+msgstr[0] "%1 acțiune de analist"
+msgstr[1] "%1 acțiuni de analist"
+msgstr[2] "%1 de acțiuni de analist"
+
+#: contents/ui/SingleStockView.qml
+msgid "Consensus %1"
+msgstr "Consens %1"
+
+#: contents/ui/SingleStockView.qml
+msgid "range %1 – %2"
+msgstr "interval %1 – %2"
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 analyst"
+msgid_plural "%1 analysts"
+msgstr[0] "%1 analist"
+msgstr[1] "%1 analiști"
+msgstr[2] "%1 de analiști"
+
+#: contents/ui/SingleStockView.qml
+msgid "Analyst price targets"
+msgstr "Ținte de preț ale analiștilor"
+
+#: contents/ui/SingleStockView.qml
+msgid "%1 action"
+msgid_plural "%1 actions"
+msgstr[0] "%1 acțiune"
+msgstr[1] "%1 acțiuni"
+msgstr[2] "%1 de acțiuni"
+
+#: contents/ui/SingleStockView.qml contents/ui/TooltipContent.qml
+msgid "… and %1 more"
+msgstr "… și încă %1"
+
 #: contents/ui/TooltipContent.qml
 msgid "Plasma Stock Monitor"
 msgstr "Monitor de acțiuni Plasma"
@@ -1218,10 +1287,6 @@ msgstr "%1 · %2 · actualizat la %3"
 msgctxt "@info:tooltip"
 msgid "%1 · %2"
 msgstr "%1 · %2"
-
-#: contents/ui/TooltipContent.qml
-msgid "… and %1 more"
-msgstr "… și încă %1"
 
 #: contents/ui/TooltipContent.qml
 msgid "loading…"
