@@ -16,9 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Yahoo Finance symbol (`BRD.RO`, the default), the base symbol only (`BRD`), or
   the base symbol with a short exchange badge (`BRD · BVB`). The compact symbol
   is used in the watchlist, the single-stock header, the panel indicator and the
-  tooltip; the stored ticker and every quote request keep the full Yahoo symbol.
-  The badge uses the exchange reported by Yahoo and falls back to the ticker
-  suffix (`BVB`, `XETRA`, `LSE`, …) before the first quote arrives.
+  tooltip; the exchange badge itself is shown only in the watchlist, header and
+  tooltip, not in the panel. The stored ticker and every quote request keep the
+  full Yahoo symbol. The badge uses the exchange reported by Yahoo and falls back
+  to the ticker suffix (`BVB`, `XETRA`, `LSE`, …) before the first quote arrives.
 
 ### Fixed
 - The News header's **Updated …** age is recomputed as soon as the News pane is

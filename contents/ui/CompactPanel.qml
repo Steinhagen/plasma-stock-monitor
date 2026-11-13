@@ -115,16 +115,13 @@ MouseArea {
     property real widestBadge: 0
     Text { id: probeTicker; visible: false; font.pixelSize: 9; font.weight: Font.Bold; renderType: Text.NativeRendering }
     Text { id: probeTag; visible: false; font.pixelSize: 8; font.weight: Font.Bold; renderType: Text.NativeRendering }
-    Text { id: probeExchange; visible: false; font.pixelSize: 7; font.weight: Font.Bold; renderType: Text.NativeRendering }
     Text { id: probePrice; visible: false; font.pixelSize: 11; font.weight: Font.Bold; renderType: Text.NativeRendering }
     Text { id: probeBadge; visible: false; font.pixelSize: 10; font.weight: Font.Black; renderType: Text.NativeRendering }
 
     function measureWidest() {
-        var tickers = [], exchanges = [], prices = [], pcts = [];
-        var collect = function(ticker, price, pct, exchange) {
+        var tickers = [], prices = [], pcts = [];
+        var collect = function(ticker, price, pct) {
             tickers.push(applet.displayTicker(ticker));
-            var badge = applet.exchangeBadge(ticker, exchange);
-            exchanges.push(badge !== "" ? "· " + badge : "");
             prices.push(String(price || ""));
             pcts.push(String(pct || ""));
             var e = applet.extendedQuote(ticker);
@@ -133,11 +130,10 @@ MouseArea {
         if (applet.isMultiMode) {
             for (var i = 0; i < stockList.count; i++) {
                 var row = stockList.get(i);
-                collect(row.ticker, row.price, row.pct, row.exchange);
+                collect(row.ticker, row.price, row.pct);
             }
         } else {
-            collect(applet.panelSymbol, applet.panelCurrentPrice, applet.panelCurrentPercent,
-                    applet.singleExchange);
+            collect(applet.panelSymbol, applet.panelCurrentPrice, applet.panelCurrentPercent);
         }
         // Width of the widest of `list` when drawn by `probe`.
         // Each piece is rounded up to whole pixels, as the layout does for every item;
@@ -152,8 +148,7 @@ MouseArea {
         };
         var widthOf = function(probe, text) { probe.text = text; return Math.ceil(probe.implicitWidth); };
 
-        // First line: ticker, exchange badge, arrow and, if extended hours are shown,
-        // the session tag.
+        // First line: ticker, arrow and, if extended hours are shown, the session tag.
         var arrowW = Math.max(widthOf(probeTag, "▲"), widthOf(probeTag, "▼"));
         // Measured from the same (translated) tags the panel shows, so a longer
         // translation still fits in the reserved width.
@@ -162,9 +157,8 @@ MouseArea {
                               widthOf(probeTag, applet.tagPreMarket),
                               widthOf(probeTag, applet.tagClosed))
                    : 0;
-        var exchangeW = applet.isVerticalPanel ? 0 : widest(exchanges, probeExchange);
-        var line1 = widest(tickers, probeTicker) + (exchangeW > 0 ? 4 + exchangeW : 0)
-                    + 4 + arrowW + (tagW > 0 ? 4 + tagW : 0);
+        var line1 = widest(tickers, probeTicker) + 4 + arrowW
+                    + (tagW > 0 ? 4 + tagW : 0);
 
         // Second line: price and change badge (or the wider of the two when they alternate).
         var priceW = widest(prices, probePrice);
@@ -179,10 +173,8 @@ MouseArea {
         var showCurrentTag = applet.showExtendedHours
                              && (compactRoot.marketClosed || compactRoot.ext !== undefined);
         var currentTagW = showCurrentTag ? tagW : 0;
-        var currentLine1 = widthOf(probeTicker, currentTicker)
-                           + (applet.panelExchange !== ""
-                              ? 4 + widthOf(probeExchange, "· " + applet.panelExchange) : 0)
-                           + 4 + arrowW + (currentTagW > 0 ? 4 + currentTagW : 0);
+        var currentLine1 = widthOf(probeTicker, currentTicker) + 4 + arrowW
+                           + (currentTagW > 0 ? 4 + currentTagW : 0);
         var currentPriceW = widthOf(probePrice, compactRoot.shownPrice);
         var currentBadgeW = showBadge
                             ? widthOf(probeBadge, compactRoot.shownPercent) + (Kirigami.Units.smallSpacing * 2)
@@ -264,18 +256,6 @@ MouseArea {
                     Layout.fillWidth: applet.isVerticalPanel
                     horizontalAlignment: applet.isVerticalPanel ? Text.AlignHCenter : Text.AlignLeft
                     elide: Text.ElideRight
-                }
-                // Short exchange label next to the ticker. Hidden in a vertical panel
-                // and whenever the symbol has no exchange suffix to replace.
-                Text {
-                    visible: applet.panelExchange !== ""
-                    text: "· " + applet.panelExchange
-                    color: applet.panelTextColor
-                    font.pixelSize: 7
-                    font.weight: Font.Bold
-                    renderType: Text.NativeRendering
-                    opacity: 0.6
-                    Layout.alignment: Qt.AlignBottom
                 }
                 // In a vertical panel only the ticker and the price fit in the panel
                 // thickness; the colour already shows the direction and the tooltip

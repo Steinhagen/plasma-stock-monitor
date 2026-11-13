@@ -99,18 +99,6 @@ PlasmoidItem {
         return label !== "" ? label : Exchanges.shortLabel(ticker, "", "");
     }
 
-    // Exchange stored in the list row for `ticker`. Reading tooltipRevision makes the
-    // caller re-evaluate when a quote updates the model.
-    function exchangeForTicker(ticker) {
-        root.tooltipRevision;
-        var clean = Exchanges.upper(ticker);
-        for (var i = 0; i < stockModel.count; i++) {
-            var row = stockModel.get(i);
-            if (row.ticker === clean) return row.exchange || Exchanges.shortLabel(clean, "", "");
-        }
-        return Exchanges.shortLabel(clean, "", "");
-    }
-
     // Name and ticker together: "Company Name (TICK)", or "TICK (Company Name)" when
     // "swap names" is on. Falls back to just the ticker while the name is not known yet
     // or when Yahoo only returned the ticker as the name.
@@ -207,13 +195,6 @@ PlasmoidItem {
     property string panelCurrentPercent: "+0.00%"
     property bool panelCurrentIsPositive: true
     readonly property string panelSymbol: root.isMultiMode ? root.panelTicker : root.singleTicker
-    // Exchange badge next to the panel ticker. The panel is narrow, so the badge is a
-    // short label and is omitted in a vertical panel.
-    readonly property string panelExchange: root.isVerticalPanel ? ""
-        : root.exchangeBadge(root.panelSymbol,
-                             root.isMultiMode ? root.exchangeForTicker(root.panelTicker)
-                                              : root.singleExchange)
-
     // --- THEME ---
     // The background has two independent choices: a preset that applies to both the
     // desktop and the panel, or a per-context source under Custom. The colors are a
