@@ -288,12 +288,14 @@ PlasmoidItem {
     property bool hideDecimals: Plasmoid.configuration.hideDecimals
     property bool showChartAxis: Plasmoid.configuration.showChartAxis
     property bool showTimeAxis: Plasmoid.configuration.showTimeAxis
-    // 0 = reference line split at the session open, 1 = candles + volume.
+    // 0 = reference line split at the session open, 1 = candlesticks.
     property int chartStyle: Plasmoid.configuration.chartStyle === 1 ? 1 : 0
     // 0 = smooth line, 1 = straight segments.
     property int chartLineStyle: Plasmoid.configuration.chartLineStyle === 1 ? 1 : 0
     // Show the Line/Candles toggle in the chart.
     property bool showChartStyleButtons: Plasmoid.configuration.showChartStyleButtons
+    // Volume is opt-in and is drawn for both chart styles.
+    property bool showChartVolume: Plasmoid.configuration.showChartVolume
     property bool showChartHover: Plasmoid.configuration.showChartHover
     // Latest news headlines for the single-stock view (the Chart/News icons in its header).
     property bool showNews: Plasmoid.configuration.showNews

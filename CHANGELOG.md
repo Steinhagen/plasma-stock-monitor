@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- An optional **trading-volume strip** under the chart, off by default and
+  available for both the reference-line and candlestick styles. It covers only
+  the regular session: Yahoo reports no usable pre-market or after-hours volume,
+  so those zones stay empty.
 - A **Symbol display** setting on the **Symbols & Lists** page: show the full
   Yahoo Finance symbol (`BRD.RO`, the default), the base symbol only (`BRD`), or
   the base symbol with a short exchange badge (`BRD · BVB`). The compact symbol

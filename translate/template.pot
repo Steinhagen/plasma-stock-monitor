@@ -140,7 +140,7 @@ msgid "Reference line (open)"
 msgstr ""
 
 #: contents/ui/config/chartNews.qml
-msgid "Candles + volume"
+msgid "Candles"
 msgstr ""
 
 #: contents/ui/config/chartNews.qml
@@ -225,6 +225,14 @@ msgstr ""
 
 #: contents/ui/config/chartNews.qml
 msgid "Show dates and times under the chart"
+msgstr ""
+
+#: contents/ui/config/chartNews.qml
+msgid "Volume:"
+msgstr ""
+
+#: contents/ui/config/chartNews.qml
+msgid "Show trading volume under the chart"
 msgstr ""
 
 #: contents/ui/config/chartNews.qml

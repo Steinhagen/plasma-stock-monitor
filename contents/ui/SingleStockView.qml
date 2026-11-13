@@ -998,7 +998,7 @@ Rectangle {
                 id: chartArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                // Room for the price scale, the time axis and, with candles, the volume bars.
+                // Room for the price scale, the time axis and, when enabled, the volume bars.
                 Layout.minimumHeight: 130
                 Layout.preferredHeight: 130
                 Layout.topMargin: 8
@@ -1020,6 +1020,7 @@ Rectangle {
                         function onShowChartAxisChanged() { singleCanvas.requestPaint(); }
                         function onShowTimeAxisChanged() { singleCanvas.requestPaint(); }
                         function onChartStyleChanged() { singleCanvas.requestPaint(); }
+                        function onShowChartVolumeChanged() { singleCanvas.requestPaint(); }
                         function onChartLineStyleChanged() { singleCanvas.requestPaint(); }
                         function onChartCandlesChanged() { singleCanvas.requestPaint(); }
                         function onChartReferencePriceChanged() { singleCanvas.requestPaint(); }
@@ -1305,8 +1306,10 @@ Rectangle {
     // ── Chart drawing ────────────────────────────────────────────
     // Settings → Chart selects between:
     //   0 = reference line split at yesterday's close
-    //   1 = candlesticks with volume
-    // Both use the same right-hand price scale and the same time scale below.
+    //   1 = candlesticks
+    // Both use the same right-hand price scale and the same time scale below. The
+    // trading-volume strip is optional and works for either style; it only covers the
+    // regular session because Yahoo reports no usable pre-market/after-hours volume.
 
     // Round tick values for a price scale, roughly `targetCount` of them.
     function axisTicks(minVal, maxVal, targetCount) {
@@ -1574,6 +1577,28 @@ Rectangle {
         return Math.round(value).toString();
     }
 
+    // Volume belongs to the regular session. Yahoo reports zero (or only the closing
+    // auction in the first bar) for the pre-market and after-hours candles, so those
+    // bars are never drawn.
+    function candleHasVolume(candle) {
+        return candle && candle.volume > 0
+               && candle.zone !== "pre" && candle.zone !== "post";
+    }
+
+    // Regular-session candles in time order, including the zero-volume gaps so the
+    // remaining bars keep their slots. Used by the line chart's volume strip; the
+    // candle chart keeps the original indices.
+    function regularCandles(candles) {
+        var out = [];
+        if (!Array.isArray(candles)) return out;
+        for (var i = 0; i < candles.length; i++) {
+            var candle = candles[i];
+            if (!candle) continue;
+            if (candle.zone !== "pre" && candle.zone !== "post") out.push(candle);
+        }
+        return out;
+    }
+
     function roundRectPath(ctx, x, y, w, h, r) {
         var rr = Math.min(r, w / 2, h / 2);
         ctx.beginPath();
@@ -1714,10 +1739,29 @@ Rectangle {
         range = maxVal - minVal;
 
         var timeAxisHeight = (showTimeAxis && times && times.length === nReg && times[0] > 0) ? 16 : 0;
-        var plotH = h - timeAxisHeight;
-        if (plotH < 10) {
+        var volumeBottom = h - timeAxisHeight;
+        if (volumeBottom < 10) {
             timeAxisHeight = 0;
-            plotH = h;
+            volumeBottom = h;
+        }
+        // Optional volume strip. It is based on the same aggregated candles as the
+        // candlestick view and covers only the regular session.
+        var volumeCandles = [];
+        var maxVolume = 0;
+        if (rootItem.showChartVolume && !rootItem.chartPreSession) {
+            volumeCandles = regularCandles(rootItem.chartCandles);
+            for (var vi = 0; vi < volumeCandles.length; vi++) {
+                if (volumeCandles[vi].volume > maxVolume) maxVolume = volumeCandles[vi].volume;
+            }
+        }
+        var volumeHeight = volumeCandles.length > 1 && maxVolume > 0
+                           ? Math.min(54, Math.max(26, h * 0.13)) : 0;
+        var volumeTop = volumeBottom - volumeHeight;
+        var plotH = volumeHeight > 0 ? volumeTop - 8 : volumeBottom;
+        if (plotH < 36) {
+            volumeHeight = 0;
+            volumeTop = volumeBottom;
+            plotH = volumeBottom;
         }
         function getY(val) { return plotH - ((val - minVal) / range * plotH); }
 
@@ -1782,8 +1826,8 @@ Rectangle {
         if (s) {
             var xOpen = xAt(s.regStart);
             var xClose = xAt(s.regEnd);
-            if (nPre > 0) drawHatch(ctx, 0, xOpen, plotH);
-            if (nPost > 0) drawHatch(ctx, xClose, plotRight, plotH);
+            if (nPre > 0) drawHatch(ctx, 0, xOpen, volumeBottom);
+            if (nPost > 0) drawHatch(ctx, xClose, plotRight, volumeBottom);
             var sec = rootItem.secondaryTextColor;
             ctx.save();
             ctx.strokeStyle = Qt.rgba(sec.r, sec.g, sec.b, 0.5);
@@ -1848,6 +1892,38 @@ Rectangle {
             strokeSplit(allData.slice(0, nPre + 1), xsAll.slice(0, nPre + 1), allTimes.slice(0, nPre + 1));
         if (nPost > 0)
             strokeSplit(allData.slice(nPre + nReg - 1), xsAll.slice(nPre + nReg - 1), allTimes.slice(nPre + nReg - 1));
+
+        // Volume strip, on the same scale in both chart styles. Only regular-session
+        // candles are drawn; the hatched pre-market/after-hours zones stay empty.
+        if (volumeHeight > 0) {
+            ctx.save();
+            ctx.strokeStyle = rootItem.chartBaseColor;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, Math.round(volumeTop) + 0.5);
+            ctx.lineTo(plotRight, Math.round(volumeTop) + 0.5);
+            ctx.stroke();
+            ctx.restore();
+
+            var volStart = s ? xAt(s.regStart) : 0;
+            var volEnd = s ? xAt(s.regEnd) : plotRight;
+            if (volEnd > volStart) {
+                var volStep = (volEnd - volStart) / volumeCandles.length;
+                var volW = Math.max(2, Math.min(6, volStep * 0.62));
+                for (var vk = 0; vk < volumeCandles.length; vk++) {
+                    var volumeCandle = volumeCandles[vk];
+                    if (!(volumeCandle.volume > 0)) continue;
+                    var volH = Math.max(1, (volumeCandle.volume / maxVolume) * (volumeHeight - 4));
+                    ctx.save();
+                    ctx.globalAlpha = 0.20;
+                    ctx.fillStyle = volumeCandle.close >= volumeCandle.open ? pos : neg;
+                    ctx.fillRect(volStart + (vk + 0.5) * volStep - volW / 2,
+                                 volumeBottom - volH, volW, volH);
+                    ctx.restore();
+                }
+            }
+        }
+
         // End dot.
         var lastValue = allData[allData.length - 1];
         var dotColor = lastValue >= ref ? pos : neg;
@@ -1901,18 +1977,30 @@ Rectangle {
             // The dot and the change text follow the sign of the change shown in the tooltip.
             var hoverAccent = hoverChange > 0 ? pos : (hoverChange < 0 ? neg : rootItem.secondaryTextColor);
             var hoverDetail = rootItem.formatNumber(hoverChange, true) + " (" + rootItem.formatNumber(hoverPct, true) + "%)";
-            drawHover(ctx, plotRight, plotH, plotH, hoverX, hoverY, hoverAccent, hoverTime,
+            var hoverVolume = "";
+            if (volumeHeight > 0) {
+                var hvStart = s ? xAt(s.regStart) : 0;
+                var hvEnd = s ? xAt(s.regEnd) : plotRight;
+                if (hvEnd > hvStart && hoverX >= hvStart && hoverX <= hvEnd) {
+                    var hvStep = (hvEnd - hvStart) / volumeCandles.length;
+                    var hvIndex = Math.floor((hoverX - hvStart) / hvStep);
+                    hvIndex = Math.max(0, Math.min(volumeCandles.length - 1, hvIndex));
+                    if (candleHasVolume(volumeCandles[hvIndex]))
+                        hoverVolume = "Vol " + compactVolume(volumeCandles[hvIndex].volume);
+                }
+            }
+            drawHover(ctx, plotRight, plotH, volumeBottom, hoverX, hoverY, hoverAccent, hoverTime,
                       rootItem.currencySym + rootItem.formatNumber(hoverPrice, false),
-                      hoverDetail, hoverAccent, "");
+                      hoverDetail, hoverAccent, hoverVolume);
         }
 
         if (timeAxisHeight > 0) {
-            if (s) drawSessionTimeAxis(ctx, plotRight, plotH, allTimes, xAt, s, nPre, nPost);
-            else drawTimeAxis(ctx, plotRight, 0, plotH, data, times);
+            if (s) drawSessionTimeAxis(ctx, plotRight, volumeBottom, allTimes, xAt, s, nPre, nPost);
+            else drawTimeAxis(ctx, plotRight, 0, volumeBottom, data, times);
         }
     }
 
-    // Candlestick chart with a volume strip. The candles are already aggregated in
+    // Candlestick chart with an optional volume strip. The candles are already aggregated in
     // main.qml, so this function only maps them to pixels. The price scale on the right
     // and the time scale below are shared with the reference chart.
     function drawCandleChart(ctx, w, h, showPriceAxis, showTimeAxis) {
@@ -1925,7 +2013,8 @@ Rectangle {
         for (var i = 0; i < candles.length; i++) {
             if (candles[i].low < minVal) minVal = candles[i].low;
             if (candles[i].high > maxVal) maxVal = candles[i].high;
-            if (candles[i].volume > maxVolume) maxVolume = candles[i].volume;
+            if (candleHasVolume(candles[i]) && candles[i].volume > maxVolume)
+                maxVolume = candles[i].volume;
         }
         if (!(maxVal > minVal)) maxVal = minVal + 1;
         var padding = (maxVal - minVal) * 0.06;
@@ -1935,11 +2024,13 @@ Rectangle {
 
         var hasTimes = candles.length > 1 && candles[0].time > 0 && candles[candles.length - 1].time > 0;
         var timeAxisHeight = (showTimeAxis && hasTimes) ? 16 : 0;
-        var volumeHeight = maxVolume > 0 ? Math.min(54, Math.max(26, h * 0.13)) : 0;
         var volumeBottom = h - timeAxisHeight;
+        var showVolume = rootItem.showChartVolume && !rootItem.chartPreSession && maxVolume > 0;
+        var volumeHeight = showVolume ? Math.min(54, Math.max(26, h * 0.13)) : 0;
         var volumeTop = volumeBottom - volumeHeight;
-        var plotBottom = volumeTop - 8;
+        var plotBottom = volumeHeight > 0 ? volumeTop - 8 : volumeBottom;
         if (plotBottom < 36) {
+            showVolume = false;
             volumeHeight = 0;
             volumeTop = volumeBottom;
             plotBottom = volumeBottom;
@@ -2031,6 +2122,7 @@ Rectangle {
 
             if (maxVolume > 0) {
                 for (var b = 0; b < candles.length; b++) {
+                    if (!candleHasVolume(candles[b])) continue;
                     var bx = ((b + 0.5) * plotRight) / candles.length;
                     var bh = Math.max(1, (candles[b].volume / maxVolume) * (volumeHeight - 4));
                     ctx.save();
@@ -2048,7 +2140,8 @@ Rectangle {
         drawEndDot(ctx, ((candles.length - 0.5) * plotRight) / candles.length, getY(last.close),
                    lastUp ? rootItem.positiveColor : rootItem.negativeColor);
 
-        // Hover crosshair: snap to the nearest candle and show its OHLC and volume.
+        // Hover crosshair: snap to the nearest candle and show its OHLC and, when the
+        // volume strip is on, the regular-session volume.
         if (singleStockRoot.chartHoverActive) {
             var hx = Math.max(0, Math.min(plotRight, singleStockRoot.chartHoverX));
             var index = Math.floor((hx / plotRight) * candles.length);
@@ -2063,7 +2156,8 @@ Rectangle {
             var hoverOHL = "O " + rootItem.formatNumber(hoverCandle.open, false)
                          + "  H " + rootItem.formatNumber(hoverCandle.high, false)
                          + "  L " + rootItem.formatNumber(hoverCandle.low, false);
-            var hoverVolume = "Vol " + compactVolume(hoverCandle.volume);
+            var hoverVolume = showVolume && candleHasVolume(hoverCandle)
+                              ? "Vol " + compactVolume(hoverCandle.volume) : "";
             drawHover(ctx, plotRight, plotBottom, volumeBottom, hoverX, hoverY, candleAccent,
                       hoverTime, rootItem.currencySym + rootItem.formatNumber(hoverCandle.close, false),
                       hoverOHL, rootItem.secondaryTextColor, hoverVolume);

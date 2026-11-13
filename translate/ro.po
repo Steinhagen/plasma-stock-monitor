@@ -139,8 +139,8 @@ msgid "Reference line (open)"
 msgstr "Linie de referință (deschidere)"
 
 #: contents/ui/config/chartNews.qml
-msgid "Candles + volume"
-msgstr "Candele + volum"
+msgid "Candles"
+msgstr "Candele"
 
 #: contents/ui/config/chartNews.qml
 msgid "Line style:"
@@ -225,6 +225,14 @@ msgstr "Scară de timp:"
 #: contents/ui/config/chartNews.qml
 msgid "Show dates and times under the chart"
 msgstr "Afișează datele și orele sub grafic"
+
+#: contents/ui/config/chartNews.qml
+msgid "Volume:"
+msgstr "Volum:"
+
+#: contents/ui/config/chartNews.qml
+msgid "Show trading volume under the chart"
+msgstr "Afișează volumul tranzacționat sub grafic"
 
 #: contents/ui/config/chartNews.qml
 msgid "News"
@@ -1241,6 +1249,9 @@ msgstr[2] "%1 de acțiuni · mediu %2"
 #: contents/ui/TooltipContent.qml
 msgid "Updated"
 msgstr "Actualizat"
+
+#~ msgid "Candles + volume"
+#~ msgstr "Candele + volum"
 
 #~ msgid "Symbols & lists"
 #~ msgstr "Simboluri și liste"

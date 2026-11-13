@@ -47,6 +47,7 @@ Item {
     property int cfg_chartStyle
     property int cfg_chartLineStyle
     property bool cfg_showChartStyleButtons
+    property bool cfg_showChartVolume
     property bool cfg_showChartHover
     property bool cfg_showNews
     property bool cfg_newsSourceYahoo

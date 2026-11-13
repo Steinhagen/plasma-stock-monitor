@@ -18,6 +18,7 @@ Item {
     property alias cfg_chartLineStyle: lineStyleCombo.currentIndex
     property alias cfg_showChartStyleButtons: chartStyleButtonsSwitch.checked
     property alias cfg_showChartRangeButtons: chartRangeButtonsSwitch.checked
+    property alias cfg_showChartVolume: volumeSwitch.checked
     property alias cfg_showChartHover: hoverSwitch.checked
     property alias cfg_showChartAxis: showAxisSwitch.checked
     property alias cfg_showTimeAxis: showTimeAxisSwitch.checked
@@ -46,7 +47,7 @@ Item {
                 id: chartStyleCombo
                 Kirigami.FormData.label: i18n("Chart style:")
                 // The style is stored by index, so the labels can be translated freely.
-                model: [i18n("Reference line (open)"), i18n("Candles + volume")]
+                model: [i18n("Reference line (open)"), i18n("Candles")]
             }
 
             ComboBox {
@@ -108,6 +109,12 @@ Item {
                 id: showTimeAxisSwitch
                 Kirigami.FormData.label: i18n("Time scale:")
                 text: i18n("Show dates and times under the chart")
+            }
+
+            CheckBox {
+                id: volumeSwitch
+                Kirigami.FormData.label: i18n("Volume:")
+                text: i18n("Show trading volume under the chart")
             }
 
             Item {

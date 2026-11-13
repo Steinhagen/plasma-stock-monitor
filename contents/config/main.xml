@@ -102,9 +102,9 @@
             <default>false</default>
         </entry>
 
-        <!-- 0 = reference line split at the session open, 1 = candles + volume. -->
+        <!-- 0 = reference line split at the session open, 1 = candlesticks. -->
         <entry name="chartStyle" type="Int">
-            <label>Chart style (0 = reference line, 1 = candles + volume)</label>
+            <label>Chart style (0 = reference line, 1 = candles)</label>
             <default>0</default>
         </entry>
         <!-- 0 = smooth (monotone curve), 1 = straight segments. -->
@@ -114,6 +114,10 @@
         </entry>
         <entry name="showChartStyleButtons" type="Bool">
             <label>Show the chart style buttons (line/candles) in the chart</label>
+            <default>false</default>
+        </entry>
+        <entry name="showChartVolume" type="Bool">
+            <label>Show trading volume under the chart</label>
             <default>false</default>
         </entry>
 
