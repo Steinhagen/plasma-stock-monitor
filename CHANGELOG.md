@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7] - 2026-11-14
+
 ### Added
 - An optional **trading-volume strip** under the chart, off by default and
   available for both the reference-line and candlestick styles. It covers only
@@ -271,7 +273,9 @@ First public release.
 - Ki18n localization with a complete Romanian translation.
 - KDE Store release and automatic `.plasmoid` packaging for version tags.
 
-[Unreleased]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.5...HEAD
+[Unreleased]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.7...HEAD
+[1.7]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.6...v1.7
+[1.6]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.5...v1.6
 [1.5]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.4...v1.5
 [1.4]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.3...v1.4
 [1.3]: https://github.com/Steinhagen/plasma-stock-monitor/compare/v1.2...v1.3
