@@ -36,9 +36,57 @@ Item {
 
     readonly property var totals: page.portfolioTotals()
     readonly property bool compactLayout: page.width < 1000
-    readonly property real tableFixedWidth: 45 + 65 + 45 + 100 + 70 + 100 + 45
+
+    // The Value and Gain columns grow with their contents. Four-digit amounts in a
+    // currency with a code symbol (for example "RON 13,234.78") are wider than the
+    // fixed 70 px Value column, so its left-elide hid the currency symbol. The
+    // minimums keep the header labels readable while quotes are still loading.
+    readonly property real widestValueWidth: {
+        var widest = 0;
+        var lots = page.filteredLots || [];
+        for (var i = 0; i < lots.length; i++)
+            widest = Math.max(widest, valueFontMetrics.advanceWidth(page.lotValueText(lots[i])));
+        return widest;
+    }
+    readonly property real widestGainWidth: {
+        var widest = 0;
+        var lots = page.filteredLots || [];
+        for (var i = 0; i < lots.length; i++) {
+            widest = Math.max(widest, gainFontMetrics.advanceWidth(page.lotGainText(lots[i])));
+            widest = Math.max(widest, gainFontMetrics.advanceWidth(page.lotGainPercentText(lots[i])));
+        }
+        return widest;
+    }
+    readonly property real desiredValueWidth: Math.max(70, Math.ceil(page.widestValueWidth)
+                                                       + Kirigami.Units.smallSpacing * 2)
+    readonly property real desiredGainWidth: Math.max(100, Math.ceil(page.widestGainWidth)
+                                                      + Kirigami.Units.smallSpacing * 2)
+    // Everything in the row except the flexible symbol column and the two money
+    // columns: shares, average cost, currency, date and the options button.
+    readonly property real tableBaseWidth: 45 + 65 + 45 + 100 + 45
+    // The money columns may take the room the symbol column leaves above its own
+    // 80 px minimum. In a very narrow window they fall back to eliding instead of
+    // pushing the options button out of the table.
+    readonly property real moneyColumnsBudget: Math.max(170, pageScroll.availableWidth
+        - page.tableBaseWidth - 80 - Kirigami.Units.smallSpacing * 9 - Kirigami.Units.gridUnit * 3)
+    readonly property real tableValueWidth: Math.min(page.desiredValueWidth,
+                                                     Math.max(70, page.moneyColumnsBudget - 100))
+    readonly property real tableGainWidth: Math.min(page.desiredGainWidth,
+                                                    Math.max(100, page.moneyColumnsBudget - page.tableValueWidth))
+    readonly property real tableFixedWidth: page.tableBaseWidth + page.tableValueWidth + page.tableGainWidth
     readonly property real tableSymbolWidth: Math.max(80, pageScroll.availableWidth
         - tableFixedWidth - Kirigami.Units.smallSpacing * 9 - Kirigami.Units.gridUnit * 3)
+
+    // Metrics matching the amount labels, so the columns can be sized from the
+    // actual formatted strings rather than from a guess at their length.
+    FontMetrics {
+        id: valueFontMetrics
+        font: Kirigami.Theme.defaultFont
+    }
+    FontMetrics {
+        id: gainFontMetrics
+        font: Kirigami.Theme.defaultFont
+    }
 
     readonly property int totalShares: {
         var total = 0;
@@ -928,9 +976,9 @@ Item {
                             }
                         }
                         Item {
-                            Layout.preferredWidth: 70
-                            Layout.minimumWidth: 70
-                            Layout.maximumWidth: 70
+                            Layout.preferredWidth: page.tableValueWidth
+                            Layout.minimumWidth: page.tableValueWidth
+                            Layout.maximumWidth: page.tableValueWidth
                             Layout.preferredHeight: 18
                             Label {
                                 anchors.fill: parent
@@ -949,9 +997,9 @@ Item {
                             }
                         }
                         Item {
-                            Layout.preferredWidth: 100
-                            Layout.minimumWidth: 100
-                            Layout.maximumWidth: 100
+                            Layout.preferredWidth: page.tableGainWidth
+                            Layout.minimumWidth: page.tableGainWidth
+                            Layout.maximumWidth: page.tableGainWidth
                             Layout.preferredHeight: 18
                             Label {
                                 anchors.fill: parent
@@ -1064,17 +1112,17 @@ Item {
                                 }
                                 Label {
                                     text: page.lotValueText(modelData)
-                                    Layout.preferredWidth: 70
-                                    Layout.minimumWidth: 70
-                                    Layout.maximumWidth: 70
+                                    Layout.preferredWidth: page.tableValueWidth
+                                    Layout.minimumWidth: page.tableValueWidth
+                                    Layout.maximumWidth: page.tableValueWidth
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideLeft
                                     color: market ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
                                 }
                                 ColumnLayout {
-                                    Layout.preferredWidth: 100
-                                    Layout.minimumWidth: 100
-                                    Layout.maximumWidth: 100
+                                    Layout.preferredWidth: page.tableGainWidth
+                                    Layout.minimumWidth: page.tableGainWidth
+                                    Layout.maximumWidth: page.tableGainWidth
                                     spacing: 0
 
                                     HoverHandler { id: gainHover }

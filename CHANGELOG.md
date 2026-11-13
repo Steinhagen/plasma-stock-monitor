@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The **Value** and **Gain** columns in the Portfolio Tracking table now size to
+  the widest amount instead of staying at a fixed width. Large four-digit values
+  in a currency shown as a code (for example `RON 13,234.78`) were left-elided,
+  which hid the currency symbol.
+
 ## [1.6] - 2026-11-12
 
 ### Added
