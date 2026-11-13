@@ -8,6 +8,7 @@ import "currencies.js" as Currency
 import "chartdata.js" as ChartData
 import "portfolio.js" as Portfolio
 import "exchanges.js" as Exchanges
+import "analyst"
 import "news.js" as News
 import "bvbnews.js" as BvbNews
 

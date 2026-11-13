@@ -50,6 +50,64 @@ msgstr ""
 msgid "Import / Export"
 msgstr ""
 
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Raised target from %1 to %2"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "New target %1"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Lowered target from %1 to %2"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Maintained target at %1"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Rating: %1 → %2"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Rating: %1"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "%1 analyst action"
+msgid_plural "%1 analyst actions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Consensus %1"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "range %1 – %2"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "%1 analyst"
+msgid_plural "%1 analysts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "Analyst price targets"
+msgstr ""
+
+#: contents/ui/analyst/AnalystMarkers.qml
+msgid "%1 action"
+msgid_plural "%1 actions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/analyst/AnalystMarkers.qml contents/ui/TooltipContent.qml
+msgid "… and %1 more"
+msgstr ""
+
 #: contents/ui/CompactPanel.qml
 msgctxt "@item:panel stock data state"
 msgid "OFF"
@@ -1194,64 +1252,6 @@ msgstr ""
 
 #: contents/ui/SingleStockView.qml
 msgid "Open on BVB"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Raised target from %1 to %2"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "New target %1"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Lowered target from %1 to %2"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Maintained target at %1"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Rating: %1 → %2"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Rating: %1"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "%1 analyst action"
-msgid_plural "%1 analyst actions"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Consensus %1"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "range %1 – %2"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "%1 analyst"
-msgid_plural "%1 analysts"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/SingleStockView.qml
-msgid "Analyst price targets"
-msgstr ""
-
-#: contents/ui/SingleStockView.qml
-msgid "%1 action"
-msgid_plural "%1 actions"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/SingleStockView.qml contents/ui/TooltipContent.qml
-msgid "… and %1 more"
 msgstr ""
 
 #: contents/ui/TooltipContent.qml
