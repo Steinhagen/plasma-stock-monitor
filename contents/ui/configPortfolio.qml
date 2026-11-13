@@ -4,9 +4,12 @@ import QtQuick.Layouts
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import "currencies.js" as Currency
+import "configWindow.js" as ConfigWindow
 
 Item {
     id: page
+
+    Window.onWindowChanged: ConfigWindow.apply(page, Window.window)
 
     property alias cfg_showPortfolioMode: portfolioModeSwitch.checked
     property string cfg_portfolioData
@@ -107,10 +110,6 @@ Item {
         return 0; // USD is first
     }
 
-    // The configuration window needs at least this width for the portfolio table and
-    // the toolbar to fit without clipping. The value includes the settings sidebar.
-    readonly property int minimumWindowWidth: 800
-
     // The code for a picker position. Deriving it from the index (rather than from
     // currentText) avoids the moment when the text still belongs to the old item.
     function currencyCodeAt(index) {
@@ -118,39 +117,14 @@ Item {
         return Currency.LIST[index].code;
     }
 
-    // ConfigView derives its minimum width from the Layout.minimumWidth of the item it
-    // loaded, and overwrites the window's minimumWidth. Raise that layout minimum too,
-    // and set the window minimum as a fallback for plain configuration windows. The
-    // page is often attached to the window after Component.onCompleted, hence the
-    // Window.onWindowChanged call below.
-    function applyMinimumWindowWidth() {
-        var win = Window.window;
-        if (!win || !win.contentItem) return;
-
-        // Walk up to the item ConfigView loaded (the direct child of its contentItem)
-        // and raise its attached Layout minimum.
-        var root = page;
-        while (root.parent && root.parent !== win.contentItem)
-            root = root.parent;
-        if (root.parent === win.contentItem && root.Layout
-                && root.Layout.minimumWidth < page.minimumWindowWidth)
-            root.Layout.minimumWidth = page.minimumWindowWidth;
-
-        if (win.minimumWidth < page.minimumWindowWidth)
-            win.minimumWidth = page.minimumWindowWidth;
-        if (win.width < page.minimumWindowWidth)
-            win.width = page.minimumWindowWidth;
-    }
-
     Component.onCompleted: {
+        ConfigWindow.apply(page, Window.window);
+        Qt.callLater(function() { ConfigWindow.apply(page, Window.window); });
         page.refreshPortfolioList();
         portfolioCurrencyCombo.currentIndex = page.currencyIndex(page.cfg_portfolioCurrency);
         page.currencyPickerReady = true;
         page.refreshQuotes();
-        page.applyMinimumWindowWidth();
     }
-
-    Window.onWindowChanged: page.applyMinimumWindowWidth()
 
     // If the setting is changed from outside the picker (for example when the config
     // framework loads the value), keep the picker in step.

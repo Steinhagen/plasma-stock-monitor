@@ -1,10 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import "configWindow.js" as ConfigWindow
 
 Item {
     id: page
+
+    Window.onWindowChanged: ConfigWindow.apply(page, Window.window)
 
     // 0 = Application, 1 = Plasma.
     property alias cfg_themePreset: presetCombo.currentIndex
@@ -58,6 +62,8 @@ Item {
     }
 
     Component.onCompleted: {
+        ConfigWindow.apply(page, Window.window);
+        Qt.callLater(function() { ConfigWindow.apply(page, Window.window); });
         page.ensureThemeDefaults();
         page.syncColorsCombo();
     }

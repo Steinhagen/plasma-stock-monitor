@@ -1,10 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import "configWindow.js" as ConfigWindow
 
 Item {
     id: page
+
+    Window.onWindowChanged: ConfigWindow.apply(page, Window.window)
 
     property string cfg_mouseRowLeftAction: "select"
     property string cfg_mouseMiddleAction: "refresh"
@@ -87,6 +91,8 @@ Item {
     }
 
     Component.onCompleted: {
+        ConfigWindow.apply(page, Window.window);
+        Qt.callLater(function() { ConfigWindow.apply(page, Window.window); });
         page.syncRowLeftCombo();
         page.syncMiddleCombo();
         page.syncDoubleCombo();

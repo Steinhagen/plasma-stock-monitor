@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   suffix (`BVB`, `XETRA`, `LSE`, …) before the first quote arrives.
 
 ### Fixed
+- Every configuration page now applies the same **800×720** minimum, so the
+  settings dialog no longer changes size while switching pages. Previously only
+  the Portfolio Tracking page raised the minimum, and only after it had been
+  opened.
 - Switching between the single-stock and multi-stock views keeps the current
   window size but now reports the new view's minimum from the applet root, which
   is what the Plasma applet container reads. A single-stock graph therefore grows

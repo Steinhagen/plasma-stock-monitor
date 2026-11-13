@@ -1,10 +1,18 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import "configWindow.js" as ConfigWindow
 
 Item {
     id: page
+
+    Component.onCompleted: {
+        ConfigWindow.apply(page, Window.window);
+        Qt.callLater(function() { ConfigWindow.apply(page, Window.window); });
+    }
+    Window.onWindowChanged: ConfigWindow.apply(page, Window.window)
 
     property alias cfg_alternatePricePercent: alternateSwitch.checked
     property alias cfg_alternateInterval: alternateSpin.value

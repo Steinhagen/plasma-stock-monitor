@@ -2,12 +2,20 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs as QtDialogs
 import QtQuick.Layouts
+import QtQuick.Window
 import Qt.labs.platform as QLP
 import org.kde.kirigami as Kirigami
 import "backup.js" as Backup
+import "configWindow.js" as ConfigWindow
 
 Item {
     id: page
+
+    Component.onCompleted: {
+        ConfigWindow.apply(page, Window.window);
+        Qt.callLater(function() { ConfigWindow.apply(page, Window.window); });
+    }
+    Window.onWindowChanged: ConfigWindow.apply(page, Window.window)
 
     // The Plasma configuration dialog passes every entry of the applet configuration in
     // as a cfg_ property and copies the properties back when Apply is pressed. Declaring
