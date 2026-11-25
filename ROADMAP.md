@@ -1,6 +1,6 @@
 # Roadmap
 
-Issues planned for the next releases.
+> **Project moved:** this roadmap is no longer maintained. Plasma Stock Monitor continues as [Market Monitor](https://github.com/Steinhagen/market-monitor-widget); current work is tracked there.
 
 ## Chart
 

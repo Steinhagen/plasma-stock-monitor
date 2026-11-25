@@ -22,7 +22,7 @@
     "Icon": "/icon.png",
     "Id": "io.github.steinhagen.plasmastockmonitor",
     "Version": "1.7",
-    "Website": "https://github.com/Steinhagen/plasma-stock-monitor",
+    "Website": "https://github.com/Steinhagen/market-monitor-widget",
     "License": "GPL-3.0+"
   },
   "X-Plasma-API-Minimum-Version": "6.0"

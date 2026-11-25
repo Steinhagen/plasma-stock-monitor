@@ -1,8 +1,14 @@
 # Plasma Stock Monitor
 
-A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo Finance.
+> **This project has moved.** Plasma Stock Monitor is now **[Market Monitor](https://github.com/Steinhagen/market-monitor-widget)**. This repository is no longer maintained; development continues in the new project, including fixes, new features and releases.
+>
+> - **New home:** <https://github.com/Steinhagen/market-monitor-widget>
+> - **KDE Store:** <https://store.kde.org/p/2381891/>
+> - **Migrating:** Market Monitor has a new applet id, so the widget has to be added again and your data carried over with a JSON backup. See [Migrating to Market Monitor](#migrating-to-market-monitor).
+>
+> The sections below are kept for historical reference only: the installation steps still install the unmaintained widget under the old name.
 
-[![KDE Store](https://img.shields.io/badge/KDE%20Store-Install-blue)](https://store.kde.org/p/2381512/)
+A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo Finance.
 
 ![Plasma Stock Monitor](screenshots/main.png)
 
@@ -21,7 +27,7 @@ A clean stock, crypto and currency widget for **KDE Plasma 6**, powered by Yahoo
 - **Backup:** export and import the portfolio, watchlist and settings as JSON.
 - **Localized:** gettext/Ki18n support with a complete Romanian translation included.
 
-## Installation
+## Installation (historical)
 
 ### KDE Store
 
@@ -40,6 +46,17 @@ kpackagetool6 --type Plasma/Applet --install .
 Then right-click the desktop or panel, choose **Add Widgets**, and search for **Plasma Stock Monitor**.
 
 To update an existing source installation, use `--upgrade` instead of `--install`.
+
+## Migrating to Market Monitor
+
+[Market Monitor](https://github.com/Steinhagen/market-monitor-widget) continues this widget under a new name and a new applet id (`io.github.steinhagen.marketmonitor`). Widgets already placed on a desktop or panel are not migrated automatically, so switch over once:
+
+1. Install **Market Monitor** from the [KDE Store](https://store.kde.org/p/2381891/) or [from source](https://github.com/Steinhagen/market-monitor-widget#from-source).
+2. In the old widget, open **Configure...** and export a JSON backup of your watchlist, portfolio and settings.
+3. Add **Market Monitor** to your desktop or panel and import that backup.
+4. Remove the old **Plasma Stock Monitor** widget once everything looks right.
+
+Backups exported by the old widget import into Market Monitor. Settings stored under the old applet id are not carried over, which is why the backup round-trip is the way to keep your data.
 
 ## Configuration
 

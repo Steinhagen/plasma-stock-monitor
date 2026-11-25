@@ -1,5 +1,7 @@
 # Changelog
 
+> **Project moved:** Plasma Stock Monitor continues as [Market Monitor](https://github.com/Steinhagen/market-monitor-widget). This file is no longer updated; new entries go to that project's [changelog](https://github.com/Steinhagen/market-monitor-widget/blob/main/CHANGELOG.md), which also keeps the pre-rename history in its [legacy changelog](https://github.com/Steinhagen/market-monitor-widget/blob/main/docs/CHANGELOG-legacy.md).
+
 All notable changes to Plasma Stock Monitor are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
